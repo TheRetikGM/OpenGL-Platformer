@@ -1,0 +1,147 @@
+{
+  "name": "PlayerAnimations",
+  "parameters": {"horizontal": "int", "vertical": "int", "state": "string"},
+  "conditions": {
+    "kind": {
+      "attack": { "state": "attack" },
+      "idle":   { "state": "idle" },
+      "roll":   { "state": "roll" },
+      "swim":   { "state": "swim" },
+      "walk":   { "state": "walk" }
+    },
+    "variant": {
+      "up":    { "horizontal": 0,  "vertical": 1 },      
+      "down":  { "horizontal": 0,  "vertical": -1 },
+      "left":  { "horizontal": -1, "vertical": 0 },
+      "right": { "horizontal": 1,  "vertical": 0 }      
+    }
+  },
+  "defaultAnimation": {
+    "kind": "idle",
+    "variant": "up"
+  },
+  "animations": {
+    "attack": {
+      "up": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/attack/attack up1.png", "player/attack/attack up2.png", "player/attack/attack up3.png", "player/attack/attack up4.png" ]
+      },
+      "down": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/attack/attack down1.png", "player/attack/attack down2.png", "player/attack/attack down3.png", "player/attack/attack down4.png" ]
+      },
+      "left": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/attack/attack left1.png", "player/attack/attack left2.png", "player/attack/attack left3.png", "player/attack/attack left4.png" ]
+      },
+      "right": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/attack/attack right1.png", "player/attack/attack right2.png", "player/attack/attack right3.png", "player/attack/attack right4.png" ]
+      }
+    },
+    "idle": {
+      "up": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/idle/idle up1.png", "player/idle/idle up2.png", "player/idle/idle up3.png", "player/idle/idle up4.png" ]
+      },
+      "down": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/idle/idle down1.png", "player/idle/idle down2.png", "player/idle/idle down3.png", "player/idle/idle down4.png" ]
+      },
+      "left": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/idle/idle left1.png", "player/idle/idle left2.png", "player/idle/idle left3.png", "player/idle/idle left4.png" ]
+      },
+      "right": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/idle/idle right1.png", "player/idle/idle right2.png", "player/idle/idle right3.png", "player/idle/idle right4.png" ]
+      }
+    },
+    "roll": {
+      "up": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/roll/roll up1.png", "player/roll/roll up2.png", "player/roll/roll up3.png", "player/roll/roll up4.png" ]
+      },
+      "down": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/roll/roll down1.png", "player/roll/roll down2.png", "player/roll/roll down3.png", "player/roll/roll down4.png" ]
+      },
+      "left": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/roll/roll left1.png", "player/roll/roll left2.png", "player/roll/roll left3.png", "player/roll/roll left4.png" ]
+      },
+      "right": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/roll/roll right1.png", "player/roll/roll right2.png", "player/roll/roll right3.png", "player/roll/roll right4.png" ]
+      }
+    },
+    "swim": {
+      "up": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/swim/swim up1.png", "player/swim/swim up2.png", "player/swim/swim up3.png", "player/swim/swim up4.png" ]
+      },
+      "down": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/swim/swim down1.png", "player/swim/swim down2.png", "player/swim/swim down3.png", "player/swim/swim down4.png" ]
+      },
+      "left": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/swim/swim left1.png", "player/swim/swim left2.png", "player/swim/swim left3.png", "player/swim/swim left4.png" ]
+      },
+      "right": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/swim/swim right1.png", "player/swim/swim right2.png", "player/swim/swim right3.png", "player/swim/swim right4.png" ]
+      }
+    },
+    "walk": {
+      "up": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/walk/walk up1.png", "player/walk/walk up2.png", "player/walk/walk up3.png", "player/walk/walk up4.png" ]
+      },
+      "down": {
+        "duration": 200,
+        "mirrored": false,
+        "frames": [ "player/walk/walk down1.png", "player/walk/walk down2.png", "player/walk/walk down3.png", "player/walk/walk down4.png" ]
+      },
+      "left": {
+        "duration": 100,
+        "mirrored": true,
+        "spritesheet": {
+          "sprite_width": 16,
+          "sprite_height": 16,
+          "offset": 0,
+          "margin": 0,
+          "source": "herochar_run_anim_strip_6.png"
+        }
+      },
+      "right": {
+        "duration": 100,
+        "mirrored": false,
+        "spritesheet": {
+          "sprite_width": 16,
+          "sprite_height": 16,
+          "offset": 0,
+          "margin": 0,
+          "source": "herochar_run_anim_strip_6.png"
+        }
+      }
+    }
+  }
+}

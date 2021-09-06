@@ -1,0 +1,127 @@
+{
+  "name": "PlayerAnimations",
+  "parameters": {"horizontal": "int", "vertical": "int", "state": "string"},
+  "conditions": {
+    "kind": {
+      "idle": { "state": "idle" },
+      "run": { "state": "run" },
+      "attack": { "state": "attack" },
+      "jump": { "vertical": 1 },
+	  "jump_down": { "vertical": -1 }
+    },
+    "variant": {      
+      "left":  { "horizontal": -1 },
+      "right": { "horizontal": 1 }      
+    }
+  },
+  "defaultAnimation": {
+    "kind": "idle",
+    "variant": "right"
+  },
+  "defaultParameters": {
+	  "horizontal": 1,
+	  "vertical": 0
+  },
+  "animations": {
+    "idle": {
+      "left": {
+        "duration": 350,
+        "mirrored": true,
+        "spritesheet": {
+			"sprite_width": 16, "sprite_height": 16,
+			"offset": 0, "margin": 0,
+			"source": "player/herochar_idle_anim_strip_4.png"
+		}
+      },
+      "right": {
+        "duration": 350,
+        "mirrored": false,
+        "spritesheet": {
+			"sprite_width": 16, "sprite_height": 16,
+			"offset": 0, "margin": 0,
+			"source": "player/herochar_idle_anim_strip_4.png"
+		}
+      }
+    },
+	"run": {
+		"right": {
+			"duration": 100,
+			"mirrored": false,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/herochar_run_anim_strip_6.png"
+			}
+		},
+		"left": {
+			"duration": 100,
+			"mirrored": true,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/herochar_run_anim_strip_6.png"
+			}
+		}
+	},	
+	"attack": {
+		"right": {
+			"duration": 100,
+			"mirrored": false,
+			"spritesheet": {
+				"sprite_width": 32, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/herochar_sword_attack_anim_strip_4.png"
+			}
+		},
+		"left": {
+			"duration": 100,
+			"mirrored": true,
+			"spritesheet": {
+				"sprite_width": 32, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/herochar_sword_attack_anim_strip_4.png"
+			}
+		}
+	},
+	"jump": {
+		"right": {
+			"duration": 100,
+			"mirrored": false,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/herochar_jump_up_anim_strip_3.png"
+			}
+		},
+		"left": {
+			"duration": 100,
+			"mirrored": true,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/herochar_jump_up_anim_strip_3.png"
+			}
+		}
+	},
+	"jump_down": {
+		"right": {
+			"duration": 100,
+			"mirrored": false,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/herochar_jump_down_anim_strip_3.png"
+			}
+		},
+		"left": {
+			"duration": 100,
+			"mirrored": true,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/herochar_jump_down_anim_strip_3.png"
+			}
+		}
+	}
+  }
+}
