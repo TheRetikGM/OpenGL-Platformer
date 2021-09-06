@@ -18,10 +18,6 @@
     "kind": "idle",
     "variant": "right"
   },
-  "defaultParameters": {
-	  "horizontal": 1,
-	  "vertical": 0
-  },
   "animations": {
     "idle": {
       "left": {
