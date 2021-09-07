@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tileset version="1.5" tiledversion="1.7.1" name="environment" tilewidth="16" tileheight="16" tilecount="72" columns="12">
- <image source="../../../../../platform_metroidvania asset pack v1.01/tiles and background_foreground (new)/tileset.png" width="192" height="96"/>
+ <image source="tileset.png" width="192" height="96"/>
  <wangsets>
   <wangset name="env" type="mixed" tile="-1">
    <wangcolor name="dirt" color="#ff0000" tile="-1" probability="1"/>
