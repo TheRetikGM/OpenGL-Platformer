@@ -199,7 +199,7 @@ void Game::ProcessInput(float dt)
 }
 void Game::Update(float dt)
 {
-	ResourceManager::GetTilemap("desert")->Update(dt);	
+	ResourceManager::GetTilemap("platformer")->Update(dt);	
 	
 	// Does nothing for now.
 	/// TileCamera2D::Update(dt);

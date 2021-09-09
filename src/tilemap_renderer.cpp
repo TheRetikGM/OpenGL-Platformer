@@ -78,6 +78,7 @@ InstanceInfo initInstanceInfo()
 	memset((void*)(&i), 0, sizeof(InstanceInfo));
 	return i;
 }
+
 void TilemapRenderer::Draw(Tilemap* tilemap, glm::vec2 pos)
 {
 	TileCamera2D::CurrentMapSize = glm::vec2((float)tilemap->Map->GetWidth(), (float)tilemap->Map->GetHeight());
@@ -98,11 +99,11 @@ void TilemapRenderer::Draw(Tilemap* tilemap, glm::vec2 pos)
 		// Get offset for tiles.
 		glm::vec2 offset = TileCamera2D::GetFirstVisibleTile();
 		glm::ivec2 nVisibleTiles = TileCamera2D::GetNVisibleTiles();		
-		glm::vec2 tileOffset = glm::vec2(offset.x - (int)offset.x, offset.y - (int)offset.y);
+		glm::vec2 tileOffset = glm::vec2(offset.x - (int)offset.x, offset.y - (int)offset.y);		
 
-		for (int x = -1; x < nVisibleTiles.x + 2; x++)
+		for (int x = -1; x <= nVisibleTiles.x + 1; x++)
 		{
-			for (int y = -1; y < nVisibleTiles.y + 2; y++)
+			for (int y = -1; y <= nVisibleTiles.y + 1; y++)
 			{
 				glm::ivec2 c_tile = glm::ivec2(x + (int)offset.x, y + (int)offset.y);
 				int i_tileset = -1;

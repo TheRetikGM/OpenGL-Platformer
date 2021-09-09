@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <game/game.h>
 
+/* Initialize static member variables */
 glm::vec2 TileCamera2D::position = glm::vec2(0.0f);
 glm::vec2* TileCamera2D::Position = &TileCamera2D::position;
 float TileCamera2D::MoveSpeed = 0.0f;
@@ -71,14 +72,16 @@ glm::vec2 TileCamera2D::GetFirstVisibleTile()
 
     // Calculate Top-Leftmost tile.
     offset = *Position - ScreenCoords / (Game::TileSize * scale * 2.0f);    
+    
+    glm::vec2 tile_overflow = CurrentMapSize / Game::TileSize - glm::vec2(glm::ivec2(CurrentMapSize / Game::TileSize));
 
     // Clamp camera to map boundaries;    
     if (offset.x < 0) offset.x = 0;
     if (offset.y < 0) offset.y = 0;
-    if (offset.x > CurrentMapSize.x - nVisibleTiles.x) 
-        offset.x = (float)(CurrentMapSize.x - nVisibleTiles.x);
-    if (offset.y > CurrentMapSize.y - nVisibleTiles.y) 
-        offset.y = (float)(CurrentMapSize.y - nVisibleTiles.y);
+    if (offset.x > CurrentMapSize.x - nVisibleTiles.x - tile_overflow.x) 
+        offset.x = (float)(CurrentMapSize.x - nVisibleTiles.x) - tile_overflow.x;
+    if (offset.y > CurrentMapSize.y - nVisibleTiles.y - tile_overflow.y) 
+        offset.y = (float)(CurrentMapSize.y - nVisibleTiles.y) - tile_overflow.y;
 
     if (CurrentMapSize.x < nVisibleTiles.x)
         offset.x = 0;
