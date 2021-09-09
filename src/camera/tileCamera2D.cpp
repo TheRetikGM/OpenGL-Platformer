@@ -8,7 +8,7 @@
 glm::vec2 TileCamera2D::position = glm::vec2(0.0f);
 glm::vec2* TileCamera2D::Position = &TileCamera2D::position;
 float TileCamera2D::MoveSpeed = 0.0f;
-std::function<void (glm::vec2)> TileCamera2D::OnScale = [&](glm::vec2 scale){};
+std::function<void (glm::vec2)> TileCamera2D::OnScale = [](glm::vec2 scale){};
 glm::vec2 TileCamera2D::ScreenCoords = glm::vec2(0.0f);
 GameObject* TileCamera2D::Follow = nullptr;
 glm::vec2 TileCamera2D::right = glm::vec2(1.0f, 0.0f);
@@ -56,8 +56,8 @@ void TileCamera2D::Rotate(float angle)
 {
     angle *= -1.0f;
     glm::mat2 rot = {
-        glm::vec2(std::cosf(angle), std::sinf(angle)),
-        glm::vec2(-std::sinf(angle), std::cosf(angle))
+        glm::vec2(std::cos(angle), std::sin(angle)),
+        glm::vec2(-std::sin(angle), std::cos(angle))
     };
     right = rot * right;
 }

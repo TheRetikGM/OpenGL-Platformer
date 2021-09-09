@@ -79,9 +79,9 @@ int main()
 				glfwSwapBuffers(window);
 			}
 	 }
-	 catch (std::exception e)
+	 catch (const std::exception& e)
 	 {
-	 std::cerr << DC_ERROR " " << e.what() << std::endl;
+	 	std::cerr << DC_ERROR " " << e.what() << std::endl;
 	 }
 
 	delete game;

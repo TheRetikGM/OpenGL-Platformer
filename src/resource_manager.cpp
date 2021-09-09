@@ -130,7 +130,7 @@ Tilemap* ResourceManager::LoadTilemap(const char* file, std::string name)
 		t = new Tilemap(file);
 		Tilemaps[name] = t;
 	}
-	catch (std::exception e)
+	catch (const std::exception& e)
 	{
 		std::cerr << DC_ERROR " ResourceManager::LoadTilemap(): " << e.what() << std::endl;
 	}

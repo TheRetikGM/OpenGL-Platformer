@@ -17,7 +17,8 @@ void AnimationManager::SetParameter(std::string name, std::any value)
     ParameterType type = std::get<0>(Parameters[name]);
     if (type == ParameterType::p_string)
     {
-        if (std::string(value.type().name()).find("char const") != std::string::npos)
+        if (std::string(value.type().name()).find("char const") != std::string::npos
+            || std::string(value.type().name()).find("PKc") != std::string::npos)
         {
             std::get<1>(Parameters[name]) = std::string(std::any_cast<const char*>(value));
         }
@@ -181,7 +182,7 @@ void from_json(const json& j, AnimatedSprite& s)
         spritesheet.at("source").get_to(s.Sheet_source);
 
 
-        std::string directory = ASSETS_DIR "Animations/";
+        std::string directory = ASSETS_DIR "animations/";
         std::string s_file = directory + s.Sheet_source;
         const char* file = s_file.c_str();
         unsigned char* sheet_data = stbi_load(file, &width, &height, &nrChannels, 0);
@@ -235,7 +236,7 @@ void from_json(const json& j, AnimatedSprite& s)
         s.Spritesheet = false;
         for (auto& frame : j.at("frames"))
         {
-            std::string directory = ASSETS_DIR "Animations/";
+            std::string directory = ASSETS_DIR "animations/";
             std::string test = directory + frame.get<std::string>();
             const char* file = test.c_str();
 

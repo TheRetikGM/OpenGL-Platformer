@@ -1,6 +1,6 @@
 #pragma once
-#include "Shader.h"
-#include "Texture.h"
+#include "shader.h"
+#include "texture.h"
 #include <glm/glm.hpp>
 
 class SpriteRenderer

@@ -44,7 +44,10 @@ unsigned char* getTextureData(std::string filename, int tile_width, int tile_hei
 {
 	// Load image.
 	int img_width, img_height;
-	unsigned char* data = stbi_load(filename.c_str(), &img_width, &img_height, &n_channels, 0);	
+	unsigned char* data = stbi_load(filename.c_str(), &img_width, &img_height, &n_channels, 0);
+
+	if (!data)
+		throw std::runtime_error(("Tilemap::getTextureData(): Failed to load " + filename).c_str());
 
 	// Allocate storage for new image with required spacing.	
 	int tiles_x = (img_width - margin / 2) / (tile_width + spacing);

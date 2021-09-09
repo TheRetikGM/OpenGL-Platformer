@@ -88,7 +88,7 @@ void Game::Init()
 	ResourceManager::LoadTilemap(ASSETS_DIR "tilemaps/test/test.tmx", "platformer");
 
 	// Load animations
-	AnimationManager* playerAnimations = ResourceManager::LoadAnimationManager(ASSETS_DIR "Animations/PlayerAnimations_platformer.json");
+	AnimationManager* playerAnimations = ResourceManager::LoadAnimationManager(ASSETS_DIR "animations/PlayerAnimations_platformer.json");
 
 	// Projection used for 2D projection.
 	glm::mat4 projection = glm::ortho(0.0f, (float)this->Width, (float)this->Height, 0.0f, -1.0f, 1.0f);

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.13.4)
 
 project("main")
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_DEBUG_POSTFIX "d")
 
 add_subdirectory(json-develop)
 add_subdirectory("src")
@@ -23,4 +24,18 @@ if (MSVC)
 		debug Debug/tinyxml2d optimized Release/tinyxml2
 		debug Debug/tmxparser optimized Release/tmxparser
 	)
+elseif (UNIX)
+    target_link_libraries(${PROJECT_NAME}
+        glfw
+        GL
+        X11
+        pthread
+        Xrandr
+        Xi
+        dl
+        m
+        tinyxml2
+        z
+        debug tmxparserd optimized tmxparser
+    )
 endif()
