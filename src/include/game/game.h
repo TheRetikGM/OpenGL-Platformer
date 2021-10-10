@@ -5,6 +5,8 @@
 #include <vector>
 #include "Interfaces/ITileSpace.h"
 #include <Tmx.h>
+#include "PhysicsWorld.h"
+#include "game/GameLevel.h"
 
 enum class GameState : uint8_t {
 	active,
@@ -27,6 +29,8 @@ public:
 	bool			KeysProcessed[1024];
 	unsigned int	Width, Height;
 	glm::vec3		BackgroundColor;
+	std::vector<GameLevel*> Levels;
+	int CurrentLevel;
 
 	static glm::vec2 TileSize;
 

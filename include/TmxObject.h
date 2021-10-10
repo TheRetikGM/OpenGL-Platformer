@@ -61,16 +61,16 @@ namespace Tmx
         const std::string &GetType() const { return type; }
 
         /// Get the left side of the object, in pixels.
-        int GetX() const { return x; }
+        float GetX() const { return x; }
 
         /// Get the top side of the object, in pixels.
-        int GetY() const { return y; }
+        float GetY() const { return y; }
 
         /// Get the width of the object, in pixels.
-        int GetWidth() const { return width; }
+        float GetWidth() const { return width; }
 
         /// Get the height of the object, in pixels.
-        int GetHeight() const { return height; }
+        float GetHeight() const { return height; }
 
         /// Get the rotation of the object, in degrees.
         double GetRot() const { return rotation; }
@@ -103,10 +103,10 @@ namespace Tmx
         std::string name;
         std::string type;
 
-        int x;
-        int y;
-        int width;
-        int height;
+        float x;
+        float y;
+        float width;
+        float height;
         int gid;
         int id;
 

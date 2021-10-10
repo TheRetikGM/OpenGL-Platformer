@@ -9,7 +9,7 @@ public:
 	glm::vec2 ScreenPosition;
 	glm::vec2 Velocity;	
 	glm::vec2 Size;
-	glm::vec3 Color;	
+	glm::vec3 Color;
 
 protected:	
 

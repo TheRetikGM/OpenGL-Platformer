@@ -13,6 +13,7 @@ target_link_libraries(${PROJECT_NAME}
 	Texture
 	Shader
 	Glad
+	Physics2D
 )
 target_link_libraries(${PROJECT_NAME} nlohmann_json::nlohmann_json)
 

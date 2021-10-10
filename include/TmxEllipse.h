@@ -40,24 +40,24 @@ namespace Tmx
     {
     public:
         /// Construct an ellipse at the given top left position with the given size.
-        Ellipse( int x, int y, int width, int height );
+        Ellipse( float x, float y, float width, float height );
 
         /// Get the center of the object, in pixels.
-        int GetCenterX() const { return x; }
+        float GetCenterX() const { return x; }
 
         /// Get the center of the object, in pixels.
-        int GetCenterY() const { return y; }
+        float GetCenterY() const { return y; }
         
         /// Get the RadiusX of the object, in pixels.
-        int GetRadiusX() const { return radiusX; }
+        float GetRadiusX() const { return radiusX; }
         
         /// Get the RadiusY of the object, in pixels.
-        int GetRadiusY() const { return radiusY; }
+        float GetRadiusY() const { return radiusY; }
 
     private:
-        int x;
-        int y;
-        int radiusX;
-        int radiusY;
+        float x;
+        float y;
+        float radiusX;
+        float radiusY;
     };
 }

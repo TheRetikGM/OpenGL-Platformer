@@ -48,7 +48,6 @@ namespace Tmx
             , flippedHorizontally(false)
             , flippedVertically(false)
             , flippedDiagonally(false)
-            , gid(0)
         {}
 
         /// Will take a gid and read the attributes from the first

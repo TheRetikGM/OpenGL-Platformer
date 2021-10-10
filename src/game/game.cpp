@@ -24,12 +24,13 @@ Player* player = nullptr;
 
 // Render state variables.
 bool wireframe_render = false;
+bool render_aabb = false;
 
 // Callbacks.
 void onLayerDraw(const Tmx::Map *map, const Tmx::Layer *layer, int n_layer);
 void onCameraScale(glm::vec2 scale);
 
-Game::Game(unsigned int width, unsigned int height) : State(GameState::active), Width(width), Height(height), Keys(), KeysProcessed(), BackgroundColor(0.0f)
+Game::Game(unsigned int width, unsigned int height) : State(GameState::active), Width(width), Height(height), Keys(), KeysProcessed(), BackgroundColor(0.0f), CurrentLevel(-1)
 {}
 Game::~Game()
 {	
@@ -42,6 +43,8 @@ Game::~Game()
 	if (player)
 		delete player;
 	ResourceManager::Clear();
+	for (auto& level : this->Levels)
+		GameLevel::Delete(level);
 }
 void Game::SetTileSize(glm::vec2 new_size)
 {
@@ -74,6 +77,9 @@ void Game::ProcessScroll(float yoffset)
 }
 void Game::Init()
 {
+	Game::SetTileSize(glm::vec2(32.0f, 32.0f));
+	this->BackgroundColor = glm::vec3(0.3f);
+
 	// Load shaders
 	ResourceManager::LoadShader(SHADERS_DIR "SpriteRender.vert", SHADERS_DIR "SpriteRender.frag", nullptr, "sprite");
 	ResourceManager::LoadShader(SHADERS_DIR "tile_render.vert", SHADERS_DIR "tile_render.frag", nullptr, "tilemap");
@@ -86,6 +92,10 @@ void Game::Init()
 	// Load tilemaps
 	ResourceManager::LoadTilemap(ASSETS_DIR "example.tmx", "desert");
 	ResourceManager::LoadTilemap(ASSETS_DIR "tilemaps/test/test.tmx", "platformer");
+
+	// Load levels
+	this->Levels.push_back(GameLevel::Load(ASSETS_DIR "Levels/level_0.lvl"));
+	this->CurrentLevel = 0;
 
 	// Load animations
 	AnimationManager* playerAnimations = ResourceManager::LoadAnimationManager(ASSETS_DIR "animations/PlayerAnimations_platformer.json");
@@ -117,25 +127,28 @@ void Game::Init()
 
 	// Initialize player
 	player = new Player(glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 2.0f), playerAnimations->GetSprite(), glm::vec3(1.0f));
-	player->MovementSpeed = 6.0f;	
+	player->MovementSpeed = 6.0f;
+	player->SetRigidBody(Physics2D::RigidBody::CreateRectangleBody({ 1.0f, 1.0f }, { 1.0f, 2.0f }, 10.0f, false, 0.0f));
+	player->RBody->Name = "player";
+	player->RBody->GravityScale = 1.0f;
+	player->Animations = playerAnimations;
 
-	// Set initial states.
-	//TileCamera2D::Follow = player;
+	// Set initial states.	
 	TileCamera2D::SetFollow(player);
-
-	Game::SetTileSize(glm::vec2(32.0f, 32.0f));
-	this->BackgroundColor = glm::vec3(0.3f);
+	Levels[CurrentLevel]->PhysicsWorld->AddBody(player->RBody);
 }
 
 void Game::ProcessInput(float dt)
 {	
 	int horizontal = 0;
 	int vertical = 0;
-	if (Keys[GLFW_KEY_W])
+	if (Keys[GLFW_KEY_W] && !KeysProcessed[GLFW_KEY_W])
 	{
 		TileCamera2D::ProccessKeyboard(Camera2DMovement::up, dt);
 		player->ProcessKeyboard(PlayerMovement::up, dt);
 		vertical += 1;
+
+		KeysProcessed[GLFW_KEY_W] = true;
 	}
 	if (Keys[GLFW_KEY_S])
 	{
@@ -168,6 +181,7 @@ void Game::ProcessInput(float dt)
 		TileCamera2D::SetRight(glm::vec2(1.0f, 0.0f));	
 		TileCamera2D::SetScale(glm::vec2(2.0f));	
 		Game::SetTileSize(Game::TileSize);	
+		player->RBody->LinearVelocity = glm::vec2(0.0f);
 	}
 	if (Keys[GLFW_KEY_F1] && !KeysProcessed[GLFW_KEY_F1])
 	{
@@ -178,35 +192,33 @@ void Game::ProcessInput(float dt)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		KeysProcessed[GLFW_KEY_F1] = true;		
 	}
+	if (Keys[GLFW_KEY_F2] && !KeysProcessed[GLFW_KEY_F2])
+	{
+		render_aabb = !render_aabb;
+		KeysProcessed[GLFW_KEY_F2] = true;
+	}
 
 	auto playerAnim = ResourceManager::GetAnimationManager("PlayerAnimations");
 	if (Keys[GLFW_KEY_LEFT_SHIFT] && !KeysProcessed[GLFW_KEY_LEFT_SHIFT])
 	{
 		playerAnim->PlayOnce("attack");
 		KeysProcessed[GLFW_KEY_LEFT_SHIFT] = true;
-	}
-
-	if (horizontal == 0 && vertical == 0)
-		playerAnim->SetParameter("state", "idle");
-	else
-	{		
-		playerAnim->SetParameter("state", "run");
-	}
-	/// Behaivor for horizontal == 0 is not defined if not defined! Character must be facing in some direction.
-	if (horizontal != 0)
-		playerAnim->SetParameter("horizontal", horizontal);
-	playerAnim->SetParameter("vertical", vertical);
+	}	
 }
 void Game::Update(float dt)
 {
-	ResourceManager::GetTilemap("platformer")->Update(dt);	
+	// ResourceManager::GetTilemap("platformer")->Update(dt);	
 	
 	// Does nothing for now.
 	/// TileCamera2D::Update(dt);
 
+	player->Update(dt);
+	Levels[CurrentLevel]->Update(dt);	
+
+	// Update Animations
 	for (auto& [name, manager] : ResourceManager::AnimationManagers)
 		manager->Update(dt);
-	player->PlayerSprite = ResourceManager::GetAnimationManager("PlayerAnimations")->GetSprite();	
+	player->PlayerSprite = ResourceManager::GetAnimationManager("PlayerAnimations")->GetSprite();
 }
 void Game::Render()
 {
@@ -214,10 +226,24 @@ void Game::Render()
 	{
 		renderer->DrawSprite(ResourceManager::GetTexture("background1"), glm::vec2(0.0f, 0.0f), glm::vec2(Width, Height), 0.0f);
 		// Render tilemap.		
-		tile_renderer->Draw(ResourceManager::GetTilemap("platformer"), glm::vec2(0.0f, 0.0f));		
+		tile_renderer->Draw(Levels[CurrentLevel]->Map, glm::vec2(0.0f, 0.0f));		
 
-		// printf("Pos: [%3.7f, %3.7f]; ScreenPos: [%3.7f, %3.7f]\n", player->Position.x, player->Position.y, player->ScreenPosition.x, player->ScreenPosition.y);
-	}
+		// Render colliders.
+		if (render_aabb)
+		{
+			auto world = Levels[CurrentLevel]->PhysicsWorld;
+			for (int i = 0; i < world->BodyCount(); i++)
+			{
+				auto body = world->GetBody(i);
+				auto p = body->GetCollider();
+				basic_renderer->RenderClosedPolygon(
+					p->UnitVertices,
+					TileCamera2D::GetScreenPosition(p->GetCenter()),
+					glm::vec2(world->GetInvMeterUnitRatio()) * Game::TileSize * TileCamera2D::GetScale(),
+					glm::vec3(1.0f, 1.0f, 1.0f));
+			}
+		}
+	}	
 }
 
 // Callbacks
@@ -228,8 +254,7 @@ void Game::OnLayerRendered(const Tmx::Map *map, const Tmx::Layer *layer, int n_l
 	{
 		// Render player.
 		player->Draw(renderer);
-		/// Render bounding box around player sprite.
-		basic_renderer->RenderShape(br_Shape::rectangle, player->PlayerSprite->Position, player->PlayerSprite->Size, 0.0f, glm::vec3(1.0f, 1.0f, 0.0f));		
+		glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
 	}
 }
 void onCameraScale(glm::vec2 scale)

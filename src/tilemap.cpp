@@ -11,6 +11,7 @@ Tilemap::Tilemap(const char* path)
 	, AnimTiles()
 	, Tileset_textures()
 	, directory("")
+	, file_path(std::string(path))
 {
 	std::string s(path);
 	directory = s.substr(0, s.find_last_of('/'));
@@ -28,6 +29,7 @@ Tilemap::~Tilemap()
 	for (auto& i : Tileset_textures)
 		glDeleteTextures(1, &i.second.ID);	
 	Tileset_textures.clear();
+
 	delete Map;	
 }
 void Tilemap::loadTilemap(const char* path)
