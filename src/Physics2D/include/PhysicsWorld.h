@@ -19,8 +19,8 @@ namespace Physics2D
 		glm::vec2 Gravity;
 
 		/* Events */
-		std::function<void(RigidBody*, RigidBody*)> OnCollisionEnter = [](RigidBody* A, RigidBody* B) {};
-		std::function<void(RigidBody*, RigidBody*)> OnCollisionExit = [](RigidBody* A, RigidBody* B) {};
+		std::function<void(RigidBody*, RigidBody*, const CollisionInfo&)> OnCollisionEnter = [](RigidBody* A, RigidBody* B, const CollisionInfo& info) {};
+		std::function<void(RigidBody*, RigidBody*, const CollisionInfo&)> OnCollisionExit = [](RigidBody* A, RigidBody* B, const CollisionInfo& info) {};
 
 		static float GetMinBodySize() { return minBodySize; }
 		static float GetMaxBodySize() { return maxBodySize; }
@@ -64,9 +64,9 @@ namespace Physics2D
 		// float meterUnitRatio;
 
 		bool collideAABB(RigidBody* A, RigidBody* B);
-		bool collide(RigidBody* b1, RigidBody* b2, glm::vec2& out_normal, float& out_depth);
-		void responseToCollision(RigidBody* b1, RigidBody* b2, const glm::vec2& normal, const float& depth);
-		void callCollisionEnter_callbacks(RigidBody* A, RigidBody* B);
-		void callCollisionExit_callbacks(RigidBody* A, RigidBody* B);
+		bool collide(RigidBody* b1, RigidBody* b2, CollisionInfo& info);
+		void responseToCollision(RigidBody* b1, RigidBody* b2, const CollisionInfo& info);
+		void callCollisionEnter_callbacks(RigidBody* A, RigidBody* B, const CollisionInfo& info);
+		void callCollisionExit_callbacks(RigidBody* A, RigidBody* B, const CollisionInfo& info);
 	};
 }

@@ -22,9 +22,9 @@ Player::~Player()
 void Player::SetRigidBody(std::shared_ptr<Physics2D::RigidBody> body)
 {
 	if (this->RBody)
-		body->OnCollisionEnter = [](Physics2D::RigidBody* b) {};
+		body->OnCollisionEnter = [](Physics2D::RigidBody* b, const Physics2D::CollisionInfo& info) {};
 	this->RBody = body;
-	body->OnCollisionEnter = std::bind(&Player::onCollision, this, std::placeholders::_1);
+	body->OnCollisionEnter = std::bind(&Player::onCollision, this, std::placeholders::_1, std::placeholders::_2);
 }
 
 void Player::Draw(SpriteRenderer* renderer)
@@ -39,6 +39,9 @@ void Player::DrawAt(SpriteRenderer* renderer, glm::vec2 pos)
 }
 void Player::Update(float dt)
 {
+	if (RBody->LinearVelocity.y > 9.81f * 3.0f * dt)
+		Jumping = true;
+
 	if (Animations)
 	{
 		if (RBody->GetForce() == glm::vec2(0.0f, 0.0f) && !Jumping && RBody->LinearVelocity.x == 0.0f)
@@ -106,9 +109,9 @@ void Player::ProcessKeyboard(PlayerMovement dir, float dt)
 		Animations->SetParameter("horizontal", (int)vel.x);
 }
 
-void Player::onCollision(Physics2D::RigidBody* body)
+void Player::onCollision(Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info)
 {
-	if (body->Name == "ground")
+	if (body->Name == "ground" && glm::dot(info.normal, glm::vec2(0.0f, -1.0f)) > 0.0f)
 		this->Jumping = false;
 }
 

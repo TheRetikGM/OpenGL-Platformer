@@ -33,5 +33,5 @@ public:
 	void onTileSizeChanged(glm::vec2 newTileSize) override;
 private:
 
-	void onCollision(Physics2D::RigidBody* body);
+	void onCollision(Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info);
 };

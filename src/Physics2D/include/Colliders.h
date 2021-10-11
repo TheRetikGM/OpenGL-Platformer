@@ -6,6 +6,14 @@
 
 namespace Physics2D
 {
+	struct CollisionInfo {
+		glm::vec2 normal;
+		float depth;
+
+		CollisionInfo(glm::vec2 norm, float depth) : normal(norm), depth(depth) {}
+		CollisionInfo() : normal(glm::vec2(0.0f)), depth(0.0f) {}
+	};
+
 	enum class ColliderType : int {
 		rectangle = 0,
 		circle = 1,
@@ -88,11 +96,11 @@ namespace Physics2D
 	protected:
 	};
 
-	bool CheckCollision(const CircleCollider* c1, const CircleCollider* c2, glm::vec2& out_normal, float& out_depth);
-	bool CheckCollision(const RectangleCollider* c1, const RectangleCollider* c2, glm::vec2& out_normal, float& out_depth);
-	bool CheckCollision(const RectangleCollider* c1, const CircleCollider* c2, glm::vec2& out_normal, float& out_depth);
-	bool CheckCollision(const PolygonCollider* c1, const PolygonCollider* c2, glm::vec2& out_normal, float& out_depth);
-	bool CheckCollision(const PolygonCollider* c1, const CircleCollider* c2, glm::vec2& out_normal, float& out_depth);
-	bool CheckCollision(const PolygonCollider* c1, const RectangleCollider* c2, glm::vec2& out_normal, float& out_depth);
-	bool CheckCollision(Collider* c1, Collider* c2, glm::vec2& out_normal, float& out_depth);
+	bool CheckCollision(const CircleCollider* c1, const CircleCollider* c2, CollisionInfo& info);
+	bool CheckCollision(const RectangleCollider* c1, const RectangleCollider* c2, CollisionInfo& info);
+	bool CheckCollision(const RectangleCollider* c1, const CircleCollider* c2, CollisionInfo& info);
+	bool CheckCollision(const PolygonCollider* c1, const PolygonCollider* c2, CollisionInfo& info);
+	bool CheckCollision(const PolygonCollider* c1, const CircleCollider* c2, CollisionInfo& info);
+	bool CheckCollision(const PolygonCollider* c1, const RectangleCollider* c2, CollisionInfo& info);
+	bool CheckCollision(Collider* c1, Collider* c2, CollisionInfo& info);
 }

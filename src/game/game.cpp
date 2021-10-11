@@ -78,7 +78,7 @@ void Game::ProcessScroll(float yoffset)
 void Game::Init()
 {
 	Game::SetTileSize(glm::vec2(32.0f, 32.0f));
-	this->BackgroundColor = glm::vec3(0.3f);
+	this->BackgroundColor = glm::vec3(0.4f, 0.5f, 0.8f);
 
 	// Load shaders
 	ResourceManager::LoadShader(SHADERS_DIR "SpriteRender.vert", SHADERS_DIR "SpriteRender.frag", nullptr, "sprite");

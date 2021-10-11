@@ -75,9 +75,9 @@ RigidBody* PhysicsWorld::GetNamedBody(std::string name)
 		return nullptr;
 	return (*body_iter).get();
 }
-bool PhysicsWorld::collide(RigidBody* b1, RigidBody* b2, glm::vec2& out_normal, float& out_depth)
+bool PhysicsWorld::collide(RigidBody* b1, RigidBody* b2, CollisionInfo& info)
 {
-	return Physics2D::CheckCollision(b1->GetCollider(), b2->GetCollider(), out_normal, out_depth);
+	return Physics2D::CheckCollision(b1->GetCollider(), b2->GetCollider(), info);
 }
 void PhysicsWorld::Update(float dt, int precision)
 {
@@ -103,29 +103,28 @@ void PhysicsWorld::Update(float dt, int precision)
 				if ((bodyA->GetIsStatic() && bodyB->GetIsStatic()) || !collideAABB(bodyA, bodyB))
 					continue;
 
-				glm::vec2 n;
-				float d;				
-				if (collide(bodyA, bodyB, n, d))
+				CollisionInfo collisionInfo;
+				if (collide(bodyA, bodyB, collisionInfo))
 				{
-					callCollisionEnter_callbacks(bodyA, bodyB);
+					callCollisionEnter_callbacks(bodyA, bodyB, collisionInfo);
 
 					// Move the bodies apart ( resolve collision ) based on their IsStatic property.
 					/// If both bodies are static, then dont resolve the collision.
 					if (bodyA->GetIsStatic() && bodyB->GetIsStatic())
 						continue;
 					else if (bodyA->GetIsStatic() && !bodyB->GetIsStatic())
-						bodyB->Move(n * d);
+						bodyB->Move(collisionInfo.normal * collisionInfo.depth);
 					else if (!bodyA->GetIsStatic() && bodyB->GetIsStatic())
-						bodyA->Move(-n * d);
+						bodyA->Move(-collisionInfo.normal * collisionInfo.depth);
 					else {
-						bodyA->Move(-n * d / 2.0f);
-						bodyB->Move(n * d / 2.0f);
+						bodyA->Move(-collisionInfo.normal * collisionInfo.depth / 2.0f);
+						bodyB->Move(collisionInfo.normal * collisionInfo.depth / 2.0f);
 					}
 
-					callCollisionExit_callbacks(bodyA, bodyB);
+					callCollisionExit_callbacks(bodyA, bodyB, collisionInfo);
 
 					// Apply realistic response of bodies to collision.
-					responseToCollision(bodyA, bodyB, n, d);
+					responseToCollision(bodyA, bodyB, collisionInfo);
 				}
 			}
 		}
@@ -133,20 +132,20 @@ void PhysicsWorld::Update(float dt, int precision)
 }
 
 /// Equasions used are from https://www.chrishecker.com/images/e/e7/Gdmphys3.pdf.
-void PhysicsWorld::responseToCollision(RigidBody* b1, RigidBody* b2, const glm::vec2& normal, const float& depth)
+void PhysicsWorld::responseToCollision(RigidBody* b1, RigidBody* b2, const CollisionInfo& info)
 {
 	auto b1_props = b1->GetPhysicsProperties();
 	auto b2_props = b2->GetPhysicsProperties();
 	glm::vec2 relativeVelocity = b2->LinearVelocity - b1->LinearVelocity;
 
-	if (glm::dot(relativeVelocity, normal) > 0.0f)
+	if (glm::dot(relativeVelocity, info.normal) > 0.0f)
 		return;
 
 	float e = std::min(b1_props.Restitution, b2_props.Restitution);
-	float j = -(1.0f + e) * glm::dot(relativeVelocity, normal);
+	float j = -(1.0f + e) * glm::dot(relativeVelocity, info.normal);
 	j /= b1_props.invMass + b2_props.invMass;
 
-	glm::vec2 impulse = j * normal;
+	glm::vec2 impulse = j * info.normal;
 
 	b1->LinearVelocity -= impulse * b1_props.invMass;
 	b2->LinearVelocity += impulse * b2_props.invMass;
@@ -163,15 +162,15 @@ bool PhysicsWorld::collideAABB(RigidBody* A, RigidBody* B)
 		&& a->GetBottom() > b->GetTop();
 }
 
-void PhysicsWorld::callCollisionEnter_callbacks(RigidBody* A, RigidBody* B)
+void PhysicsWorld::callCollisionEnter_callbacks(RigidBody* A, RigidBody* B, const CollisionInfo& info)
 {
-	A->OnCollisionEnter(B);
-	B->OnCollisionEnter(A);
-	OnCollisionEnter(A, B);
+	A->OnCollisionEnter(B, info);
+	B->OnCollisionEnter(A, info);
+	OnCollisionEnter(A, B, info);
 }
-void PhysicsWorld::callCollisionExit_callbacks(RigidBody* A, RigidBody* B)
+void PhysicsWorld::callCollisionExit_callbacks(RigidBody* A, RigidBody* B, const CollisionInfo& info)
 {
-	A->OnCollisionExit(B);
-	B->OnCollisionExit(A);
-	OnCollisionExit(A, B);
+	A->OnCollisionExit(B, info);
+	B->OnCollisionExit(A, info);
+	OnCollisionExit(A, B, info);
 }

@@ -42,8 +42,8 @@ namespace Physics2D
 		MeterUnitConverter* UnitConverter;
 
 		// Events
-		std::function<void(RigidBody*)> OnCollisionEnter = [](RigidBody* body) {};
-		std::function<void(RigidBody*)> OnCollisionExit =  [](RigidBody* body) {};
+		std::function<void(RigidBody*, const CollisionInfo&)> OnCollisionEnter = [](RigidBody* body, const CollisionInfo& info) {};
+		std::function<void(RigidBody*, const CollisionInfo&)> OnCollisionExit =  [](RigidBody* body, const CollisionInfo& info) {};
 
 		PhysicsProperties GetPhysicsProperties() const { return Properties; }
 		bool		 GetIsStatic()		const { return isStatic; }

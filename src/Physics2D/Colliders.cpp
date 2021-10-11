@@ -5,18 +5,18 @@ using namespace Physics2D;
 using glm::vec2;
 using std::vector;
 
-bool Physics2D::CheckCollision(const CircleCollider* A, const CircleCollider* B, glm::vec2& out_normal, float& out_depth)
+bool Physics2D::CheckCollision(const CircleCollider* A, const CircleCollider* B, CollisionInfo& info)
 {
 	float distance = glm::length(B->GetCenter() - A->GetCenter());
 	float min_distance = A->GetRadius() + B->GetRadius();
 	if (distance < min_distance)
 	{
-		out_normal = glm::normalize(B->GetCenter() - A->GetCenter());
-		out_depth = min_distance - distance;
+		info.normal = glm::normalize(B->GetCenter() - A->GetCenter());
+		info.depth = min_distance - distance;
 		return true;
 	}
-	out_normal = glm::vec2(0.0f);
-	out_depth = 0.0f;
+	info.normal = glm::vec2(0.0f);
+	info.depth = 0.0f;
 
 	return false;
 }
@@ -41,13 +41,13 @@ void ProjectVertices(std::vector<glm::vec2>& v, glm::vec2 axis, float& o_min, fl
 		o_max = std::max(o_max, q);
 	}
 }
-bool SAT_CollisionCheck(std::vector<glm::vec2>& p1, std::vector<glm::vec2>& p2, glm::vec2& out_normal, float& out_depth)
+bool SAT_CollisionCheck(std::vector<glm::vec2>& p1, std::vector<glm::vec2>& p2, CollisionInfo& info)
 {
 	vector<vec2>* poly1 = &p1;
 	vector<vec2>* poly2 = &p2;
 
-	out_depth = INFINITY;
-	out_normal = glm::vec2(0.0f);
+	info.depth = INFINITY;
+	info.normal = glm::vec2(0.0f);
 
 	for (int shape = 0; shape < 2; shape++)
 	{
@@ -72,18 +72,18 @@ bool SAT_CollisionCheck(std::vector<glm::vec2>& p1, std::vector<glm::vec2>& p2, 
 				return false;
 
 			float overlap = std::min(max_r1, max_r2) - std::max(min_r1, min_r2);
-			if (overlap < out_depth)
+			if (overlap < info.depth)
 			{
-				out_depth = overlap;
-				out_normal = axisProj;
+				info.depth = overlap;
+				info.normal = axisProj;
 			}
 		}
 	}
 
 	glm::vec2 center1 = GetCenter(p1);
 	glm::vec2 center2 = GetCenter(p2);
-	if (glm::dot(out_normal, glm::normalize(center2 - center1)) < 0.0f)
-		out_normal = -out_normal;
+	if (glm::dot(info.normal, glm::normalize(center2 - center1)) < 0.0f)
+		info.normal = -info.normal;
 
 	return true;
 }
@@ -113,12 +113,12 @@ glm::vec2 GetClosestPointToCircle(glm::vec2& circleCenter, std::vector<glm::vec2
 	}
 	return closestPoint;
 }
-bool SAT_CollisionCheck(glm::vec2 circleCenter, float circleRadius, std::vector<glm::vec2> p, glm::vec2& out_normal, float& out_depth)
+bool SAT_CollisionCheck(glm::vec2 circleCenter, float circleRadius, std::vector<glm::vec2> p, CollisionInfo& info)
 {
 	vector<vec2>* poly1 = &p;
 
-	out_depth = INFINITY;
-	out_normal = glm::vec2(0.0f);
+	info.depth = INFINITY;
+	info.normal = glm::vec2(0.0f);
 
 	for (int a = 0; a < poly1->size() + 1; a++)
 	{
@@ -143,84 +143,82 @@ bool SAT_CollisionCheck(glm::vec2 circleCenter, float circleRadius, std::vector<
 			return false;
 
 		float overlap = std::min(max_r1, max_r2) - std::max(min_r1, min_r2);
-		if (overlap < out_depth)
+		if (overlap < info.depth)
 		{
-			out_depth = overlap;
-			out_normal = axisProj;
+			info.depth = overlap;
+			info.normal = axisProj;
 		}
 	}
 
 	glm::vec2 center1 = GetCenter(p);
 	glm::vec2 center2 = circleCenter;
-	if (glm::dot(out_normal, glm::normalize(center2 - center1)) < 0.0f)
-		out_normal = -out_normal;
+	if (glm::dot(info.normal, glm::normalize(center2 - center1)) < 0.0f)
+		info.normal = -info.normal;
 
 	return true;
 }
 
-bool Physics2D::CheckCollision(const RectangleCollider* c1, const RectangleCollider* c2, glm::vec2& out_normal, float& out_depth)
+bool Physics2D::CheckCollision(const RectangleCollider* c1, const RectangleCollider* c2, CollisionInfo& info)
 {
 	auto p1 = c1->Vertices;
 	auto p2 = c2->Vertices;
-	return SAT_CollisionCheck(p1, p2, out_normal, out_depth);
+	return SAT_CollisionCheck(p1, p2, info);
 }
-bool Physics2D::CheckCollision(const RectangleCollider* c1, const CircleCollider* c2, glm::vec2& out_normal, float& out_depth)
+bool Physics2D::CheckCollision(const RectangleCollider* c1, const CircleCollider* c2, CollisionInfo& info)
 {	
-	return SAT_CollisionCheck(c2->GetCenter(), c2->GetRadius(), (std::vector<glm::vec2>)c1->Vertices, out_normal, out_depth);
+	return SAT_CollisionCheck(c2->GetCenter(), c2->GetRadius(), (std::vector<glm::vec2>)c1->Vertices, info);
 }
-bool Physics2D::CheckCollision(const PolygonCollider* c1, const PolygonCollider* c2, glm::vec2& out_normal, float& out_depth)
+bool Physics2D::CheckCollision(const PolygonCollider* c1, const PolygonCollider* c2, CollisionInfo& info)
 {
 	auto p1 = c1->Vertices;
 	auto p2 = c2->Vertices;
-	return SAT_CollisionCheck(p1, p2, out_normal, out_depth);
+	return SAT_CollisionCheck(p1, p2, info);
 }
-bool Physics2D::CheckCollision(const PolygonCollider* c1, const CircleCollider* c2, glm::vec2& out_normal, float& out_depth)
+bool Physics2D::CheckCollision(const PolygonCollider* c1, const CircleCollider* c2, CollisionInfo& info)
 {
 	auto p1 = c1->Vertices;
-	return SAT_CollisionCheck(c2->GetCenter(), c2->GetRadius(), p1, out_normal, out_depth);
+	return SAT_CollisionCheck(c2->GetCenter(), c2->GetRadius(), p1, info);
 }
-bool Physics2D::CheckCollision(const PolygonCollider* c1, const RectangleCollider* c2, glm::vec2& out_normal, float& out_depth)
+bool Physics2D::CheckCollision(const PolygonCollider* c1, const RectangleCollider* c2, CollisionInfo& info)
 {
 	auto p1 = c1->Vertices;
 	auto p2 = c2->Vertices;
-	return SAT_CollisionCheck(p1, p2, out_normal, out_depth);
+	return SAT_CollisionCheck(p1, p2, info);
 }
-
-bool Physics2D::CheckCollision(Collider* c1, Collider* c2, glm::vec2& out_normal, float& out_depth)
+bool Physics2D::CheckCollision(Collider* c1, Collider* c2, CollisionInfo& info)
 {
 	auto t1 = c1->GetType();
 	auto t2 = c2->GetType();
 
 	if (t1 == ColliderType::circle && t2 == ColliderType::circle)
-		return CheckCollision(c1->Get<CircleCollider*>(), c2->Get<CircleCollider*>(), out_normal, out_depth);
+		return CheckCollision(c1->Get<CircleCollider*>(), c2->Get<CircleCollider*>(), info);
 	else if (t1 == ColliderType::rectangle && t2 == ColliderType::rectangle)
-		return CheckCollision(c1->Get<RectangleCollider*>(), c2->Get<RectangleCollider*>(), out_normal, out_depth);
+		return CheckCollision(c1->Get<RectangleCollider*>(), c2->Get<RectangleCollider*>(), info);
 	else if (t1 == ColliderType::rectangle && t2 == ColliderType::circle)
-		return CheckCollision(c1->Get<RectangleCollider*>(), c2->Get<CircleCollider*>(), out_normal, out_depth);
+		return CheckCollision(c1->Get<RectangleCollider*>(), c2->Get<CircleCollider*>(), info);
 	else if (t1 == ColliderType::circle && t2 == ColliderType::rectangle) {
-		bool result = CheckCollision(c2->Get<RectangleCollider*>(), c1->Get<CircleCollider*>(), out_normal, out_depth);
-		out_normal = -out_normal;
+		bool result = CheckCollision(c2->Get<RectangleCollider*>(), c1->Get<CircleCollider*>(), info);
+		info.normal = -info.normal;
 		return result;
 	}
 	else if (t1 == ColliderType::polygon && t2 == ColliderType::polygon)
-		return CheckCollision(c1->Get<PolygonCollider*>(), c2->Get<PolygonCollider*>(), out_normal, out_depth);
+		return CheckCollision(c1->Get<PolygonCollider*>(), c2->Get<PolygonCollider*>(), info);
 	else if (t1 == ColliderType::polygon && t2 == ColliderType::rectangle)
-		return CheckCollision(c1->Get<PolygonCollider*>(), c2->Get<RectangleCollider*>(), out_normal, out_depth);
+		return CheckCollision(c1->Get<PolygonCollider*>(), c2->Get<RectangleCollider*>(), info);
 	else if (t1 == ColliderType::polygon && t2 == ColliderType::circle)
-		return CheckCollision(c1->Get<PolygonCollider*>(), c2->Get<CircleCollider*>(), out_normal, out_depth);		
+		return CheckCollision(c1->Get<PolygonCollider*>(), c2->Get<CircleCollider*>(), info);		
 	else if (t1 == ColliderType::rectangle && t2 == ColliderType::polygon) {
-		auto result = CheckCollision(c2->Get<PolygonCollider*>(), c1->Get<RectangleCollider*>(), out_normal, out_depth);
-		out_normal = -out_normal;
+		auto result = CheckCollision(c2->Get<PolygonCollider*>(), c1->Get<RectangleCollider*>(), info);
+		info.normal = -info.normal;
 		return result;
 	}
 	else if (t1 == ColliderType::circle && t2 == ColliderType::polygon) {
-		auto result = CheckCollision(c2->Get<PolygonCollider*>(), c1->Get<CircleCollider*>(), out_normal, out_depth);
-		out_normal = -out_normal;
+		auto result = CheckCollision(c2->Get<PolygonCollider*>(), c1->Get<CircleCollider*>(), info);
+		info.normal = -info.normal;
 		return result;
 	}
 	return false;
 }
-
 
 void GetPolygonAABB(std::vector<glm::vec2>& vertices, glm::vec2& o_pos, glm::vec2& o_size)
 {
