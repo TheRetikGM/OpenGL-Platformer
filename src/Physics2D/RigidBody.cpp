@@ -169,8 +169,8 @@ void RigidBody::Update(float dt, glm::vec2 gravity, int iterations)
 	// force = acc * mass
 	// acc = force / mass
 	glm::vec2 acceleration = this->force / this->Properties.Mass;
-	this->LinearVelocity += acceleration * dt;
-	this->LinearVelocity += this->GravityScale * gravity * dt;
+	// this->LinearVelocity += acceleration * dt;
+	// this->LinearVelocity += this->GravityScale * gravity * dt;
 
 	this->position += LinearVelocity * dt;
 	this->rotation += RotationalVelocity * dt;

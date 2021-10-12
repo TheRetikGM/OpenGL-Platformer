@@ -120,11 +120,13 @@ void PhysicsWorld::Update(float dt, int precision)
 						bodyA->Move(-collisionInfo.normal * collisionInfo.depth / 2.0f);
 						bodyB->Move(collisionInfo.normal * collisionInfo.depth / 2.0f);
 					}
+					/*bodyA->LinearVelocity = glm::vec2(0.0f, 0.0f);
+					bodyB->LinearVelocity = glm::vec2(0.0f, 0.0f);*/
 
 					callCollisionExit_callbacks(bodyA, bodyB, collisionInfo);
 
 					// Apply realistic response of bodies to collision.
-					responseToCollision(bodyA, bodyB, collisionInfo);
+					// responseToCollision(bodyA, bodyB, collisionInfo);
 				}
 			}
 		}

@@ -78,7 +78,7 @@ void Game::ProcessScroll(float yoffset)
 void Game::Init()
 {
 	Game::SetTileSize(glm::vec2(32.0f, 32.0f));
-	this->BackgroundColor = glm::vec3(0.4f, 0.5f, 0.8f);
+	this->BackgroundColor = glm::vec3(0.4f, 0.5f, 0.4f);
 
 	// Load shaders
 	ResourceManager::LoadShader(SHADERS_DIR "SpriteRender.vert", SHADERS_DIR "SpriteRender.frag", nullptr, "sprite");
@@ -148,7 +148,7 @@ void Game::ProcessInput(float dt)
 		player->ProcessKeyboard(PlayerMovement::up, dt);
 		vertical += 1;
 
-		KeysProcessed[GLFW_KEY_W] = true;
+		// KeysProcessed[GLFW_KEY_W] = true;
 	}
 	if (Keys[GLFW_KEY_S])
 	{

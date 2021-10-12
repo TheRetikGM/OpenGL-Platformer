@@ -78,7 +78,7 @@ void Player::ProcessKeyboard(PlayerMovement dir, float dt)
 		vel.y -= 1.0f;
 		break;
 	case PlayerMovement::down:
-		vel.y += 0.0f;
+		vel.y += 1.0f;
 		break;
 	case PlayerMovement::left:
 		vel.x -= 1.0f;
@@ -89,13 +89,15 @@ void Player::ProcessKeyboard(PlayerMovement dir, float dt)
 	}	
 	if (RBody)
 	{
-		glm::vec2 force = glm::vec2(vel.x, 0.0f) * 1000.0f;
+		/*glm::vec2 force = glm::vec2(vel.x, 0.0f) * 1000.0f;
 		if (vel.y == -1.0f && !Jumping)
 		{
 			Jumping = true;
-			force += glm::vec2(0.0f, -1.0f) * 100000.0f;
+			force += glm::vec2(0.0f, -1.0f) * 1000.0f;
 		}
-		RBody->AddForce(force);				
+		RBody->AddForce(force);	*/	
+
+		RBody->Move(vel * MovementSpeed * dt, true);
 
 		// RBody->Move(glm::vec2(vel.x, 0.0f) * 3.0f * dt, true);
 	}
