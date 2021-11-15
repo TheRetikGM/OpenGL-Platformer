@@ -2,14 +2,17 @@
 #include "camera/tileCamera2D.h"
 #include "game/game.h"
 
+#define ifFirstPressed(key, pred) if (keys[key] && !keys_processed[key]) { pred; keys_processed[key] = true; }
+
 Player::Player(glm::vec2 position, glm::vec2 size, Sprite* sprite, glm::vec3 color)
 	: GameObject(position, glm::vec2(0.0f, 0.0f), size, color)
 	, PlayerSprite(sprite)
 	, MovementSpeed(2.0f)
 	, InCollision(false)
 	, RBody(nullptr)
-	, Animations(nullptr)
+	, Animator(nullptr)
 	, Jumping(true)
+	, Controls()
 {	
 	Game::AddTileSpaceObject(this);
 	onTileSizeChanged(Game::TileSize);
@@ -37,84 +40,129 @@ void Player::DrawAt(SpriteRenderer* renderer, glm::vec2 pos)
 {		
 	renderer->DrawSprite(PlayerSprite->Texture, pos, PlayerSprite->Size, PlayerSprite->Rotation, PlayerSprite->Color);
 }
+
+bool in_range(float& num, float low, float high)
+{
+	return low <= num && num <= high;
+}
+
+template<typename T> T sign(T val) {
+	return T((T(0) < val) - (val < T(0)));
+}
+
 void Player::Update(float dt)
 {
 	if (RBody->LinearVelocity.y > 9.81f * 3.0f * dt)
 		Jumping = true;
 
-	if (Animations)
+	if (Animator)
 	{
-		if (RBody->GetForce() == glm::vec2(0.0f, 0.0f) && !Jumping && RBody->LinearVelocity.x == 0.0f)
-		{
-			Animations->SetParameter("state", "idle");
-			Animations->SetParameter("vertical", 0);
-		}
-		else if (!Jumping) {
-			Animations->SetParameter("state", "run");
-			Animations->SetParameter("vertical", 0);
+		if (RBody->LinearVelocity.x == 0.0f)
+			Animator->SetParameter("state", "idle");
+		else
+			Animator->SetParameter("state", "run");
+
+		if (Jumping) {
+			Animator->SetParameter("vertical", (RBody->LinearVelocity.y < 0) ? 1 : -1);
 		}
 		else {
-			glm::vec2 norm_vel = glm::normalize(RBody->LinearVelocity);
-			float up_dot = glm::dot(norm_vel, glm::vec2(0.0f, -1.0f));
-
-			int vertical = up_dot != 0.0f ? (up_dot > 0.0f ? 1 : -1) : 0;
-			
-			Animations->SetParameter("state", "run");			
-			Animations->SetParameter("vertical", vertical);
+			Animator->SetParameter("vertical", 0);
 		}
-
-	}
-	if (RBody) {
-		this->Position = RBody->GetPosition();
-		this->ScreenPosition = TileCamera2D::GetScreenPosition(RBody->GetPosition() - RBody->GetAABBSize() / 2.0f);
 	}
 }
-void Player::ProcessKeyboard(PlayerMovement dir, float dt)
+void Player::UpdatePositions()
 {
-	glm::vec2 vel(0.0f);
-	switch (dir)
+	if (RBody) {
+		this->Position = RBody->GetPosition();
+		this->ScreenPosition = TileCamera2D::GetScreenPosition(RBody->GetAABB().GetMin());
+	}
+}
+
+void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
+{
+	int horizontal = 0;
+	int vertical = 0;
+
+	if (keys[Controls.JumpUp] && !keys_processed[Controls.JumpUp])
 	{
-	case PlayerMovement::up:
-		vel.y -= 1.0f;
-		break;
-	case PlayerMovement::down:
-		vel.y += 1.0f;
-		break;
-	case PlayerMovement::left:
-		vel.x -= 1.0f;
-		break;
-	case PlayerMovement::right:
-		vel.x += 1.0f;
-		break;
-	}	
-	if (RBody)
-	{
-		/*glm::vec2 force = glm::vec2(vel.x, 0.0f) * 1000.0f;
-		if (vel.y == -1.0f && !Jumping)
-		{
+		TileCamera2D::ProccessKeyboard(Camera2DMovement::up, dt);
+		// player->ProcessKeyboard(PlayerMovement::up, dt);
+		if (!Jumping) {
 			Jumping = true;
-			force += glm::vec2(0.0f, -1.0f) * 1000.0f;
+			RBody->LinearVelocity.y = 0.0f;
+			RBody->ApplyImpulse(glm::vec2(0.0f, -1.0f) * 25.0f);
+			vertical = 1;
 		}
-		RBody->AddForce(force);	*/	
 
-		RBody->Move(vel * MovementSpeed * dt, true);
-
-		// RBody->Move(glm::vec2(vel.x, 0.0f) * 3.0f * dt, true);
+		keys_processed[GLFW_KEY_W] = true;
+	}
+	if (!keys[Controls.JumpUp] && Jumping && RBody->LinearVelocity.y < 0.0f) {
+		RBody->LinearVelocity.y = 100.0f * dt;
+		vertical = 0;
+	}
+	if (keys[Controls.JumpDown])
+	{
+		// TileCamera2D::ProccessKeyboard(Camera2DMovement::down, dt);
+	}
+	float max_velocity = 10.0f;
+	if (!in_range(RBody->LinearVelocity.x, -max_velocity, max_velocity)) {
+		RBody->ClearForces();
+		RBody->LinearVelocity.x = sign(RBody->LinearVelocity.x) * max_velocity;
 	}
 	else {
-		Position += vel;
-		// Get screen position from tile-space position.
-		ScreenPosition = TileCamera2D::GetScreenPosition(Position) - (Size * Game::TileSize * TileCamera2D::GetScale()) / 2.0f;
+		if (keys[Controls.RunLeft])
+		{
+			TileCamera2D::ProccessKeyboard(Camera2DMovement::left, dt);
+			// a = F / m
+			// v = v0 + a * dt
+			// 0 = v0 + (F / m) * dt
+			// (-v0 / dt) * m = F
+			glm::vec2 additional_force(0.0f);
+			if (RBody->LinearVelocity.x > 0.0f)	// If moving right, add force based on the velocity.
+				additional_force = glm::vec2(((-RBody->LinearVelocity.x) / (dt)) * RBody->Properties.Mass, 0.0f);
+			RBody->AddForce(glm::vec2(-1.0f, 0.0f) * 500.0f + additional_force);
+			horizontal = -1;
+		}
+		if (keys[Controls.RunRight])
+		{
+			TileCamera2D::ProccessKeyboard(Camera2DMovement::right, dt);
+
+			glm::vec2 additional_force(0.0f);
+			if (RBody->LinearVelocity.x < 0.0f)
+				additional_force = glm::vec2(((-RBody->LinearVelocity.x) / (dt)) * RBody->Properties.Mass, 0.0f);
+
+			RBody->AddForce(glm::vec2(1.0f, 0.0f) * 500.0f + additional_force);
+			RBody->Properties.FrictionCoeff = 0.0f;
+			horizontal = 1;
+		}
+	}
+	if (!keys[Controls.RunLeft] && !keys[Controls.RunRight]) {
+		//RBody->Properties.FrictionCoeff = 5.0f;
+		// RBody->ApplyImpulse(glm::vec2(-RBody->LinearVelocity.x, 0.0f));
+		RBody->LinearVelocity.x = 0.0f;
+	}
+	else {
+		RBody->Properties.FrictionCoeff = 0.0f;
 	}
 
-	if ((int)vel.x != 0)
-		Animations->SetParameter("horizontal", (int)vel.x);
+	if (horizontal != 0)
+		Animator->SetParameter("horizontal", horizontal);
 }
 
 void Player::onCollision(Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info)
 {
 	if (body->Name == "ground" && glm::dot(info.normal, glm::vec2(0.0f, -1.0f)) > 0.0f)
 		this->Jumping = false;
+}
+
+void Player::SetPosition(glm::vec2 position)
+{
+	this->Position = position;
+	UpdateScreenPosition();
+}
+void Player::UpdateScreenPosition()
+{
+	ScreenPosition = TileCamera2D::GetScreenPosition(Position) - (Size * Game::TileSize * TileCamera2D::GetScale()) / 2.0f;
 }
 
 void Player::onTileSizeChanged(glm::vec2 newTileSize)

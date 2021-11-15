@@ -36,22 +36,18 @@ set (INTERFACES
 )
 file(GLOB game_files "game/*.cpp")
 file(GLOB game_includes "include/game/*.h" "include/game/*.hpp")
+file(GLOB base_files "./*.cpp")
+file(GLOB base_includes "include/*.h" "include/*.hpp")
 
 add_executable(${PROJECT_NAME}
-	main.cpp
-	stb_image.cpp ../include/stb_image.h
-	stb_image_write.cpp ../include/stb_image_write.h
-	resource_manager.cpp include/resource_manager.h
+	../include/stb_image.h
+	../include/stb_image_write.h
 	${CMAKE_CURRENT_BINARY_DIR}/config.h
 	${game_files} ${game_includes}
-	tilemap.cpp include/tilemap.h
-	tilemap_renderer.cpp include/tilemap_renderer.h
-	sprite_renderer.cpp include/sprite_renderer.h
-	basic_renderer.cpp include/basic_renderer.h
+	${base_files} ${base_includes}
 	${Camera}
-	"${SHADERS}"
+	${SHADERS}
 	${INTERFACES}
-	include/Helper.hpp
 )
 source_group(TREE ${CMAKE_SOURCE_DIR}/src PREFIX "" FILES ${SHADERS})
 

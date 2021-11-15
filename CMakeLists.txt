@@ -24,6 +24,7 @@ if (MSVC)
 		debug Debug/zlibstaticd optimized Release/zlibstatic
 		debug Debug/tinyxml2d optimized Release/tinyxml2
 		debug Debug/tmxparser optimized Release/tmxparser
+		debug Debug/freetyped optimized Release/freetype
 	)
 elseif (UNIX)
     target_link_libraries(${PROJECT_NAME}

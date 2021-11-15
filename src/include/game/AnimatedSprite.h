@@ -41,7 +41,8 @@ public:
 
     void Update(float dt) override;
     void ResetAnimation();
-    std::vector<SpriteFrame> GetFrames() const { return Frames; }
+    const std::vector<SpriteFrame>& GetFrames() const { return Frames; }
+    const size_t& GetActiveFrame() const { return activeFrame; }
 protected:    
     size_t activeFrame;
 

@@ -9,7 +9,9 @@
 #include "camera/tileCamera2D.h"
 #include "basic_renderer.h"
 #include "game/Player.h"
+#include "TextRenderer.h"
 #include <GLFW/glfw3.h>
+#include <thread>
 using namespace std::placeholders;
 
 // Initialize static Game member variables.
@@ -19,12 +21,17 @@ std::vector<ITileSpace*> Game::tileSpaceObjects;
 SpriteRenderer*	 renderer = nullptr;
 TilemapRenderer* tile_renderer = nullptr;
 BasicRenderer*	 basic_renderer = nullptr;
+TextRenderer* text_renderer = nullptr;
 
 Player* player = nullptr;
 
 // Render state variables.
 bool wireframe_render = false;
 bool render_aabb = false;
+float fps = 0.0f;
+float ref_fps = 0.0f;
+float n_fps = 0.0f;
+float t_fps = 0.0f;
 
 // Callbacks.
 void onLayerDraw(const Tmx::Map *map, const Tmx::Layer *layer, int n_layer);
@@ -42,6 +49,8 @@ Game::~Game()
 		delete basic_renderer;
 	if (player)
 		delete player;
+	if (text_renderer)
+		delete text_renderer;
 	ResourceManager::Clear();
 	for (auto& level : this->Levels)
 		GameLevel::Delete(level);
@@ -113,6 +122,10 @@ void Game::Init()
 	basic_renderer = new BasicRenderer(ResourceManager::GetShader("basic_render"));
 	basic_renderer->SetLineWidth(2.0f);
 
+	// Initialize text renderer.
+	text_renderer = new TextRenderer(Width, Height);
+	text_renderer->Load(ASSETS_DIR "fonts/arial.ttf", 16);
+
 	// Initialize Camera	
 	TileCamera2D::SetPosition(glm::vec2(0.0f, 0.0f));
 	TileCamera2D::SetRight(glm::vec2(1.0f, 0.0f));
@@ -126,12 +139,16 @@ void Game::Init()
 	tile_renderer->AfterLayer_callback = std::bind(&Game::OnLayerRendered, this, _1, _2, _3);
 
 	// Initialize player
-	player = new Player(glm::vec2(1.0f, 1.0f), glm::vec2(1.0f, 2.0f), playerAnimations->GetSprite(), glm::vec3(1.0f));
+	player = new Player(glm::vec2(1.0f, 1.0f), glm::vec2(0.7f, 1.4f), playerAnimations->GetSprite(), glm::vec3(1.0f));
 	player->MovementSpeed = 6.0f;
-	player->SetRigidBody(Physics2D::RigidBody::CreateRectangleBody({ 1.0f, 1.0f }, { 1.0f, 2.0f }, 10.0f, false, 0.0f));
+	player->SetRigidBody(Physics2D::RigidBody::CreateCapsuleBody(Physics2D::CapsuleOrientation::vertical, { 1.0f, 1.0f }, { 0.7f, 1.4f }, 5.0f, false, 0.0f));
+	// player->SetRigidBody(Physics2D::RigidBody::CreateRectangleBody({ 1.0f, 1.0f }, { 0.7f, 1.4f }, 5.0f, false, 0.0f));
 	player->RBody->Name = "player";
+	player->RBody->Properties.Restitution = 0.0f;
 	player->RBody->GravityScale = 1.0f;
-	player->Animations = playerAnimations;
+	player->RBody->Properties.FrictionCoeff = 0.9f;
+	player->Jumping = false;
+	player->Animator = playerAnimations;
 
 	// Set initial states.	
 	TileCamera2D::SetFollow(player);
@@ -139,35 +156,9 @@ void Game::Init()
 }
 
 void Game::ProcessInput(float dt)
-{	
-	int horizontal = 0;
-	int vertical = 0;
-	if (Keys[GLFW_KEY_W] && !KeysProcessed[GLFW_KEY_W])
-	{
-		TileCamera2D::ProccessKeyboard(Camera2DMovement::up, dt);
-		player->ProcessKeyboard(PlayerMovement::up, dt);
-		vertical += 1;
+{
+	player->ProcessKeyboard(Keys, KeysProcessed, dt);
 
-		// KeysProcessed[GLFW_KEY_W] = true;
-	}
-	if (Keys[GLFW_KEY_S])
-	{
-		TileCamera2D::ProccessKeyboard(Camera2DMovement::down, dt);
-		player->ProcessKeyboard(PlayerMovement::down, dt);
-		vertical -= 1;
-	}
-	if (Keys[GLFW_KEY_A])
-	{
-		TileCamera2D::ProccessKeyboard(Camera2DMovement::left, dt);
-		player->ProcessKeyboard(PlayerMovement::left, dt);
-		horizontal -= 1;
-	}
-	if (Keys[GLFW_KEY_D])
-	{
-		TileCamera2D::ProccessKeyboard(Camera2DMovement::right, dt);
-		player->ProcessKeyboard(PlayerMovement::right, dt);
-		horizontal += 1;
-	}
 	if (Keys[GLFW_KEY_Q])
 	{
 		TileCamera2D::Rotate(glm::radians(45.0f) * dt);
@@ -208,17 +199,29 @@ void Game::ProcessInput(float dt)
 void Game::Update(float dt)
 {
 	// ResourceManager::GetTilemap("platformer")->Update(dt);	
-	
-	// Does nothing for now.
-	/// TileCamera2D::Update(dt);
 
 	player->Update(dt);
-	Levels[CurrentLevel]->Update(dt);	
+	Levels[CurrentLevel]->Update(dt);
+	player->UpdatePositions();
+	TileCamera2D::Update(dt);
 
 	// Update Animations
 	for (auto& [name, manager] : ResourceManager::AnimationManagers)
 		manager->Update(dt);
 	player->PlayerSprite = ResourceManager::GetAnimationManager("PlayerAnimations")->GetSprite();
+	
+	// Step update for FPS.
+	if (ref_fps < 2.0f) {
+		ref_fps += dt;
+		n_fps += 1.0f;
+		t_fps += 1.0f / dt;
+	}
+	else {
+		fps = t_fps / n_fps;
+		t_fps = 0.0f;
+		ref_fps = 0.0f;
+		n_fps = 0.0f;
+	}
 }
 void Game::Render()
 {
@@ -236,14 +239,46 @@ void Game::Render()
 			{
 				auto body = world->GetBody(i);
 				auto p = body->GetCollider();
-				basic_renderer->RenderClosedPolygon(
-					p->UnitVertices,
-					TileCamera2D::GetScreenPosition(p->GetCenter()),
-					glm::vec2(world->GetInvMeterUnitRatio()) * Game::TileSize * TileCamera2D::GetScale(),
-					glm::vec3(1.0f, 1.0f, 1.0f));
+				if (body->GetCollider()->GetType() != Physics2D::ColliderType::capsule)
+				{
+					basic_renderer->RenderClosedPolygon(
+						p->UnitVertices,
+						TileCamera2D::GetScreenPosition(p->GetCenter()),
+						glm::vec2(world->GetInvMeterUnitRatio()) * Game::TileSize * TileCamera2D::GetScale(),
+						glm::vec3(1.0f, 1.0f, 1.0f));
+				}
+				else {
+					auto cap = body->GetCollider()->Get<Physics2D::CapsuleCollider*>();
+					basic_renderer->RenderShape(br_Shape::circle_empty,
+						TileCamera2D::GetScreenPosition(cap->TopCollider->GetAABB().GetMin(true)),
+						cap->TopCollider->GetAABB().GetSize(true) * Game::TileSize * TileCamera2D::GetScale(),
+						0.0f, glm::vec3(1.0f));
+					basic_renderer->RenderShape(br_Shape::rectangle,
+						TileCamera2D::GetScreenPosition(cap->MiddleCollider->GetAABB().GetMin(true)),
+						cap->MiddleCollider->GetAABB().GetSize(true) * Game::TileSize * TileCamera2D::GetScale(),
+						0.0f, glm::vec3(1.0f));
+					basic_renderer->RenderShape(br_Shape::circle_empty,
+						TileCamera2D::GetScreenPosition(cap->BottomCollider->GetAABB().GetMin(true)),
+						cap->BottomCollider->GetAABB().GetSize(true) * Game::TileSize * TileCamera2D::GetScale(),
+						0.0f, glm::vec3(1.0f));
+				}
 			}
 		}
-	}	
+	}
+
+
+	// Render DEBUG text
+	std::string state = player->Animator->GetParamater<std::string>("state");
+	int hor = player->Animator->GetParamater<int>("horizontal");
+	int vert = player->Animator->GetParamater<int>("vertical");
+	char buf[128];
+	memset(buf, 0, 128 * sizeof(char));
+	sprintf(buf, "FPS: %.f\nState: %s\nHorizontal: %i\nVertical: %i\nFrictionC: %f\nLin. vel.: [%f, %f]", 
+		fps, 
+		state.c_str(), hor, vert,
+		player->RBody->Properties.FrictionCoeff, 
+		player->RBody->LinearVelocity.x, player->RBody->LinearVelocity.y);
+	text_renderer->RenderText(std::string(buf), 10.0f, 10.0f, 1.0f);
 }
 
 // Callbacks

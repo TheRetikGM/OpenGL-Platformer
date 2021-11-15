@@ -20,21 +20,22 @@ namespace Physics2D
 	{
 		float Density;
 		float Mass;
-		float Restitution;	// Bounciness
+		float Restitution;	 // "Bounciness"
 		float Area;
 		float invMass;
-		float FrictionCoefficient;
+		float FrictionCoeff; // Coefficient of friction
 	};
 
 	class RigidBody
 	{
-	public:		
-		bool		IsColliding = false;
+	public:
+		glm::vec2	LinearDrag = glm::vec2(0.0f, 0.0f);
 		glm::vec2	LinearVelocity;
+		glm::vec2	Acceleration;
 		float		RotationalVelocity;
 		float		GravityScale;
 		PhysicsProperties Properties;
-
+		bool		IsKinematic = false;
 
 		std::string Name = "";
 		std::any	CustomProperties = std::any("");
@@ -46,15 +47,16 @@ namespace Physics2D
 		std::function<void(RigidBody*, const CollisionInfo&)> OnCollisionExit =  [](RigidBody* body, const CollisionInfo& info) {};
 
 		PhysicsProperties GetPhysicsProperties() const { return Properties; }
-		bool		 GetIsStatic()		const { return isStatic; }
+		bool		 IsStatic()		const { return isStatic; }
 		Collider*	 GetCollider()		const { return collider.get(); }
-		glm::vec2	 GetAABBSize(bool inUnits = false)		const { return (inUnits && UnitConverter) ? UnitConverter->ToUnits(collider->GetSize()) : collider->GetSize(); }
-		glm::vec2	 GetCenter(bool inUnits = false)		const { return (inUnits && UnitConverter) ? UnitConverter->ToUnits(collider->GetCenter()) : collider->GetCenter(); }
-		ColliderType GetType()								const { return collider->GetType(); }
-		glm::vec2	 GetAABBPosition(bool inUnits = false)	const { return (inUnits && UnitConverter) ? UnitConverter->ToUnits(collider->GetPosition()) : collider->GetPosition(); }
+		const AABB&	 GetAABB()			const { return collider->GetAABB(); }
+		glm::vec2	 GetCenter(bool inUnits = false)	const { return collider->GetCenter(inUnits); }
+		ColliderType GetType()							const { return collider->GetType(); }
 		glm::vec2	 GetPosition(bool inUnits = false)	const { return (inUnits && UnitConverter) ? UnitConverter->ToUnits(this->position) : this->position; }
 		float		 GetRotation()		const { return rotation; }
 		float		 GetRotVelocity()	const { return RotationalVelocity; }
+
+		void SetUnitConverter(MeterUnitConverter* converter);
 
 		void Move(glm::vec2 amount, bool inUnits = false) { 
 			this->position += (inUnits && UnitConverter) ? UnitConverter->ToMeters(amount) : amount;
@@ -69,26 +71,36 @@ namespace Physics2D
 			updateVerticesRequired = updateAABBRequired = true;
 		}
 		void AddForce(glm::vec2 force) {
-			this->force += force;			
+			this->force += force;
+		}
+		void ClearForces() { this->force.x = this->force.y = 0.0f; }
+		void ApplyImpulse(glm::vec2 impulse) {
+			this->impulses += impulse * Properties.invMass;
 		}
 		glm::vec2 GetForce() { return force; }
 		void Update(float dt, glm::vec2 gravity = glm::vec2(0.0f, 9.81), int iterations = 1);
+		void ApplyForces(float& dt, glm::vec2& gravity);
+		void UpdatePosition();
 
 		void UpdateColliderVertices();
 		glm::mat4 GetModel();
+		glm::mat3 GetModel_m3();
 
 		static std::string LastError;
 		static std::shared_ptr<RigidBody> CreateCircleBody(glm::vec2 position, float radius, float density, bool isStatic, float restitution, std::string& out_errorMsg);
 		static std::shared_ptr<RigidBody> CreateRectangleBody(glm::vec2 position, glm::vec2 size, float density, bool isStatic, float restitution, std::string& out_errorMsg);
 		static std::shared_ptr<RigidBody> CreatePolygonBody(glm::vec2 position, std::vector<glm::vec2> vertices, float density, bool isStatic, float restitution, std::string& out_errorMsg);
+		static std::shared_ptr<RigidBody> CreateCapsuleBody(CapsuleOrientation o, glm::vec2 position, glm::vec2 size, float density, float isStatic, float restitution, std::string& out_errorMsg);
 		static std::shared_ptr<RigidBody> CreateCircleBody(glm::vec2 position, float radius, float density, bool isStatic, float restitution);
 		static std::shared_ptr<RigidBody> CreateRectangleBody(glm::vec2 position, glm::vec2 size, float density, bool isStatic, float restitution);
 		static std::shared_ptr<RigidBody> CreatePolygonBody(glm::vec2 position, std::vector<glm::vec2> vertices, float density, bool isStatic, float restitution);
+		static std::shared_ptr<RigidBody> CreateCapsuleBody(CapsuleOrientation o, glm::vec2 position, glm::vec2 size, float density, float isStatic, float restitution);
 
 	protected:
 		glm::vec2 position;
 		float rotation;
 		glm::vec2 force;
+		glm::vec2 impulses = glm::vec2(0.0f, 0.0f);
 
 		bool isStatic;
 		std::shared_ptr<Collider> collider;
@@ -99,7 +111,11 @@ namespace Physics2D
 		float meterUnitRatio = 1;
 		float invMeterUnitRatio = 1;
 
-		RigidBody(glm::vec2 position, float density, float mass, float restitution, float area, bool isStatic, Collider* collider);
+		RigidBody(glm::vec2 position, float density, float mass, float restitution, float area, bool isStatic, std::shared_ptr<Collider> collider);
+		static bool checkAreaAndDensity(float& area, float& density, std::string& out_err);
 	};
 
+	inline bool CheckCollision(const RigidBody* A, const RigidBody* B, CollisionInfo& info) {
+		return CheckCollision(A->GetCollider(), B->GetCollider(), info);
+	}
 }

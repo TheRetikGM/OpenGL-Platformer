@@ -5,6 +5,8 @@
 #include <glad/glad.h>
 #include <iostream>
 #include "config.h"
+#include <stdexcept>
+#include <exception>
 
 using json = nlohmann::json;
 
@@ -13,7 +15,7 @@ std::vector<std::pair<std::string, Texture2D>> AnimationManager::LoadedTextures;
 void AnimationManager::SetParameter(std::string name, std::any value)
 {
     if (Parameters.find(name) == Parameters.end())
-        throw std::runtime_error(("Parameter '" + name + "' not found.").c_str());
+        throw std::out_of_range(("Parameter '" + name + "' not found.").c_str());
     ParameterType type = std::get<0>(Parameters[name]);
     if (type == ParameterType::p_string)
     {

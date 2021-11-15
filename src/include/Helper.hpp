@@ -27,12 +27,28 @@ namespace Helper
 		void Stop()
 		{
 			clock_end = timer::now();
+			elapsed_time = clock_end - clock_start;
 		}
-		template<class units>
-		long int ElapsedTime()
+		void Clear()
 		{
+			elapsed_time = timer::duration::zero();
+		}
+		void Pause()
+		{
+			clock_end = timer::now();
 			elapsed_time += clock_end - clock_start;
+		}
+		template<class units> long int ElapsedTime()
+		{			
 			return static_cast<long int>(std::chrono::duration_cast<units>(elapsed_time).count());
+		}
+		float ElapsedSeconds()
+		{
+			return float(ElapsedTime<nanosec>()) / 1e9f;
+		}
+		float ElapsedMilliseconds()
+		{
+			return float(ElapsedTime<nanosec>()) / 1e6f;
 		}
 
 	protected:
@@ -40,18 +56,19 @@ namespace Helper
 		timer::time_point clock_start;
 		timer::time_point clock_end;
 		timer::duration	elapsed_time;
-
 	};
 
-	int RandomInteger(int min, int max)
+	// Returns random integer in interval <min, max>
+	inline int RandomInt(int min, int max)
 	{
+		max = max + 1;
 		return std::rand() % (max - min) + min;
 	}
-	float RandomFloat_0_1()
+	inline float RandomFloat_0_1()
 	{
 		return (float)std::rand() / (float)RAND_MAX;
 	}
-	float RandomFloat(float min, float max)
+	inline float RandomFloat(float min, float max)
 	{
 		std::random_device rd;
 		std::mt19937 gen(rd());

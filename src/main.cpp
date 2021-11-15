@@ -70,6 +70,9 @@ int main()
 				game->ProcessInput(deltaTime);
 				game->Update(deltaTime);
 
+				// Set window title
+				glfwSetWindowTitle(window, game->WindowTitle.c_str());
+
 				// Clear default framebuffer and render game scene.
 				glClearColor(game->BackgroundColor.r, game->BackgroundColor.g, game->BackgroundColor.b, 1.0f);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

@@ -28,6 +28,20 @@ public:
     //AnimationManager(const AnimationManager& manager);
 
     void SetParameter(std::string name, std::any value);
+    template<class T> T GetParamater(std::string name)
+    {
+        if (Parameters.find(name) == Parameters.end())
+            throw std::out_of_range(("Parameter '" + name + "' not found.").c_str());
+        T val;
+        try {
+            val = std::any_cast<T>(std::get<1>(Parameters[name]));
+        }
+        catch (std::bad_any_cast& ex) {
+            throw std::runtime_error((std::string("AnimationManager::GetParameter(): Bad parameter type. ") + std::string(ex.what())).c_str());
+        }
+        return val;
+    }
+    // template<class T> T GetParamater(const char* name) { GetParameter<T>(std::string(name)); }
     AnimatedSprite* GetSprite();
     bool CompareParameter(std::string name, std::any value);
     static void DeleteAllTextures();    

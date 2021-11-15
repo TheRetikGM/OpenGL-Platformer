@@ -29,6 +29,7 @@ public:
 	bool			KeysProcessed[1024];
 	unsigned int	Width, Height;
 	glm::vec3		BackgroundColor;
+	std::string		WindowTitle = "Game";
 	std::vector<GameLevel*> Levels;
 	int CurrentLevel;
 

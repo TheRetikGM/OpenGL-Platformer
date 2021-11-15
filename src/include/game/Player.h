@@ -6,9 +6,16 @@
 #include <memory>
 #include "RigidBody.h"
 #include "game/AnimationManager.h"
+#include "GLFW/glfw3.h"
 
-enum class PlayerMovement : int {
-	up, down, left, right
+class PlayerControls {
+public:
+	int JumpUp = GLFW_KEY_W;
+	int JumpDown = GLFW_KEY_S;
+	int RunLeft = GLFW_KEY_A;
+	int RunRight = GLFW_KEY_D;
+
+	PlayerControls() {}
 };
 
 class Player : public GameObject, public ITileSpace
@@ -19,7 +26,8 @@ public:
 	bool		InCollision;
 	bool		Jumping;
 	std::shared_ptr<Physics2D::RigidBody> RBody;
-	AnimationManager* Animations;
+	AnimationManager* Animator;
+	PlayerControls Controls;
 	
 	Player(glm::vec2 position, glm::vec2 size, Sprite* sprite, glm::vec3 color);
 	~Player();
@@ -27,8 +35,11 @@ public:
 	void Draw(SpriteRenderer* renderer);
 	void DrawAt(SpriteRenderer* renderer, glm::vec2 pos);
 	void Update(float dt);
-	void ProcessKeyboard(PlayerMovement dir, float dt);
+	void UpdatePositions();
+	void ProcessKeyboard(bool* keys, bool* keys_processed, float dt);
 	void SetRigidBody(std::shared_ptr<Physics2D::RigidBody> body);
+	void SetPosition(glm::vec2 position);
+	void UpdateScreenPosition();
 
 	void onTileSizeChanged(glm::vec2 newTileSize) override;
 private:
