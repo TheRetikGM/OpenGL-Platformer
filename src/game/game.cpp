@@ -10,8 +10,11 @@
 #include "basic_renderer.h"
 #include "game/Player.h"
 #include "TextRenderer.h"
+#include "Helper.hpp"
 #include <GLFW/glfw3.h>
 #include <thread>
+#define printf_v(name, vec, prec) std::printf(name ": [%" prec "f, %" prec "f]\n", (vec).x, (vec).y)
+
 using namespace std::placeholders;
 
 // Initialize static Game member variables.
@@ -32,6 +35,11 @@ float fps = 0.0f;
 float ref_fps = 0.0f;
 float n_fps = 0.0f;
 float t_fps = 0.0f;
+
+// Temp
+Helper::Stopwatch w1;
+Helper::Stopwatch w2;
+Helper::Stopwatch w3;
 
 // Callbacks.
 void onLayerDraw(const Tmx::Map *map, const Tmx::Layer *layer, int n_layer);
@@ -95,12 +103,7 @@ void Game::Init()
 	ResourceManager::LoadShader(SHADERS_DIR "BasicRender.vert", SHADERS_DIR "BasicRender.frag", nullptr, "basic_render");
 
 	// Load textures
-	ResourceManager::LoadTexture(ASSETS_DIR "tmw_desert_spacing.png", true, "torches");
 	ResourceManager::LoadTexture(ASSETS_DIR "sprites/bg_1.png", true, "background1");
-
-	// Load tilemaps
-	ResourceManager::LoadTilemap(ASSETS_DIR "example.tmx", "desert");
-	ResourceManager::LoadTilemap(ASSETS_DIR "tilemaps/test/test.tmx", "platformer");
 
 	// Load levels
 	this->Levels.push_back(GameLevel::Load(ASSETS_DIR "Levels/level_0.lvl"));
@@ -198,17 +201,18 @@ void Game::ProcessInput(float dt)
 }
 void Game::Update(float dt)
 {
-	// ResourceManager::GetTilemap("platformer")->Update(dt);	
 
 	player->Update(dt);
+	w1.Restart();
 	Levels[CurrentLevel]->Update(dt);
+	w1.Stop();
 	player->UpdatePositions();
 	TileCamera2D::Update(dt);
 
 	// Update Animations
 	for (auto& [name, manager] : ResourceManager::AnimationManagers)
 		manager->Update(dt);
-	player->PlayerSprite = ResourceManager::GetAnimationManager("PlayerAnimations")->GetSprite();
+	// player->PlayerSprite = ResourceManager::GetAnimationManager("PlayerAnimations")->GetSprite();
 	
 	// Step update for FPS.
 	if (ref_fps < 2.0f) {
@@ -225,6 +229,7 @@ void Game::Update(float dt)
 }
 void Game::Render()
 {
+	w2.Restart();
 	if (State == GameState::active)
 	{
 		renderer->DrawSprite(ResourceManager::GetTexture("background1"), glm::vec2(0.0f, 0.0f), glm::vec2(Width, Height), 0.0f);
@@ -265,19 +270,20 @@ void Game::Render()
 			}
 		}
 	}
-
+	w2.Stop();
 
 	// Render DEBUG text
 	std::string state = player->Animator->GetParamater<std::string>("state");
 	int hor = player->Animator->GetParamater<int>("horizontal");
 	int vert = player->Animator->GetParamater<int>("vertical");
-	char buf[128];
-	memset(buf, 0, 128 * sizeof(char));
-	sprintf(buf, "FPS: %.f\nState: %s\nHorizontal: %i\nVertical: %i\nFrictionC: %f\nLin. vel.: [%f, %f]", 
+	char buf[256];
+	sprintf(buf, "FPS: %.f\nState: %s\nHorizontal: %i\nVertical: %i\nFrictionC: %f\nLin. vel.: [%f, %f]\nUpdate step: %.4f ms\nRender step: %.4f ms", 
 		fps, 
 		state.c_str(), hor, vert,
 		player->RBody->Properties.FrictionCoeff, 
-		player->RBody->LinearVelocity.x, player->RBody->LinearVelocity.y);
+		player->RBody->LinearVelocity.x, player->RBody->LinearVelocity.y,
+		w1.ElapsedMilliseconds(),
+		w2.ElapsedMilliseconds());
 	text_renderer->RenderText(std::string(buf), 10.0f, 10.0f, 1.0f);
 }
 

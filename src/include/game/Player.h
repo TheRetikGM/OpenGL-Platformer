@@ -25,6 +25,7 @@ public:
 	Sprite* 	PlayerSprite;
 	bool		InCollision;
 	bool		Jumping;
+	bool		SlidingWall = false;
 	std::shared_ptr<Physics2D::RigidBody> RBody;
 	AnimationManager* Animator;
 	PlayerControls Controls;
@@ -39,10 +40,11 @@ public:
 	void ProcessKeyboard(bool* keys, bool* keys_processed, float dt);
 	void SetRigidBody(std::shared_ptr<Physics2D::RigidBody> body);
 	void SetPosition(glm::vec2 position);
-	void UpdateScreenPosition();
+	glm::vec2 GetScreenPosition() override;
 
 	void onTileSizeChanged(glm::vec2 newTileSize) override;
 private:
+	glm::vec2 lastSlidingDir = glm::vec2(0.0f, 0.0f);
 
 	void onCollision(Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info);
 };

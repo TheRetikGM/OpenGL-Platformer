@@ -3,8 +3,8 @@
   "parameters": {"horizontal": "int", "vertical": "int", "state": "string"},
   "conditions": {
     "kind": {
-      "idle": { "state": "idle" },
-      "run": { "state": "run" },
+      "idle": { "state": "idle", "vertical": 0 },
+      "run": { "state": "run", "vertical": 0 },
       "attack": { "state": "attack" },
       "jump": { "vertical": 1 },
 	  "jump_down": { "vertical": -1 }

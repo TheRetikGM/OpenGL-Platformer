@@ -16,8 +16,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
-unsigned int SCREEN_WIDTH = 800;
-unsigned int SCREEN_HEIGHT = 600;
+unsigned int SCREEN_WIDTH = 1600;
+unsigned int SCREEN_HEIGHT = 900;
 
 Game* game;
 

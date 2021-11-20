@@ -1,4 +1,4 @@
 {
 	"name": "Level 0",
-	"tilemap": "tilemaps/test/test.tmx"
+	"tilemap": "tilemaps/map1/map1.tmx"
 }

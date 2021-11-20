@@ -29,6 +29,7 @@ public:
 	static glm::ivec2 GetNVisibleTiles();
 	static void Update(float dt);
 	static glm::vec2 GetScreenPosition(glm::vec2 tileSpacePosition);
+	static glm::vec2 GetTileSpacePosition(glm::vec2 screenSpacePosition);
 	static void SetFollow(GameObject* follow_obj);
 	static void UnsetFollow(bool keep_position = false);
 	// Sets LOCAL position of camera. Does not affect position of followed object.
