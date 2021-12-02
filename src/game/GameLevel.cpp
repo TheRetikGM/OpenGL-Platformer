@@ -5,6 +5,7 @@
 #include "config.h"
 #include <exception>
 #include <stdexcept>
+#include <iostream>
 
 using nlohmann::json;
 
@@ -77,7 +78,7 @@ void GameLevel::LoadObjectsFromTilemap()
 			auto tile = set->GetTile(layer->GetTileId(x, y));
 			if (tile && tile->HasObjects())
 			{
-				for (auto& obj : tile->GetObjects())
+				for (Tmx::Object* obj : tile->GetObjects())
 				{
 					const Tmx::Polygon* polygon = obj->GetPolygon();
 					glm::vec2 set_tile_size = glm::vec2(set->GetTileWidth(), set->GetTileHeight());
