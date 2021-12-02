@@ -26,6 +26,8 @@ namespace Physics2D
 		float FrictionCoeff; // Coefficient of friction
 	};
 
+	// class CollisionQuadTree;
+
 	class RigidBody
 	{
 	public:
@@ -42,6 +44,7 @@ namespace Physics2D
 
 		MeterUnitConverter* UnitConverter;
 
+
 		// Events
 		std::function<void(RigidBody*, const CollisionInfo&)> OnCollisionEnter = [](RigidBody* body, const CollisionInfo& info) {};
 		std::function<void(RigidBody*, const CollisionInfo&)> OnCollisionExit =  [](RigidBody* body, const CollisionInfo& info) {};
@@ -52,7 +55,8 @@ namespace Physics2D
 		const AABB&	 GetAABB()			const { return collider->GetAABB(); }
 		glm::vec2	 GetCenter(bool inUnits = false)	const { return collider->GetCenter(inUnits); }
 		ColliderType GetType()							const { return collider->GetType(); }
-		glm::vec2	 GetPosition(bool inUnits = false)	const { return (inUnits && UnitConverter) ? UnitConverter->ToUnits(this->position) : this->position; }
+		glm::vec2	 GetPosition(bool inUnits)	const { return (inUnits && UnitConverter) ? UnitConverter->ToUnits(this->position) : this->position; }
+		const glm::vec2& GetPosition() const { return position; }
 		float		 GetRotation()		const { return rotation; }
 		float		 GetRotVelocity()	const { return RotationalVelocity; }
 
@@ -60,11 +64,11 @@ namespace Physics2D
 
 		void Move(glm::vec2 amount, bool inUnits = false) { 
 			this->position += (inUnits && UnitConverter) ? UnitConverter->ToMeters(amount) : amount;
-			updateVerticesRequired = updateAABBRequired = true;
+			updateVerticesRequired = updateAABBRequired = bIsDirty = true;
 		}
 		void MoveTo(glm::vec2 pos, bool inUnits = false) {
 			this->position = (inUnits && UnitConverter) ? UnitConverter->ToMeters(pos) : pos;
-			updateVerticesRequired = updateAABBRequired = true;
+			updateVerticesRequired = updateAABBRequired = bIsDirty = true;
 		}
 		void Rotate(float angle) { 
 			this->rotation += angle;
@@ -81,10 +85,13 @@ namespace Physics2D
 		void Update(float dt, glm::vec2 gravity = glm::vec2(0.0f, 9.81), int iterations = 1);
 		void ApplyForces(float& dt, glm::vec2& gravity);
 		void UpdatePosition();
+		void MoveOutOfCollision(const CollisionInfo& info);
 
 		void UpdateColliderVertices();
 		glm::mat4 GetModel();
 		glm::mat3 GetModel_m3();
+
+		RigidBody* GetNextObject() { return pNextObject; }	// Next object in quadtree node linked list.
 
 		static std::string LastError;
 		static std::shared_ptr<RigidBody> CreateCircleBody(glm::vec2 position, float radius, float density, bool isStatic, float restitution, std::string& out_errorMsg);
@@ -113,6 +120,18 @@ namespace Physics2D
 
 		RigidBody(glm::vec2 position, float density, float mass, float restitution, float area, bool isStatic, std::shared_ptr<Collider> collider);
 		static bool checkAreaAndDensity(float& area, float& density, std::string& out_err);
+
+		// Internal variables used by collision quadtree //
+		RigidBody* pNextObject = nullptr;	// For quadtree linked list of node objects.
+		void*	   pParentNode = nullptr;	// Pointer to parent node of the octree.
+		bool	   bIsDirty = false;		// Is set, whenever object should be updated in quadtree.
+		float	   dist = 0.0f;				// Distance sorting.
+		RigidBody* pNextSortNode = nullptr; // Distance sorting linked list.
+		// --------------------------------------------- //
+
+		// Can access protected fields and members.
+		friend class CollisionQuadTree;
+		friend class PhysicsWorld;
 	};
 
 	inline bool CheckCollision(const RigidBody* A, const RigidBody* B, CollisionInfo& info) {

@@ -9,6 +9,7 @@
 #include <Tmx.h>
 #include "game/game.h"
 #include "DebugColors.h"
+#include <thread>
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -52,40 +53,40 @@ int main()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDisable(GL_DEPTH_TEST | GL_CULL_FACE);
 
-	 try
-	 {
-			game->Init();
+	try
+	{
+		game->Init();
 
-			float deltaTime = 0.0f;
-			float lastFrame = 0.0f;
+		float deltaTime = 0.0f;
+		float lastFrame = 0.0f;
 
-			while (!glfwWindowShouldClose(window))
-			{
-				float currentFrame = (float)glfwGetTime();
-				deltaTime = currentFrame - lastFrame;
-				lastFrame = currentFrame;
-				// Poll events like key presses, mouse event, ...
-				glfwPollEvents();
+		while (!glfwWindowShouldClose(window))
+		{
+			float currentFrame = (float)glfwGetTime();
+			deltaTime = currentFrame - lastFrame;
+			lastFrame = currentFrame;
+			// Poll events like key presses, mouse event, ...
+			glfwPollEvents();
 
-				game->ProcessInput(deltaTime);
-				game->Update(deltaTime);
+			game->ProcessInput(deltaTime);
+			game->Update(deltaTime);
 
-				// Set window title
-				glfwSetWindowTitle(window, game->WindowTitle.c_str());
+			// Set window title
+			glfwSetWindowTitle(window, game->WindowTitle.c_str());
 
-				// Clear default framebuffer and render game scene.
-				glClearColor(game->BackgroundColor.r, game->BackgroundColor.g, game->BackgroundColor.b, 1.0f);
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-				game->Render();
+			// Clear default framebuffer and render game scene.
+			glClearColor(game->BackgroundColor.r, game->BackgroundColor.g, game->BackgroundColor.b, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			game->Render();
 
-				// Swap back and front buffers.
-				glfwSwapBuffers(window);
-			}
-	 }
-	 catch (const std::exception& e)
-	 {
-	 	std::cerr << DC_ERROR " " << e.what() << std::endl;
-	 }
+			// Swap back and front buffers.
+			glfwSwapBuffers(window);
+		}
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << DC_ERROR " " << e.what() << std::endl;
+	}
 
 	delete game;
 	glfwTerminate();

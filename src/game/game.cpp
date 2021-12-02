@@ -144,8 +144,9 @@ void Game::Init()
 	// Initialize player
 	player = new Player(glm::vec2(1.0f, 1.0f), glm::vec2(0.7f, 1.4f), playerAnimations->GetSprite(), glm::vec3(1.0f));
 	player->MovementSpeed = 6.0f;
-	player->SetRigidBody(Physics2D::RigidBody::CreateCapsuleBody(Physics2D::CapsuleOrientation::vertical, { 1.0f, 1.0f }, { 0.7f, 1.4f }, 5.0f, false, 0.0f));
+	player->SetRigidBody(Physics2D::RigidBody::CreateRectangleBody({ 1.0f, 1.0f }, { 0.7f, 1.4f }, 5.0f, false, 0.0f));
 	// player->SetRigidBody(Physics2D::RigidBody::CreateRectangleBody({ 1.0f, 1.0f }, { 0.7f, 1.4f }, 5.0f, false, 0.0f));
+	player->RBody->IsKinematic = true;
 	player->RBody->Name = "player";
 	player->RBody->Properties.Restitution = 0.0f;
 	player->RBody->GravityScale = 1.0f;
@@ -202,11 +203,11 @@ void Game::ProcessInput(float dt)
 void Game::Update(float dt)
 {
 
-	player->Update(dt);
+	
 	w1.Restart();
 	Levels[CurrentLevel]->Update(dt);
 	w1.Stop();
-	player->UpdatePositions();
+	player->Update(dt);
 	TileCamera2D::Update(dt);
 
 	// Update Animations
@@ -277,11 +278,10 @@ void Game::Render()
 	int hor = player->Animator->GetParamater<int>("horizontal");
 	int vert = player->Animator->GetParamater<int>("vertical");
 	char buf[256];
-	sprintf(buf, "FPS: %.f\nState: %s\nHorizontal: %i\nVertical: %i\nFrictionC: %f\nLin. vel.: [%f, %f]\nUpdate step: %.4f ms\nRender step: %.4f ms", 
+	sprintf(buf, "FPS: %.f\nState: %s\nHorizontal: %i\nVertical: %i\nLin. vel.: [%f, %f]\nUpdate step: %f ms\nRender step: %f ms", 
 		fps, 
 		state.c_str(), hor, vert,
-		player->RBody->Properties.FrictionCoeff, 
-		player->RBody->LinearVelocity.x, player->RBody->LinearVelocity.y,
+		player->Velocity.x, player->Velocity.y,
 		w1.ElapsedMilliseconds(),
 		w2.ElapsedMilliseconds());
 	text_renderer->RenderText(std::string(buf), 10.0f, 10.0f, 1.0f);

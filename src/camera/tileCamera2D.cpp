@@ -148,7 +148,7 @@ void TileCamera2D::Update(float dt)
     if (in_range(move_step.x, -0.001f, 0.001f) || in_range(move_step.y, -0.001f, 0.001f))
         move_step = relative_position * dt * 3.0f;
 
-    position += move_step;
+    position += relative_position;
 }
 
 

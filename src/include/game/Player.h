@@ -29,6 +29,7 @@ public:
 	std::shared_ptr<Physics2D::RigidBody> RBody;
 	AnimationManager* Animator;
 	PlayerControls Controls;
+	const float Gravity = 9.81f;
 	
 	Player(glm::vec2 position, glm::vec2 size, Sprite* sprite, glm::vec3 color);
 	~Player();
@@ -45,6 +46,11 @@ public:
 	void onTileSizeChanged(glm::vec2 newTileSize) override;
 private:
 	glm::vec2 lastSlidingDir = glm::vec2(0.0f, 0.0f);
+	struct collision {
+		float dist = INFINITY;
+		Physics2D::RigidBody* body = nullptr;
+	};
+	std::vector<collision> collisions;
 
 	void onCollision(Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info);
 };

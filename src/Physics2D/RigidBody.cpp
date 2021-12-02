@@ -181,6 +181,9 @@ glm::mat4 RigidBody::GetModel()
 
 void RigidBody::ApplyForces(float& dt, glm::vec2& gravity)
 {
+	if (IsKinematic)
+		return;
+	
 	// F = ma
 	// a = F / m
 	Acceleration = (-LinearDrag * LinearVelocity + force) / Properties.Mass + this->GravityScale * gravity;
@@ -192,6 +195,7 @@ void RigidBody::ApplyForces(float& dt, glm::vec2& gravity)
 	this->rotation += RotationalVelocity * dt;
 
 	force = impulses = glm::vec2(0.0f, 0.0f);
+	bIsDirty = true;
 }
 void RigidBody::UpdatePosition()
 {
@@ -199,6 +203,7 @@ void RigidBody::UpdatePosition()
 	{
 		UpdateColliderVertices();
 		collider->UpdateAABB();
+		bIsDirty = true;
 	}
 }
 void RigidBody::Update(float dt, glm::vec2 gravity, int iterations) 
@@ -209,4 +214,11 @@ void RigidBody::Update(float dt, glm::vec2 gravity, int iterations)
 	dt /= iterations;
 	ApplyForces(dt, gravity);
 	UpdatePosition();
+}
+void RigidBody::MoveOutOfCollision(const CollisionInfo& info)
+{
+	this->position += info.normal * info.depth;
+	UpdateColliderVertices();
+	collider->UpdateAABB();
+	bIsDirty = true;
 }

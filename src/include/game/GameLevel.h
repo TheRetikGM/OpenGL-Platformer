@@ -12,14 +12,14 @@ public:
 
 	GameLevel(std::string name, Physics2D::PhysicsWorld* world, Tilemap* map): Name(name), PhysicsWorld(world), Map(map) {}
 	GameLevel() = default;
-	~GameLevel() {};
+	~GameLevel() {} 
 
 	static GameLevel* Load(const char* path);
 	static void Delete(GameLevel* level);
 
 	void Update(float dt)
 	{
-		PhysicsWorld->Update(dt, 10);
+		PhysicsWorld->Update(dt, 1);
 		Map->Update(dt);
 	}
 

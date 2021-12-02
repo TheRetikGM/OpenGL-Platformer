@@ -43,7 +43,9 @@ GameLevel* GameLevel::Load(const char* path)
 	level->Name = level_local.Name;
 	level->PhysicsWorld = level_local.PhysicsWorld;
 	level->Map = level_local.Map;
-	level->PhysicsWorld = new Physics2D::PhysicsWorld(1.0f);
+	glm::vec2 map_size = glm::vec2((float)level->Map->Map->GetWidth(), (float)level->Map->Map->GetHeight());
+	level->PhysicsWorld = new Physics2D::PhysicsWorld(glm::vec2(0.0f), map_size, 1.0f);
+	// level->PhysicsWorld->CollisionTree->SortOnTests = true;
 	level->LoadObjectsFromTilemap();
 
 	return level;
@@ -51,6 +53,7 @@ GameLevel* GameLevel::Load(const char* path)
 void GameLevel::Delete(GameLevel* level)
 {
 	delete level->Map;
+	delete level->PhysicsWorld;
 	delete level;
 }
 

@@ -13,13 +13,26 @@ float Physics2D::PhysicsWorld::maxDensity = 21.4f;
 int	  Physics2D::PhysicsWorld::minPrecision = 1;
 int	  Physics2D::PhysicsWorld::maxPrecision = 128;
 
+PhysicsWorld::PhysicsWorld(glm::vec2 world_start, glm::vec2 world_end, float units_per_meter) 
+	: bodies()
+	, Gravity(0.0f, 9.81f)
+	, MeterUnitConverter(1.0f / units_per_meter)
+{
+	CollisionTree = new CollisionQuadTree(ToMeters(world_start), ToMeters(world_end));
+	CollisionTree->OnCollisionTest = std::bind(&PhysicsWorld::checkAndResolveCollision, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+}
+PhysicsWorld::~PhysicsWorld()
+{
+	delete CollisionTree;
+}
+
 void PhysicsWorld::AddBody(std::shared_ptr<Physics2D::RigidBody> body) 
 { 
 	if (body) 
 	{ 
 		body->SetUnitConverter(this);
 		bodies.push_back(body);
-		sortedBodies.push_back(new sw_aabb(body.get()));
+		CollisionTree->InsertObject(body.get());
 	}
 }
 RigidBody* PhysicsWorld::AddCircleBody(glm::vec2 position, float radius, float density, bool isStatic, float restitution, bool inUnits)
@@ -90,14 +103,7 @@ bool PhysicsWorld::RemoveBody(int index)
 {
 	if (index >= 0 && index < bodies.size())
 	{
-		// sortedBodies.remove_if([&](auto body) { return body.get() == bodies[index].get(); });
-		for (int i = 0; i < sortedBodies.size(); i++) {
-			if (sortedBodies[i]->body == bodies[index].get()) {
-				delete sortedBodies[i];
-				sortedBodies.erase(sortedBodies.begin() + i);
-				break;
-			}
-		}
+		CollisionTree->RemoveObject(bodies[index].get());
 		bodies.erase(bodies.begin() + index);		
 
 		return true;
@@ -106,10 +112,8 @@ bool PhysicsWorld::RemoveBody(int index)
 }
 void PhysicsWorld::RemoveAllBodies()
 {
+	CollisionTree->Rebuild(1);
 	bodies.clear();
-	for (auto& i : sortedBodies)
-		delete i;
-	sortedBodies.clear();
 }
 RigidBody* PhysicsWorld::GetBody(int index)
 {
@@ -151,7 +155,7 @@ void PhysicsWorld::responseToCollision(RigidBody* b1, RigidBody* b2, const Colli
 
 	// Extra oomph
 	float slop = info.depth / 3.0f;
-	float bias_factor = 0.12f;
+	float bias_factor = 0.13f;
 	float bias_velocity = (bias_factor / dt) * std::max(0.0f, info.depth - slop);
 
 	// Compute normal impulse.
@@ -217,35 +221,16 @@ void PhysicsWorld::Update(float dt, int precision)
 	for (int pre = 0; pre < precision; pre++)
 	{
 		// Move step.
-		for (auto& body : bodies)
+		for (auto& body : bodies) {
 			body->Update(dt, Gravity, precision);
-
-		// Collision step
-		std::sort(sortedBodies.begin(), sortedBodies.end(), [&](const sw_aabb* A, const sw_aabb* B) {
-			return (*A->position)[sortAxis] < (*B->position)[sortAxis];
-		});
-
-		glm::vec2 s(0.0f), s2(0.0f), v(0.0f);
-		for (auto i = sortedBodies.begin(); i != sortedBodies.end(); i++)
-		{
-			// Compute center of AABB
-			glm::vec2 p = 0.5f * ((*i)->Min() + *(*i)->size);
-			s += p;
-			s2 += p * p;
-
-			for (auto j = std::next(i); j != sortedBodies.end(); j++)
-			{
-				// Check if object A max is less then object B min.
-				if ((*i)->Max()[sortAxis] < (*j)->Min()[sortAxis])
-					break;
-				checkAndResolveCollision((*i)->body, (*j)->body, part_dt);
+			if (body->bIsDirty) {
+				CollisionTree->UpdateObject(body.get());
+				body->bIsDirty = false;
 			}
 		}
 
-		// Select x or y based on avarage variance of object centers.
-		v = s2 - s * s / float(sortedBodies.size());
-		sortAxis = 0;
-		if (v.y > v.x) sortAxis = 1;
+		// Collision test step.
+		CollisionTree->TestAllCollisions(dt);
 
 		// Move step.
 		for (auto& body : bodies)
@@ -268,3 +253,4 @@ void PhysicsWorld::callCollisionExit_callbacks(RigidBody* A, RigidBody* B, const
 	B->OnCollisionExit(A, i);
 	OnCollisionExit(A, B, info);
 }
+

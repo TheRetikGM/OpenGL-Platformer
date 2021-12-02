@@ -50,28 +50,109 @@ template<typename T> T sign(T val) {
 	return T((T(0) < val) - (val < T(0)));
 }
 
+void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
+{
+	int horizontal = 0;
+	int vertical = 0;
+	glm::vec2 rightVec = glm::vec2(1.0f, 0.0f);
+	glm::vec2 leftVec = -rightVec;
+	glm::vec2 upVec = glm::vec2(0.0f, -1.0f);
+	glm::vec2 downVec = glm::vec2(0.0f, 1.0f);
+
+	float hAcceleration = 15.0f;		// After 1 second the velocity will be 3 tiles per s.
+	float hDeceleration = 30.0f;
+	float maxHVelocity = 5.0f;
+	bool hDecelerating = false;
+	float vAcceleration = 30.0f;
+	float maxJumpHeight = 3.0f * this->Size.y;
+	Acceleration = glm::vec2(0.0f, 0.0f);
+
+	if (keys[Controls.RunLeft])
+	{
+		Acceleration += hAcceleration * leftVec;
+		hDecelerating = false;
+		horizontal += -1;
+	}
+	if (keys[Controls.RunRight])
+	{
+		Acceleration += hAcceleration * rightVec;
+		hDecelerating = false;
+		horizontal += 1;
+	}
+	if (Acceleration.x == 0.0f && Velocity.x != 0.0f)
+	{
+		Acceleration.x = -sign(Velocity.x) * hDeceleration;
+		hDecelerating = true;
+	}
+
+	if (keys[Controls.JumpUp] && !keys_processed[Controls.JumpUp])
+	{
+		if (!Jumping)
+		{
+			Velocity.y = -10.0;
+			Jumping = true;
+		}
+
+		keys_processed[Controls.JumpUp] = true;
+	}
+
+	Velocity += Acceleration * dt;
+	// If hDecelerating and the body should stop, then stop it.
+	if (Acceleration.x * Velocity.x > 0.0f && hDecelerating) {
+		Velocity.x = 0.0f;
+		hDecelerating = false;
+	}
+
+	// Clamp horizontal velocity to maximum speed.
+	Velocity.x = glm::clamp(Velocity.x, -maxHVelocity, maxHVelocity);
+
+	Velocity.y += Gravity * dt;
+	Velocity.y = glm::clamp(Velocity.y, -INFINITY, Gravity);
+
+	// Move the player.
+	RBody->Move(Velocity * dt);
+
+	RBody->LinearVelocity = Velocity;
+	RBody->Acceleration = Acceleration;
+
+	if (horizontal != 0)
+		Animator->SetParameter("horizontal", horizontal);
+}
+
 void Player::Update(float dt)
 {
-	if (RBody->LinearVelocity.y > 9.81f * 3.0f * dt && !SlidingWall)
+	std::sort(collisions.begin(), collisions.end(), [](const collision& a, const collision& b) { return a.dist < b.dist; });
+	for (auto& c : collisions) {
+		Physics2D::CollisionInfo info;
+		if (Physics2D::CheckCollision(RBody.get(), c.body, info)) {
+			if (c.body->Name == "ground" && glm::dot(info.normal, glm::vec2(0.0f, -1.0f)) > 0.0f)
+			{
+				Jumping = false;
+				Velocity.y = 0.0f;
+			}
+			RBody->MoveOutOfCollision(info);
+		}
+	}
+	collisions.clear();
+	UpdatePositions();
+
+	if (Velocity.y == Gravity)
 		Jumping = true;
 
 	if (Animator)
 	{
-		if (RBody->LinearVelocity.x == 0.0f)
+		if (Velocity.x == 0.0f)
 			Animator->SetParameter("state", "idle");
 		else
 			Animator->SetParameter("state", "run");
 
 		if (Jumping) {
-			Animator->SetParameter("vertical", (RBody->LinearVelocity.y < 0) ? 1 : -1);
+			Animator->SetParameter("vertical", (Velocity.y < 0) ? 1 : -1);
 		}
 		else {
 			Animator->SetParameter("vertical", 0);
 		}
 	}
-
-	Velocity = RBody->LinearVelocity;
-	Acceleration = RBody->Acceleration;
 
 	// Update the sprite.
 	PlayerSprite = Animator->GetSprite();
@@ -87,87 +168,14 @@ glm::vec2 Player::GetScreenPosition()
 	return TileCamera2D::GetScreenPosition(RBody->GetAABB().GetMin());
 }
 
-void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
-{
-	int horizontal = 0;
-	int vertical = 0;
-	float movement_force = 500.0f;
-	float max_velocity = 10.0f;
-
-	if (keys[Controls.JumpUp] && !keys_processed[Controls.JumpUp])
-	{
-		TileCamera2D::ProccessKeyboard(Camera2DMovement::up, dt);
-		// player->ProcessKeyboard(PlayerMovement::up, dt);
-		if (!Jumping) {
-			Jumping = true;
-			SlidingWall = false;
-			RBody->LinearVelocity.y = 0.0f;
-			RBody->ApplyImpulse(glm::vec2(0.0f, -1.0f) * 25.0f);
-			vertical = 1;
-		}
-
-		keys_processed[GLFW_KEY_W] = true;
-	}
-	if (!keys[Controls.JumpUp] && Jumping && RBody->LinearVelocity.y < 0.0f) {
-		RBody->LinearVelocity.y = 100.0f * dt;
-		vertical = 0;
-	}
-	if (keys[Controls.JumpDown])
-	{
-		// TileCamera2D::ProccessKeyboard(Camera2DMovement::down, dt);
-	}
-	if (!in_range(RBody->LinearVelocity.x, -max_velocity, max_velocity)) {
-		RBody->ClearForces();
-		RBody->LinearVelocity.x = sign(RBody->LinearVelocity.x) * max_velocity;
-	}
-	else {
-		if (keys[Controls.RunLeft])
-		{
-			TileCamera2D::ProccessKeyboard(Camera2DMovement::left, dt);
-
-			if (RBody->LinearVelocity.x > 0.0f)
-				RBody->LinearVelocity.x = 0.0f;
-			RBody->AddForce(glm::vec2(-1.0f, 0.0f) * movement_force);
-
-			horizontal = -1;
-		}
-		if (keys[Controls.RunRight])
-		{
-			TileCamera2D::ProccessKeyboard(Camera2DMovement::right, dt);
-			if (RBody->LinearVelocity.x < 0.0f)
-				RBody->LinearVelocity.x = 0.0f;
-
-			RBody->AddForce(glm::vec2(1.0f, 0.0f) * movement_force);
-			horizontal = 1;
-		}
-	}
-	if (!keys[Controls.RunLeft] && !keys[Controls.RunRight]) {
-		//RBody->Properties.FrictionCoeff = 5.0f;
-		//RBody->ApplyImpulse(glm::vec2(-RBody->LinearVelocity.x, 0.0f));
-		RBody->LinearVelocity.x = 0.0f;
-	}
-	else {
-		if (!SlidingWall)
-			RBody->Properties.FrictionCoeff = 0.0f;
-	}
-
-	if (horizontal != 0)
-		Animator->SetParameter("horizontal", horizontal);
-}
-
 void Player::onCollision(Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info)
 {
+	// Move the body out of the collision.
+	// RBody->MoveOutOfCollision(info);
+	glm::vec2 ab = body->GetPosition() - RBody->GetPosition();
+	collisions.push_back(collision{ ab.x * ab.x + ab.y * ab.y, body });
 	if (body->Name == "ground")
 	{
-		if (glm::dot(info.normal, glm::vec2(0.0f, -1.0f)) > 0.0f) {
-			this->Jumping = false;
-			SlidingWall = false;
-		}
-		if (info.normal == glm::vec2(-1.0f, 0.0f) || info.normal == glm::vec2(1.0f, 0.0f)) {
-			RBody->Properties.FrictionCoeff = 0.5f;
-			SlidingWall = true;
-			Jumping = false;
-		}
 	}
 }
 
