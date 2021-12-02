@@ -7,8 +7,8 @@
 #include <string>
 #include <vector>
 
-#include "Texture.h"
-#include "Shader.h"
+#include "texture.h"
+#include "shader.h"
 
 struct Character {
     unsigned int TextureID;

@@ -5,7 +5,6 @@ include_directories(
 	${CMAKE_CURRENT_BINARY_DIR}
 	${CMAKE_SOURCE_DIR}/src/include
 	${CMAKE_SOURCE_DIR}/include
-	${CMAKE_SOURCE_DIR}/src/Physics2D/include
 )
 
 # Texture
@@ -16,9 +15,6 @@ add_library(Shader shader.cpp include/shader.h)
 
 # Glad
 add_library(Glad glad.c ../include/glad/glad.h)
-
-# Physics2D
-add_subdirectory(Physics2D)
 
 # Main executable
 file(GLOB SHADERS

@@ -6,9 +6,14 @@ set(CMAKE_DEBUG_POSTFIX "d")
 
 add_subdirectory(json-develop)
 add_subdirectory("src")
+add_subdirectory("external/Physics2D")
 
 target_link_directories(${PROJECT_NAME} PRIVATE lib)
-target_include_directories(${PROJECT_NAME} PRIVATE include PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(${PROJECT_NAME} 
+	PRIVATE include 
+	PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
+	PRIVATE external/Physics2D/include
+)
 target_link_libraries(${PROJECT_NAME}	
 	Texture
 	Shader
@@ -39,5 +44,6 @@ elseif (UNIX)
         tinyxml2
         z
         debug tmxparserd optimized tmxparser
+	freetype
     )
 endif()
