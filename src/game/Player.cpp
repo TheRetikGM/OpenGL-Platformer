@@ -80,7 +80,7 @@ void Player::Update(float dt)
 		else
 			Animator->SetParameter("state", "run");
 
-		if (IsJumping) {
+		if (IsJumping || !CanJump) {
 			Animator->SetParameter("vertical", (Velocity.y < 0) ? 1 : -1);
 		}
 		else {
@@ -100,14 +100,12 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 	glm::vec2 leftVec = -rightVec;
 	glm::vec2 upVec = glm::vec2(0.0f, -1.0f);
 	glm::vec2 downVec = glm::vec2(0.0f, 1.0f);
+	Acceleration = glm::vec2(0.0f, 0.0f);
 
-	float hAcceleration = 15.0f;		// After 1 second the velocity will be 3 tiles per s.
+	float hAcceleration = 20.0f;		// After 1 second the velocity will be 3 tiles per s.
 	float hDeceleration = 30.0f;
 	float maxHVelocity = 5.0f;
 	bool hDecelerating = false;
-	float vAcceleration = 30.0f;
-	float maxJumpHeight = 3.0f * this->Size.y;
-	Acceleration = glm::vec2(0.0f, 0.0f);
 
 	// Jump variables
 	static float buttonTime = 0.5f;
@@ -148,9 +146,11 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 	if (keys[Controls.JumpUp] && !keys_processed[Controls.JumpUp])
 	{
 		if (CanJump)
-		{
+		{ 
 			float jump_impulse = std::sqrt(2.0f * Gravity * GravityScale * jumpHeight);
 			Velocity.y = -jump_impulse;
+
+			// Set default states.
 			IsJumping = true;
 			CanJump = false;
 			jumpCanceled = false;
@@ -166,10 +166,10 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 	if (IsJumping)
 	{
 		jumpTime += dt;
+		// Check for canceled jump.
 		if (!keys[Controls.JumpUp])
-		{
 			jumpCanceled = true;
-		}
+		// 
 		if (jumpTime > buttonTime)
 			IsJumping = false;
 	}
