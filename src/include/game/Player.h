@@ -24,12 +24,14 @@ public:
 	float 		MovementSpeed;
 	Sprite* 	PlayerSprite;
 	bool		InCollision;
-	bool		Jumping;
+	bool		CanJump;
+	bool		IsJumping;
 	bool		SlidingWall = false;
 	std::shared_ptr<Physics2D::RigidBody> RBody;
 	AnimationManager* Animator;
 	PlayerControls Controls;
 	const float Gravity = 9.81f;
+	float GravityScale = 2.0f;
 	
 	Player(glm::vec2 position, glm::vec2 size, Sprite* sprite, glm::vec3 color);
 	~Player();

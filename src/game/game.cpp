@@ -142,16 +142,16 @@ void Game::Init()
 	tile_renderer->AfterLayer_callback = std::bind(&Game::OnLayerRendered, this, _1, _2, _3);
 
 	// Initialize player
-	player = new Player(glm::vec2(1.0f, 1.0f), glm::vec2(0.7f, 1.4f), playerAnimations->GetSprite(), glm::vec3(1.0f));
+	player = new Player(glm::vec2(10.0f, 10.0f), glm::vec2(0.7f, 1.4f), playerAnimations->GetSprite(), glm::vec3(1.0f));
 	player->MovementSpeed = 6.0f;
-	player->SetRigidBody(Physics2D::RigidBody::CreateRectangleBody({ 1.0f, 1.0f }, { 0.7f, 1.4f }, 5.0f, false, 0.0f));
+	player->SetRigidBody(Physics2D::RigidBody::CreateRectangleBody(player->Position, { 0.7f, 1.4f }, 5.0f, false, 0.0f));
 	// player->SetRigidBody(Physics2D::RigidBody::CreateRectangleBody({ 1.0f, 1.0f }, { 0.7f, 1.4f }, 5.0f, false, 0.0f));
 	player->RBody->IsKinematic = true;
 	player->RBody->Name = "player";
 	player->RBody->Properties.Restitution = 0.0f;
 	player->RBody->GravityScale = 1.0f;
 	player->RBody->Properties.FrictionCoeff = 0.9f;
-	player->Jumping = false;
+	player->IsJumping = false;
 	player->Animator = playerAnimations;
 
 	// Set initial states.	

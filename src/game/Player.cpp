@@ -11,7 +11,7 @@ Player::Player(glm::vec2 position, glm::vec2 size, Sprite* sprite, glm::vec3 col
 	, InCollision(false)
 	, RBody(nullptr)
 	, Animator(nullptr)
-	, Jumping(true)
+	, IsJumping(true)
 	, Controls()
 {	
 	Game::AddTileSpaceObject(this);
@@ -50,6 +50,48 @@ template<typename T> T sign(T val) {
 	return T((T(0) < val) - (val < T(0)));
 }
 
+void Player::Update(float dt)
+{
+	// Do collision test again in sorted order,
+	// so that the player will not het stuck 
+	// between tiles.
+	std::sort(collisions.begin(), collisions.end(), [](const collision& a, const collision& b) { return a.dist < b.dist; });
+	for (auto& c : collisions) {
+		Physics2D::CollisionInfo info;
+		if (Physics2D::CheckCollision(RBody.get(), c.body, info)) {
+			if (c.body->Name == "ground" && glm::dot(info.normal, glm::vec2(0.0f, -1.0f)) > 0.0f)
+			{
+				CanJump = true;
+				Velocity.y = 0.0f;
+			}
+			RBody->MoveOutOfCollision(info);
+		}
+	}
+	collisions.clear();
+	UpdatePositions();
+
+	if (Velocity.y > 0.0f)
+		CanJump = false;
+
+	if (Animator)
+	{
+		if (Velocity.x == 0.0f)
+			Animator->SetParameter("state", "idle");
+		else
+			Animator->SetParameter("state", "run");
+
+		if (IsJumping) {
+			Animator->SetParameter("vertical", (Velocity.y < 0) ? 1 : -1);
+		}
+		else {
+			Animator->SetParameter("vertical", 0);
+		}
+	}
+
+	// Update the sprite.
+	PlayerSprite = Animator->GetSprite();
+}
+
 void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 {
 	int horizontal = 0;
@@ -67,34 +109,72 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 	float maxJumpHeight = 3.0f * this->Size.y;
 	Acceleration = glm::vec2(0.0f, 0.0f);
 
+	// Jump variables
+	static float buttonTime = 0.5f;
+	static float jumpHeight = 3.1f;
+	static float cancelRate = 80.0f;
+	static float jumpTime = 0.0f;
+	static bool  jumpCanceled = false;
+	static float JumpGravityScale = 2.0f;
+	static float FallGravityScale = 5.0f;
+
+	// Run left.
 	if (keys[Controls.RunLeft])
 	{
+		if (Velocity.x > 0.0f)
+			Acceleration.x += -hDeceleration;
+
 		Acceleration += hAcceleration * leftVec;
 		hDecelerating = false;
 		horizontal += -1;
 	}
+	// Run right.
 	if (keys[Controls.RunRight])
 	{
+		if (Velocity.x < 0.0f)
+			Acceleration.x += hDeceleration;
+
 		Acceleration += hAcceleration * rightVec;
 		hDecelerating = false;
 		horizontal += 1;
 	}
+	// Horizontal deceleration when not pressing left or right.
 	if (Acceleration.x == 0.0f && Velocity.x != 0.0f)
 	{
 		Acceleration.x = -sign(Velocity.x) * hDeceleration;
 		hDecelerating = true;
 	}
-
+	// Jump.
 	if (keys[Controls.JumpUp] && !keys_processed[Controls.JumpUp])
 	{
-		if (!Jumping)
+		if (CanJump)
 		{
-			Velocity.y = -10.0;
-			Jumping = true;
+			float jump_impulse = std::sqrt(2.0f * Gravity * GravityScale * jumpHeight);
+			Velocity.y = -jump_impulse;
+			IsJumping = true;
+			CanJump = false;
+			jumpCanceled = false;
+			jumpTime = 0.0f;
 		}
 
 		keys_processed[Controls.JumpUp] = true;
 	}
+	if (Velocity.y > 0.0)		// Falling
+		GravityScale = FallGravityScale;
+	else						// Jumping
+		GravityScale = JumpGravityScale;
+	if (IsJumping)
+	{
+		jumpTime += dt;
+		if (!keys[Controls.JumpUp])
+		{
+			jumpCanceled = true;
+		}
+		if (jumpTime > buttonTime)
+			IsJumping = false;
+	}
+	if (jumpCanceled && IsJumping && Velocity.y < 0.0f)
+		Velocity += downVec * cancelRate * dt;
 
 	Velocity += Acceleration * dt;
 	// If hDecelerating and the body should stop, then stop it.
@@ -106,7 +186,8 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 	// Clamp horizontal velocity to maximum speed.
 	Velocity.x = glm::clamp(Velocity.x, -maxHVelocity, maxHVelocity);
 
-	Velocity.y += Gravity * dt;
+	// Apply gravity and clamp it between ( -inf; gravity >
+	Velocity.y += (Gravity * GravityScale) * dt;
 	Velocity.y = glm::clamp(Velocity.y, -INFINITY, Gravity);
 
 	// Move the player.
@@ -117,45 +198,6 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 
 	if (horizontal != 0)
 		Animator->SetParameter("horizontal", horizontal);
-}
-
-void Player::Update(float dt)
-{
-	std::sort(collisions.begin(), collisions.end(), [](const collision& a, const collision& b) { return a.dist < b.dist; });
-	for (auto& c : collisions) {
-		Physics2D::CollisionInfo info;
-		if (Physics2D::CheckCollision(RBody.get(), c.body, info)) {
-			if (c.body->Name == "ground" && glm::dot(info.normal, glm::vec2(0.0f, -1.0f)) > 0.0f)
-			{
-				Jumping = false;
-				Velocity.y = 0.0f;
-			}
-			RBody->MoveOutOfCollision(info);
-		}
-	}
-	collisions.clear();
-	UpdatePositions();
-
-	if (Velocity.y == Gravity)
-		Jumping = true;
-
-	if (Animator)
-	{
-		if (Velocity.x == 0.0f)
-			Animator->SetParameter("state", "idle");
-		else
-			Animator->SetParameter("state", "run");
-
-		if (Jumping) {
-			Animator->SetParameter("vertical", (Velocity.y < 0) ? 1 : -1);
-		}
-		else {
-			Animator->SetParameter("vertical", 0);
-		}
-	}
-
-	// Update the sprite.
-	PlayerSprite = Animator->GetSprite();
 }
 void Player::UpdatePositions()
 {

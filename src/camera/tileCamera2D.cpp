@@ -116,28 +116,6 @@ void TileCamera2D::RenderAtPosition(BasicRenderer* renderer, br_Shape shape, glm
 
 void TileCamera2D::Update(float dt)
 {
-    //glm::vec2 old_to_new = Follow->Position - position;
-    //glm::vec2 middle_point = GetTileSpacePosition(ScreenCoords / 2.0f);
-    //glm::vec2 move_field_size = (ScreenCoords / 4.0f) / (Game::TileSize * TileCamera2D::scale);
-    //glm::vec2 move_field_o = middle_point - move_field_size / 2.0f;
-
-    //glm::vec2 t_near = (move_field_o - position) / old_to_new;
-    //glm::vec2 t_far = (move_field_o + move_field_size - position) / old_to_new;
-
-    //if (t_near.x > t_far.x) std::swap(t_near.x, t_far.x);
-    //if (t_near.y > t_far.y) std::swap(t_near.y, t_far.y);
-
-    //if (t_near.x > t_far.x || t_near.y > t_far.y)
-    //    return;
-
-    //float t_hit_near = std::max(t_near.x, t_near.y);
-    //float t_hit_far = std::min(t_far.x, t_far.y);
-
-    //if (t_hit_far < 0.0f || t_hit_far > 1.0f)
-    //    return;
-
-    //position = position + (1.0f - t_hit_far) * old_to_new;
-
     // Move camera quadratically to player position.
     glm::vec2 relative_position = Follow->Position - position;
     glm::vec2 sign = glm::vec2(relative_position.x < 0.0f ? -1.0f : 1.0f, relative_position.y < 0.0f ? -1.0f : 1.0f);
@@ -148,7 +126,7 @@ void TileCamera2D::Update(float dt)
     if (in_range(move_step.x, -0.001f, 0.001f) || in_range(move_step.y, -0.001f, 0.001f))
         move_step = relative_position * dt * 3.0f;
 
-    position += relative_position;
+    position += move_step;
 }
 
 
