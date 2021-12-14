@@ -143,9 +143,7 @@ void Game::Init()
 
 	// Initialize player
 	player = new Player(glm::vec2(10.0f, 10.0f), glm::vec2(0.7f, 1.4f), playerAnimations->GetSprite(), glm::vec3(1.0f));
-	player->MovementSpeed = 6.0f;
 	player->SetRigidBody(Physics2D::RigidBody::CreateRectangleBody(player->Position, { 0.7f, 1.4f }, 5.0f, false, 0.0f));
-	// player->SetRigidBody(Physics2D::RigidBody::CreateRectangleBody({ 1.0f, 1.0f }, { 0.7f, 1.4f }, 5.0f, false, 0.0f));
 	player->RBody->IsKinematic = true;
 	player->RBody->Name = "player";
 	player->RBody->Properties.Restitution = 0.0f;
@@ -278,12 +276,14 @@ void Game::Render()
 	int hor = player->Animator->GetParamater<int>("horizontal");
 	int vert = player->Animator->GetParamater<int>("vertical");
 	char buf[256];
-	sprintf(buf, "FPS: %.f\nState: %s\nHorizontal: %i\nVertical: %i\nLin. vel.: [%f, %f]\nUpdate step: %f ms\nRender step: %f ms", 
+	sprintf(buf, "FPS: %.f\nState: %s\nHorizontal: %i\nVertical: %i\nLin. vel.: [%f, %f]\nUpdate step: %f ms\nRender step: %f ms\nSliding wall: %s", 
 		fps, 
 		state.c_str(), hor, vert,
 		player->Velocity.x, player->Velocity.y,
 		w1.ElapsedMilliseconds(),
-		w2.ElapsedMilliseconds());
+		w2.ElapsedMilliseconds(),
+		player->SlidingWall ? "yes" : "no"
+		);
 	text_renderer->RenderText(std::string(buf), 10.0f, 10.0f, 1.0f);
 }
 

@@ -4,10 +4,11 @@
 
 #define ifFirstPressed(key, pred) if (keys[key] && !keys_processed[key]) { pred; keys_processed[key] = true; }
 
+bool SlidingJumped = true;
+
 Player::Player(glm::vec2 position, glm::vec2 size, Sprite* sprite, glm::vec3 color)
 	: GameObject(position, glm::vec2(0.0f, 0.0f), size, color)
 	, PlayerSprite(sprite)
-	, MovementSpeed(2.0f)
 	, InCollision(false)
 	, RBody(nullptr)
 	, Animator(nullptr)
@@ -59,10 +60,21 @@ void Player::Update(float dt)
 	for (auto& c : collisions) {
 		Physics2D::CollisionInfo info;
 		if (Physics2D::CheckCollision(RBody.get(), c.body, info)) {
-			if (c.body->Name == "ground" && glm::dot(info.normal, glm::vec2(0.0f, -1.0f)) > 0.0f)
+			if (c.body->Name == "ground")
 			{
-				CanJump = true;
-				Velocity.y = 0.0f;
+				if (glm::dot(info.normal, glm::vec2(0.0f, -1.0f)) > 0.0f)
+				{
+					CanJump = true;
+					Velocity.y = 0.0f;
+				}
+				if (std::abs(info.normal.x) == 1.0f)
+				{
+					CanJump = true;
+					SlidingWall = true;
+				}
+				else {
+					SlidingWall = false;
+				}
 			}
 			RBody->MoveOutOfCollision(info);
 		}
@@ -70,7 +82,7 @@ void Player::Update(float dt)
 	collisions.clear();
 	UpdatePositions();
 
-	if (Velocity.y > 0.0f)
+	if (Velocity.y > 0.0f && !SlidingWall)
 		CanJump = false;
 
 	if (Animator)
@@ -102,7 +114,7 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 	glm::vec2 downVec = glm::vec2(0.0f, 1.0f);
 	Acceleration = glm::vec2(0.0f, 0.0f);
 
-	float hAcceleration = 20.0f;		// After 1 second the velocity will be 3 tiles per s.
+	float hAcceleration = 20.0f;
 	float hDeceleration = 30.0f;
 	float maxHVelocity = 5.0f;
 	bool hDecelerating = false;
@@ -142,6 +154,7 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 		Acceleration.x = -sign(Velocity.x) * hDeceleration;
 		hDecelerating = true;
 	}
+
 	// Jump.
 	if (keys[Controls.JumpUp] && !keys_processed[Controls.JumpUp])
 	{
@@ -149,6 +162,9 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 		{ 
 			float jump_impulse = std::sqrt(2.0f * Gravity * GravityScale * jumpHeight);
 			Velocity.y = -jump_impulse;
+
+			if (SlidingWall)
+				Velocity.x = 20.0f;
 
 			// Set default states.
 			IsJumping = true;
@@ -201,6 +217,7 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 }
 void Player::UpdatePositions()
 {
+
 	if (RBody) {
 		this->Position = RBody->GetPosition();
 	}

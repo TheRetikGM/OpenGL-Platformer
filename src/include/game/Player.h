@@ -21,7 +21,6 @@ public:
 class Player : public GameObject, public ITileSpace
 {
 public:	
-	float 		MovementSpeed;
 	Sprite* 	PlayerSprite;
 	bool		InCollision;
 	bool		CanJump;
