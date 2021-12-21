@@ -154,7 +154,7 @@ void Game::Init()
 
 	// Set initial states.	
 	TileCamera2D::SetFollow(player);
-	Levels[CurrentLevel]->PhysicsWorld->AddBody(player->RBody);
+	player->AddToWorld(Levels[CurrentLevel]->PhysicsWorld);
 }
 
 void Game::ProcessInput(float dt)

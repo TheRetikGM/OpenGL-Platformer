@@ -4,7 +4,8 @@
 #include "game/Sprite.h"
 #include "Interfaces/ITileSpace.h"
 #include <memory>
-#include "RigidBody.h"
+#include <RigidBody.h>
+#include <PhysicsWorld.h>
 #include "game/AnimationManager.h"
 #include "GLFW/glfw3.h"
 
@@ -42,11 +43,18 @@ public:
 	void ProcessKeyboard(bool* keys, bool* keys_processed, float dt);
 	void SetRigidBody(std::shared_ptr<Physics2D::RigidBody> body);
 	void SetPosition(glm::vec2 position);
-	glm::vec2 GetScreenPosition() override;
+	void AddToWorld(Physics2D::PhysicsWorld* world);
 
+	glm::vec2 GetScreenPosition() override;
 	void onTileSizeChanged(glm::vec2 newTileSize) override;
 private:
 	glm::vec2 lastSlidingDir = glm::vec2(0.0f, 0.0f);
+	std::shared_ptr<Physics2D::RigidBody> leftBody;
+	std::shared_ptr<Physics2D::RigidBody> rightBody;
+	bool leftColliding = false;
+	bool rightColliding = false;
+	float sideBodyWidth = 0.3f;
+
 	struct collision {
 		float dist = INFINITY;
 		Physics2D::RigidBody* body = nullptr;

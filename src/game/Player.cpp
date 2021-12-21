@@ -25,10 +25,34 @@ Player::~Player()
 
 void Player::SetRigidBody(std::shared_ptr<Physics2D::RigidBody> body)
 {
-	if (this->RBody)
+	if (this->RBody) {
 		body->OnCollisionEnter = [](Physics2D::RigidBody* b, const Physics2D::CollisionInfo& info) {};
+		leftBody->OnCollisionEnter = [](Physics2D::RigidBody* b, const Physics2D::CollisionInfo& info) {};
+		rightBody->OnCollisionEnter = [](Physics2D::RigidBody* b, const Physics2D::CollisionInfo& info) {};
+	}
 	this->RBody = body;
-	body->OnCollisionEnter = std::bind(&Player::onCollision, this, std::placeholders::_1, std::placeholders::_2);
+	auto callable = std::bind(&Player::onCollision, this, std::placeholders::_1, std::placeholders::_2);
+	body->OnCollisionEnter = callable;
+
+	// TODO: initialize left and right bodies.
+	const Physics2D::AABB& aabb = RBody->GetAABB();
+	glm::vec2 sideBodySize = glm::vec2(sideBodyWidth, aabb.size.y);
+	leftBody = Physics2D::RigidBody::CreateRectangleBody(aabb.position - glm::vec2(sideBodyWidth, 0.0f), sideBodySize, 1.0f, false, 0.0f);
+	leftBody->Name = "leftBody";
+	rightBody = Physics2D::RigidBody::CreateRectangleBody(aabb.position + glm::vec2(aabb.size.x, 0.0f), sideBodySize, 1.0f, false, 0.0f);
+	rightBody->Name = "rightBody";
+	leftBody->OnCollisionEnter = [&](Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info) { this->leftColliding = true; };
+	rightBody->OnCollisionEnter = [&](Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info) { this->rightColliding = true; };
+	leftBody->IsKinematic = rightBody->IsKinematic = true;
+}
+void Player::AddToWorld(Physics2D::PhysicsWorld* world)
+{
+	if (this->RBody) {
+		world->AddBody(RBody);
+		// TODO: add left and right bodies...
+		world->AddBody(leftBody);
+		world->AddBody(rightBody);
+	}
 }
 
 void Player::Draw(SpriteRenderer* renderer)
@@ -46,7 +70,6 @@ bool in_range(float& num, float low, float high)
 {
 	return low <= num && num <= high;
 }
-
 template<typename T> T sign(T val) {
 	return T((T(0) < val) - (val < T(0)));
 }
@@ -54,7 +77,7 @@ template<typename T> T sign(T val) {
 void Player::Update(float dt)
 {
 	// Do collision test again in sorted order,
-	// so that the player will not het stuck 
+	// so that the player will not get stuck 
 	// between tiles.
 	std::sort(collisions.begin(), collisions.end(), [](const collision& a, const collision& b) { return a.dist < b.dist; });
 	for (auto& c : collisions) {
@@ -102,6 +125,10 @@ void Player::Update(float dt)
 
 	// Update the sprite.
 	PlayerSprite = Animator->GetSprite();
+	// Move the left and right colliders.
+	const Physics2D::AABB& aabb = RBody->GetAABB();
+	leftBody->MoveTo(aabb.position - glm::vec2(sideBodyWidth, 0.0f));
+	rightBody->MoveTo(aabb.position + glm::vec2(aabb.size.x, 0.0f));
 }
 
 void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
@@ -229,6 +256,8 @@ glm::vec2 Player::GetScreenPosition()
 
 void Player::onCollision(Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info)
 {
+	if (body->Name == "leftBody" || body->Name == "rightBody")
+		return;
 	// Move the body out of the collision.
 	// RBody->MoveOutOfCollision(info);
 	glm::vec2 ab = body->GetPosition() - RBody->GetPosition();
