@@ -31,25 +31,27 @@ void Player::SetRigidBody(std::shared_ptr<Physics2D::RigidBody> body)
 		rightBody->OnCollisionEnter = [](Physics2D::RigidBody* b, const Physics2D::CollisionInfo& info) {};
 	}
 	this->RBody = body;
-	auto callable = std::bind(&Player::onCollision, this, std::placeholders::_1, std::placeholders::_2);
-	body->OnCollisionEnter = callable;
+	body->OnCollisionEnter = std::bind(&Player::onCollision, this, std::placeholders::_1, std::placeholders::_2);;
 
 	// TODO: initialize left and right bodies.
 	const Physics2D::AABB& aabb = RBody->GetAABB();
 	glm::vec2 sideBodySize = glm::vec2(sideBodyWidth, aabb.size.y);
+
 	leftBody = Physics2D::RigidBody::CreateRectangleBody(aabb.position - glm::vec2(sideBodyWidth, 0.0f), sideBodySize, 1.0f, false, 0.0f);
 	leftBody->Name = "leftBody";
+
 	rightBody = Physics2D::RigidBody::CreateRectangleBody(aabb.position + glm::vec2(aabb.size.x, 0.0f), sideBodySize, 1.0f, false, 0.0f);
 	rightBody->Name = "rightBody";
-	leftBody->OnCollisionEnter = [&](Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info) { this->leftColliding = true; };
-	rightBody->OnCollisionEnter = [&](Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info) { this->rightColliding = true; };
+
+	// Side colliders should collider only with bodies other than this player body.
+	leftBody->OnCollisionEnter = std::bind(&Player::onLeftCollision, this, std::placeholders::_1, std::placeholders::_2);
+	rightBody->OnCollisionEnter = std::bind(&Player::onRightCollision, this, std::placeholders::_1, std::placeholders::_2);
 	leftBody->IsKinematic = rightBody->IsKinematic = true;
 }
 void Player::AddToWorld(Physics2D::PhysicsWorld* world)
 {
 	if (this->RBody) {
 		world->AddBody(RBody);
-		// TODO: add left and right bodies...
 		world->AddBody(leftBody);
 		world->AddBody(rightBody);
 	}
@@ -90,20 +92,18 @@ void Player::Update(float dt)
 					CanJump = true;
 					Velocity.y = 0.0f;
 				}
-				if (std::abs(info.normal.x) == 1.0f)
-				{
-					CanJump = true;
-					SlidingWall = true;
-				}
-				else {
-					SlidingWall = false;
-				}
 			}
 			RBody->MoveOutOfCollision(info);
 		}
 	}
 	collisions.clear();
 	UpdatePositions();
+	// Move the left and right colliders.
+	glm::vec2 offset = glm::vec2((RBody->GetAABB().size.x + sideBodyWidth) / 2.0f, 0.0f);
+	leftBody->MoveTo(RBody->GetPosition() - offset);
+	rightBody->MoveTo(RBody->GetPosition() + offset);
+	leftBody->UpdatePosition();
+	rightBody->UpdatePosition();
 
 	if (Velocity.y > 0.0f && !SlidingWall)
 		CanJump = false;
@@ -123,12 +123,16 @@ void Player::Update(float dt)
 		}
 	}
 
+
+	if (!leftColliding && !rightColliding)
+		SlidingJumped = false;
+
 	// Update the sprite.
 	PlayerSprite = Animator->GetSprite();
-	// Move the left and right colliders.
-	const Physics2D::AABB& aabb = RBody->GetAABB();
-	leftBody->MoveTo(aabb.position - glm::vec2(sideBodyWidth, 0.0f));
-	rightBody->MoveTo(aabb.position + glm::vec2(aabb.size.x, 0.0f));
+
+	lastLeftColliding = leftColliding;
+	lastRightColliding = rightColliding;
+	leftColliding = rightColliding = false;
 }
 
 void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
@@ -182,7 +186,7 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 		hDecelerating = true;
 	}
 
-	// Jump.
+	// Jump -- pressed once.
 	if (keys[Controls.JumpUp] && !keys_processed[Controls.JumpUp])
 	{
 		if (CanJump)
@@ -190,8 +194,15 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 			float jump_impulse = std::sqrt(2.0f * Gravity * GravityScale * jumpHeight);
 			Velocity.y = -jump_impulse;
 
-			if (SlidingWall)
-				Velocity.x = 20.0f;
+			if (lastLeftColliding || lastRightColliding)
+			{
+				if (!SlidingJumped)
+				{
+					std::cout << "Slide jumped" << std::endl;
+					Velocity.x = 1000.0f * (lastLeftColliding ? -1.0f : 1.0f);
+					SlidingJumped = true;
+				}
+			}
 
 			// Set default states.
 			IsJumping = true;
@@ -244,7 +255,6 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 }
 void Player::UpdatePositions()
 {
-
 	if (RBody) {
 		this->Position = RBody->GetPosition();
 	}
@@ -262,9 +272,16 @@ void Player::onCollision(Physics2D::RigidBody* body, const Physics2D::CollisionI
 	// RBody->MoveOutOfCollision(info);
 	glm::vec2 ab = body->GetPosition() - RBody->GetPosition();
 	collisions.push_back(collision{ ab.x * ab.x + ab.y * ab.y, body });
-	if (body->Name == "ground")
-	{
-	}
+}
+void Player::onLeftCollision(Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info)
+{
+	if (body->Name == "ground" && glm::dot(glm::vec2(1.0f, 0.0f), info.normal) > 0.0f)
+		this->leftColliding = !(body == this->RBody.get());
+}
+void Player::onRightCollision(Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info)
+{
+	if (body->Name == "ground" && glm::dot(glm::vec2(-1.0f, 0.0f), info.normal) > 0.0f)
+		this->rightColliding = !(body == this->RBody.get());
 }
 
 void Player::SetPosition(glm::vec2 position)

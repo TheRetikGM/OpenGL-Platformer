@@ -201,7 +201,6 @@ void Game::ProcessInput(float dt)
 void Game::Update(float dt)
 {
 
-	
 	w1.Restart();
 	Levels[CurrentLevel]->Update(dt);
 	w1.Stop();
@@ -276,14 +275,16 @@ void Game::Render()
 	int hor = player->Animator->GetParamater<int>("horizontal");
 	int vert = player->Animator->GetParamater<int>("vertical");
 	char buf[256];
-	sprintf(buf, "FPS: %.f\nState: %s\nHorizontal: %i\nVertical: %i\nLin. vel.: [%f, %f]\nUpdate step: %f ms\nRender step: %f ms\nSliding wall: %s", 
+	sprintf(buf, "FPS: %.f\nState: %s\nHorizontal: %i\nVertical: %i\nLin. vel.: [%f, %f]\nUpdate step: %f ms\nRender step: %f ms\nSliding wall: %s\nLeftCol: %s\nRightCol: %s",
 		fps, 
 		state.c_str(), hor, vert,
 		player->Velocity.x, player->Velocity.y,
 		w1.ElapsedMilliseconds(),
 		w2.ElapsedMilliseconds(),
-		player->SlidingWall ? "yes" : "no"
-		);
+		player->SlidingWall ? "yes" : "no",
+		player->lastLeftColliding ? "yes" : "no",
+		player->lastRightColliding ? "yes" : "no"
+	);
 	text_renderer->RenderText(std::string(buf), 10.0f, 10.0f, 1.0f);
 }
 

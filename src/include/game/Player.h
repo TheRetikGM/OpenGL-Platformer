@@ -47,13 +47,17 @@ public:
 
 	glm::vec2 GetScreenPosition() override;
 	void onTileSizeChanged(glm::vec2 newTileSize) override;
+
+	bool lastLeftColliding = false;
+	bool lastRightColliding = false;
 private:
 	glm::vec2 lastSlidingDir = glm::vec2(0.0f, 0.0f);
 	std::shared_ptr<Physics2D::RigidBody> leftBody;
 	std::shared_ptr<Physics2D::RigidBody> rightBody;
+
 	bool leftColliding = false;
 	bool rightColliding = false;
-	float sideBodyWidth = 0.3f;
+	float sideBodyWidth = 0.1f;
 
 	struct collision {
 		float dist = INFINITY;
@@ -62,4 +66,6 @@ private:
 	std::vector<collision> collisions;
 
 	void onCollision(Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info);
+	void onLeftCollision(Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info);
+	void onRightCollision(Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info);
 };
