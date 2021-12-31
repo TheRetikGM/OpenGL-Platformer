@@ -200,12 +200,12 @@ void Game::ProcessInput(float dt)
 }
 void Game::Update(float dt)
 {
-
+	TileCamera2D::Update(dt);
 	w1.Restart();
 	Levels[CurrentLevel]->Update(dt);
 	w1.Stop();
 	player->Update(dt);
-	TileCamera2D::Update(dt);
+	player->SetSprite(player->Animator->GetSprite());
 
 	// Update Animations
 	for (auto& [name, manager] : ResourceManager::AnimationManagers)
@@ -268,22 +268,18 @@ void Game::Render()
 			}
 		}
 	}
+
+	basic_renderer->RenderShape(br_Shape::rectangle, player->GetSprite()->Position, player->GetSprite()->Size, 0.0f, glm::vec3(1.0f, 1.0f, 0.0f));
 	w2.Stop();
 
 	// Render DEBUG text
-	std::string state = player->Animator->GetParamater<std::string>("state");
-	int hor = player->Animator->GetParamater<int>("horizontal");
-	int vert = player->Animator->GetParamater<int>("vertical");
 	char buf[256];
-	sprintf(buf, "FPS: %.f\nState: %s\nHorizontal: %i\nVertical: %i\nLin. vel.: [%f, %f]\nUpdate step: %f ms\nRender step: %f ms\nSliding wall: %s\nLeftCol: %s\nRightCol: %s",
+	sprintf(buf, "FPS: %.f\nUpdate step: %f ms\nRender step: %f ms\nSpriteSize: %s",
 		fps, 
-		state.c_str(), hor, vert,
 		player->Velocity.x, player->Velocity.y,
 		w1.ElapsedMilliseconds(),
 		w2.ElapsedMilliseconds(),
-		player->SlidingWall ? "yes" : "no",
-		player->lastLeftColliding ? "yes" : "no",
-		player->lastRightColliding ? "yes" : "no"
+		("(" + std::to_string(player->GetSprite()->Size.x) + ", " + std::to_string(player->GetSprite()->Size.y) + ")").c_str()
 	);
 	text_renderer->RenderText(std::string(buf), 10.0f, 10.0f, 1.0f);
 }

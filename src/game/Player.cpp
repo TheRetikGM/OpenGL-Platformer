@@ -4,16 +4,17 @@
 
 #define ifFirstPressed(key, pred) if (keys[key] && !keys_processed[key]) { pred; keys_processed[key] = true; }
 
-bool SlidingJumped = true;
 
 Player::Player(glm::vec2 position, glm::vec2 size, Sprite* sprite, glm::vec3 color)
 	: GameObject(position, glm::vec2(0.0f, 0.0f), size, color)
-	, PlayerSprite(sprite)
+	, playerSprite(sprite)
 	, InCollision(false)
 	, RBody(nullptr)
 	, Animator(nullptr)
 	, IsJumping(true)
 	, Controls()
+	, spriteOffset(0.0f)
+	, spriteRatio(sprite->Size.x / sprite->Size.y)
 {	
 	Game::AddTileSpaceObject(this);
 	onTileSizeChanged(Game::TileSize);
@@ -56,16 +57,28 @@ void Player::AddToWorld(Physics2D::PhysicsWorld* world)
 		world->AddBody(rightBody);
 	}
 }
+void Player::SetSpriteOffset(glm::vec2 offset_in_tiles)
+{
+	spriteOffset = TileCamera2D::GetScreenPosition(offset_in_tiles);	
+}
+void Player::SetSprite(Sprite* spr)
+{
+	if (spr->Texture.Width != playerSprite->Texture.Width || spr->Texture.Height != playerSprite->Texture.Height)
+		this->spriteRatio = spr->Size.x / spr->Size.y; //spr->Texture.Width / spr->Texture.Height;
+	this->playerSprite = spr;
+	this->playerSprite->Size = glm::vec2(this->Size.y * spriteRatio, this->Size.y) * Game::TileSize * TileCamera2D::GetScale();
+	this->playerSprite->Position = TileCamera2D::GetScreenPosition(Position) - playerSprite->Size * 0.5f;
+}
 
 void Player::Draw(SpriteRenderer* renderer)
 {	
-	PlayerSprite->Size = this->Size * Game::TileSize * TileCamera2D::GetScale();
-	PlayerSprite->Position = GetScreenPosition();
-	PlayerSprite->Draw(renderer);
+	//playerSprite->Size = glm::vec2(this->Size.y * spriteRatio, this->Size.y) * Game::TileSize * TileCamera2D::GetScale();
+	//playerSprite->Position = GetScreenPosition() + spriteOffset;
+	playerSprite->Draw(renderer);
 }
 void Player::DrawAt(SpriteRenderer* renderer, glm::vec2 pos)
 {		
-	renderer->DrawSprite(PlayerSprite->Texture, pos, PlayerSprite->Size, PlayerSprite->Rotation, PlayerSprite->Color);
+	renderer->DrawSprite(playerSprite->Texture, pos, playerSprite->Size, playerSprite->Rotation, playerSprite->Color);
 }
 
 bool in_range(float& num, float low, float high)
@@ -87,9 +100,11 @@ void Player::Update(float dt)
 		if (Physics2D::CheckCollision(RBody.get(), c.body, info)) {
 			if (c.body->Name == "ground")
 			{
+				// On ground
 				if (glm::dot(info.normal, glm::vec2(0.0f, -1.0f)) > 0.0f)
 				{
 					CanJump = true;
+					canWallJump = false;
 					Velocity.y = 0.0f;
 				}
 			}
@@ -124,15 +139,8 @@ void Player::Update(float dt)
 	}
 
 
-	if (!leftColliding && !rightColliding)
-		SlidingJumped = false;
-
 	// Update the sprite.
-	PlayerSprite = Animator->GetSprite();
-
-	lastLeftColliding = leftColliding;
-	lastRightColliding = rightColliding;
-	leftColliding = rightColliding = false;
+	// this->SetSprite(Animator->GetSprite());
 }
 
 void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
@@ -180,7 +188,7 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 		horizontal += 1;
 	}
 	// Horizontal deceleration when not pressing left or right.
-	if (Acceleration.x == 0.0f && Velocity.x != 0.0f)
+	if (Acceleration.x == 0.0f && Velocity.x != 0.0f && !canWallJump)
 	{
 		Acceleration.x = -sign(Velocity.x) * hDeceleration;
 		hDecelerating = true;
@@ -194,29 +202,37 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 			float jump_impulse = std::sqrt(2.0f * Gravity * GravityScale * jumpHeight);
 			Velocity.y = -jump_impulse;
 
-			if (lastLeftColliding || lastRightColliding)
-			{
-				if (!SlidingJumped)
-				{
-					std::cout << "Slide jumped" << std::endl;
-					Velocity.x = 1000.0f * (lastLeftColliding ? -1.0f : 1.0f);
-					SlidingJumped = true;
-				}
-			}
-
 			// Set default states.
 			IsJumping = true;
 			CanJump = false;
 			jumpCanceled = false;
 			jumpTime = 0.0f;
 		}
+		if (canWallJump)
+		{
+			float jump_impulse = std::sqrt(2.0f * Gravity * JumpGravityScale * jumpHeight);
+			Velocity.y = -jump_impulse;
+			Velocity.x = wallNormal.x * 5.0f;
+			canWallJump = false;
+
+			IsJumping = true;
+			jumpCanceled = false;
+			jumpTime = 0.0f;
+		}
 
 		keys_processed[Controls.JumpUp] = true;
 	}
-	if (Velocity.y > 0.0)		// Falling
+	// Gravity scale
+	if (canWallJump && Acceleration.x != 0.0f && Acceleration.x * wallNormal.x < 0.0f && Velocity.y >= 0.0f) // Sliding wall
+	{
+		GravityScale = 1.0f;
+		Velocity.y = 0.0f;
+	}
+	else if (Velocity.y > 0.0)		// Falling
 		GravityScale = FallGravityScale;
 	else						// Jumping
 		GravityScale = JumpGravityScale;
+	// Jump cancel check.
 	if (IsJumping)
 	{
 		jumpTime += dt;
@@ -232,6 +248,8 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 
 	Velocity += Acceleration * dt;
 	// If hDecelerating and the body should stop, then stop it.
+	// Handles the case, where the body is almost not moving, 
+	// but it is moving little bit left and right.
 	if (Acceleration.x * Velocity.x > 0.0f && hDecelerating) {
 		Velocity.x = 0.0f;
 		hDecelerating = false;
@@ -250,8 +268,11 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 	RBody->LinearVelocity = Velocity;
 	RBody->Acceleration = Acceleration;
 
+	// Apply horizontal animation.
 	if (horizontal != 0)
 		Animator->SetParameter("horizontal", horizontal);
+
+	canWallJump = false;
 }
 void Player::UpdatePositions()
 {
@@ -275,13 +296,27 @@ void Player::onCollision(Physics2D::RigidBody* body, const Physics2D::CollisionI
 }
 void Player::onLeftCollision(Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info)
 {
+	if (body == this->RBody.get())
+		return;
+
+	// Wall on the left side of player.
 	if (body->Name == "ground" && glm::dot(glm::vec2(1.0f, 0.0f), info.normal) > 0.0f)
-		this->leftColliding = !(body == this->RBody.get());
+	{
+		canWallJump = true;
+		wallNormal = glm::vec2(1.0f, 0.0f);
+	}
 }
 void Player::onRightCollision(Physics2D::RigidBody* body, const Physics2D::CollisionInfo& info)
 {
+	if (body == this->RBody.get())
+		return;
+
+	// Wall on the right side of player.
 	if (body->Name == "ground" && glm::dot(glm::vec2(-1.0f, 0.0f), info.normal) > 0.0f)
-		this->rightColliding = !(body == this->RBody.get());
+	{
+		canWallJump = true;
+		wallNormal = glm::vec2(-1.0f, 0.0f);
+	}
 }
 
 void Player::SetPosition(glm::vec2 position)

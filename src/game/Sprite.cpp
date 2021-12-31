@@ -1,5 +1,6 @@
 #include "game/Sprite.h"
 #include <glad/glad.h>
+#include "game/game.h"
 
 Sprite::Sprite(glm::vec2 position, glm::vec2 size, Texture2D texture)
     : Position(position)
@@ -9,7 +10,17 @@ Sprite::Sprite(glm::vec2 position, glm::vec2 size, Texture2D texture)
     , Rotation(0.0f)
     , FlipTex_x(false)
     , FlipTex_y(false)
+    , ITileSpace()
 {
+    Game::AddTileSpaceObject(this);
+}
+Sprite::Sprite()
+{
+    Game::AddTileSpaceObject(this);
+}
+Sprite::~Sprite()
+{
+    Game::RemoveTileSpaceObject(this);
 }
 
 void Sprite::Draw(SpriteRenderer* renderer)
@@ -19,4 +30,10 @@ void Sprite::Draw(SpriteRenderer* renderer)
     renderer->DrawSprite(Texture, Position, Size, Rotation, Color);
     renderer->GetShader().SetInt("inverse_tex_x", 0);
     renderer->GetShader().SetInt("inverse_tex_y", 0);
+}
+void Sprite::onTileSizeChanged(glm::vec2 newTileSize)
+{
+    // Set size in tiles.
+    Size.x = Texture.Width / newTileSize.x;
+    Size.y = Texture.Height / newTileSize.y;
 }

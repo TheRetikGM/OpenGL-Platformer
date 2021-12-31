@@ -3,8 +3,9 @@
 #include <glm/glm.hpp>
 #include "shader.h"
 #include "sprite_renderer.h"
+#include "Interfaces/ITileSpace.h"
 
-class Sprite
+class Sprite : public ITileSpace
 {
 public:
     glm::vec2   Position;
@@ -16,7 +17,9 @@ public:
     bool        FlipTex_y;
 
     Sprite (glm::vec2 position, glm::vec2 size, Texture2D texture);
-    Sprite() = default;
+    Sprite();
+    ~Sprite();
 
     virtual void Draw(SpriteRenderer* renderer);
+    void onTileSizeChanged(glm::vec2 newTileSize) override;
 };

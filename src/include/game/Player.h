@@ -22,7 +22,6 @@ public:
 class Player : public GameObject, public ITileSpace
 {
 public:	
-	Sprite* 	PlayerSprite;
 	bool		InCollision;
 	bool		CanJump;
 	bool		IsJumping;
@@ -32,6 +31,8 @@ public:
 	PlayerControls Controls;
 	const float Gravity = 9.81f;
 	float GravityScale = 2.0f;
+	bool canWallJump = false;
+	glm::vec2 wallNormal;
 	
 	Player(glm::vec2 position, glm::vec2 size, Sprite* sprite, glm::vec3 color);
 	~Player();
@@ -41,22 +42,27 @@ public:
 	void Update(float dt);
 	void UpdatePositions();
 	void ProcessKeyboard(bool* keys, bool* keys_processed, float dt);
+
 	void SetRigidBody(std::shared_ptr<Physics2D::RigidBody> body);
 	void SetPosition(glm::vec2 position);
+	void SetSpriteOffset(glm::vec2 offset_in_tiles);
+	void SetSprite(Sprite* spr);
+	Sprite* GetSprite() { return playerSprite; }
+
 	void AddToWorld(Physics2D::PhysicsWorld* world);
 
 	glm::vec2 GetScreenPosition() override;
 	void onTileSizeChanged(glm::vec2 newTileSize) override;
 
-	bool lastLeftColliding = false;
-	bool lastRightColliding = false;
 private:
+	Sprite* 	playerSprite;
+	float 		spriteRatio;
+	glm::vec2	spriteOffset;
+
 	glm::vec2 lastSlidingDir = glm::vec2(0.0f, 0.0f);
 	std::shared_ptr<Physics2D::RigidBody> leftBody;
 	std::shared_ptr<Physics2D::RigidBody> rightBody;
 
-	bool leftColliding = false;
-	bool rightColliding = false;
 	float sideBodyWidth = 0.1f;
 
 	struct collision {
