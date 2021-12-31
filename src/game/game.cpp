@@ -266,10 +266,9 @@ void Game::Render()
 						0.0f, glm::vec3(1.0f));
 				}
 			}
+			basic_renderer->RenderShape(br_Shape::rectangle, player->GetSprite()->Position, player->GetSprite()->Size, 0.0f, glm::vec3(1.0f, 1.0f, 0.0f));
 		}
 	}
-
-	basic_renderer->RenderShape(br_Shape::rectangle, player->GetSprite()->Position, player->GetSprite()->Size, 0.0f, glm::vec3(1.0f, 1.0f, 0.0f));
 	w2.Stop();
 
 	// Render DEBUG text
