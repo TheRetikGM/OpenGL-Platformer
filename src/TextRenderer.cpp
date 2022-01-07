@@ -25,9 +25,21 @@ TextRenderer::TextRenderer(unsigned int width, unsigned int height)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
-
-void TextRenderer::Load(std::string font, unsigned int fontSize)
+TextRenderer::~TextRenderer()
 {
+    delete_textures();
+    this->Characters.clear();
+    this->Errors.clear();
+}
+void TextRenderer::delete_textures()
+{
+    for (auto& [c, character] : this->Characters)
+        glDeleteTextures(1, &character.TextureID);
+}
+
+void TextRenderer::Load(std::string font, unsigned int fontSize, int mag_filter, int min_filter)
+{
+    delete_textures();
     this->Characters.clear();
     this->Errors.clear();
 
@@ -68,8 +80,8 @@ void TextRenderer::Load(std::string font, unsigned int fontSize)
         );
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
 
         // Store character for later use
         Character character = {
@@ -84,8 +96,10 @@ void TextRenderer::Load(std::string font, unsigned int fontSize)
 
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
+
+    this->fontSize = fontSize;
 }
-void TextRenderer::RenderText(std::string text, float x, float y, float scale, glm::vec3 color)
+void TextRenderer::RenderText(std::string text, float x, float y, float scale, glm::vec3 color) const
 {
     this->TextShader.Use();
     this->TextShader.SetVec3f("TextColor", color);
@@ -100,14 +114,14 @@ void TextRenderer::RenderText(std::string text, float x, float y, float scale, g
         if (*c == '\n')
         {
             x = x_orig;
-            y += (this->Characters['H'].Size.y + RowSpacing) * scale;
+            y += (Characters.at('H').Size.y + RowSpacing) * scale;
             continue;
         }
 
-        Character ch = this->Characters[*c];
+        Character ch = Characters.at(*c);
 
         float xpos = x + ch.Bearing.x * scale;
-        float ypos = y + (this->Characters['H'].Bearing.y - ch.Bearing.y) * scale;
+        float ypos = y + (Characters.at('H').Bearing.y - ch.Bearing.y) * scale;
 
         float w = ch.Size.x * scale;
         float h = ch.Size.y * scale;
@@ -132,4 +146,17 @@ void TextRenderer::RenderText(std::string text, float x, float y, float scale, g
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+glm::ivec2 TextRenderer::GetStringSize(std::string str, float scale) const
+{
+    glm::ivec2 size(0, 0);
+    size_t len = str.length();
+    for (int i = 0; i < len; i++)
+    {
+        size.x += Characters.at(str[i]).Advance >> 6;
+        size.y = std::max(size.y, Characters.at(str[i]).Size.y);
+    }
+
+    return size;
 }

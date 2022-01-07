@@ -11,7 +11,8 @@
 enum class GameState : uint8_t {
 	active,
 	menu,
-	loading
+	loading,
+	ingame_paused
 };
 
 enum class Direction : uint8_t {
@@ -31,6 +32,7 @@ public:
 	glm::vec3		BackgroundColor;
 	std::string		WindowTitle = "Game";
 	std::vector<GameLevel*> Levels;
+	bool Run = true;
 	int CurrentLevel;
 
 	static glm::vec2 TileSize;

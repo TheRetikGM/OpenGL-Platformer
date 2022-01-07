@@ -11,6 +11,7 @@
 #include "game/Player.h"
 #include "TextRenderer.h"
 #include "Helper.hpp"
+#include "menu.hpp"
 #include <GLFW/glfw3.h>
 #include <thread>
 #define printf_v(name, vec, prec) std::printf(name ": [%" prec "f, %" prec "f]\n", (vec).x, (vec).y)
@@ -36,6 +37,12 @@ float ref_fps = 0.0f;
 float n_fps = 0.0f;
 float t_fps = 0.0f;
 
+// Menu variables
+using namespace MenuSystem;
+MenuObject* menu;
+MenuRenderer* menu_renderer;
+MenuManager* menu_manager;
+
 // Temp
 Helper::Stopwatch w1;
 Helper::Stopwatch w2;
@@ -59,6 +66,13 @@ Game::~Game()
 		delete player;
 	if (text_renderer)
 		delete text_renderer;
+	if (menu)
+		delete menu;
+	if (menu_renderer)
+		delete menu_renderer;
+	if (menu_manager)
+		delete menu_manager;
+	
 	ResourceManager::Clear();
 	for (auto& level : this->Levels)
 		GameLevel::Delete(level);
@@ -104,6 +118,7 @@ void Game::Init()
 
 	// Load textures
 	ResourceManager::LoadTexture(ASSETS_DIR "sprites/bg_1.png", true, "background1");
+	ResourceManager::LoadTexture(ASSETS_DIR "textures/menu_9patch.png", true, "menu_9patch").SetMagFilter(GL_NEAREST).SetMinFilter(GL_NEAREST).UpdateParameters();
 
 	// Load levels
 	this->Levels.push_back(GameLevel::Load(ASSETS_DIR "Levels/level_0.lvl"));
@@ -125,9 +140,9 @@ void Game::Init()
 	basic_renderer = new BasicRenderer(ResourceManager::GetShader("basic_render"));
 	basic_renderer->SetLineWidth(2.0f);
 
-	// Initialize text renderer.
+	// Load Fonts and Initialize text renderer.
 	text_renderer = new TextRenderer(Width, Height);
-	text_renderer->Load(ASSETS_DIR "fonts/arial.ttf", 16);
+	text_renderer->Load(ASSETS_DIR "fonts/arial.ttf", 16, GL_NEAREST);
 
 	// Initialize Camera	
 	TileCamera2D::SetPosition(glm::vec2(0.0f, 0.0f));
@@ -155,27 +170,118 @@ void Game::Init()
 	// Set initial states.	
 	TileCamera2D::SetFollow(player);
 	player->AddToWorld(Levels[CurrentLevel]->PhysicsWorld);
+
+	/* ====== Initizlie menu objects ======= */
+	// Initialize menus.
+	menu = new MenuObject();
+	menu->SetPatchSize(glm::ivec2(16));
+	MenuObject& pauseMenu = menu->at("Pause Menu").SetTable(1, 3);
+	pauseMenu["Resume"].SetID(101);
+	pauseMenu["Options"];
+	pauseMenu["Exit game"].SetID(103);
+	pauseMenu.Build(text_renderer);
+
+	// Initilize menu manager
+	menu_manager = new MenuManager();
+
+	// Initialize menu renderer
+	menu_renderer = new MenuRenderer(renderer);
 }
 
 void Game::ProcessInput(float dt)
 {
-	player->ProcessKeyboard(Keys, KeysProcessed, dt);
+	if (this->State == GameState::active)
+	{
+		player->ProcessKeyboard(Keys, KeysProcessed, dt);
 
-	if (Keys[GLFW_KEY_Q])
-	{
-		TileCamera2D::Rotate(glm::radians(45.0f) * dt);
+		if (Keys[GLFW_KEY_Q])
+		{
+			TileCamera2D::Rotate(glm::radians(45.0f) * dt);
+		}
+		if (Keys[GLFW_KEY_E])
+		{
+			TileCamera2D::Rotate(glm::radians(-45.0f) * dt);
+		}
+		if (Keys[GLFW_KEY_SPACE])
+		{
+			TileCamera2D::SetRight(glm::vec2(1.0f, 0.0f));	
+			TileCamera2D::SetScale(glm::vec2(2.0f));	
+			Game::SetTileSize(Game::TileSize);	
+			player->RBody->LinearVelocity = glm::vec2(0.0f);
+		}
+		if (Keys[GLFW_KEY_F2] && !KeysProcessed[GLFW_KEY_F2])
+		{
+			render_aabb = !render_aabb;
+			KeysProcessed[GLFW_KEY_F2] = true;
+		}
+
+
+		// ==== TODO: move this into player's code
+		auto playerAnim = ResourceManager::GetAnimationManager("PlayerAnimations");
+		if (Keys[GLFW_KEY_LEFT_SHIFT] && !KeysProcessed[GLFW_KEY_LEFT_SHIFT])
+		{
+			playerAnim->PlayOnce("attack");
+			KeysProcessed[GLFW_KEY_LEFT_SHIFT] = true;
+		}
+
+		if (Keys[GLFW_KEY_ESCAPE] && !KeysProcessed[GLFW_KEY_ESCAPE])
+		{
+			this->State = GameState::ingame_paused;	
+			menu_manager->Open(&menu->at("Pause Menu"));
+			KeysProcessed[GLFW_KEY_ESCAPE] = true;
+		}
 	}
-	if (Keys[GLFW_KEY_E])
+	else if (this->State == GameState::ingame_paused)
 	{
-		TileCamera2D::Rotate(glm::radians(-45.0f) * dt);
+		if (Keys[GLFW_KEY_W] && !KeysProcessed[GLFW_KEY_W])
+		{
+			menu_manager->OnUp();
+			KeysProcessed[GLFW_KEY_W] = true;
+		}
+		if (Keys[GLFW_KEY_S] && !KeysProcessed[GLFW_KEY_S])
+		{
+			menu_manager->OnDown();
+			KeysProcessed[GLFW_KEY_S] = true;
+		}
+		if (Keys[GLFW_KEY_A] && !KeysProcessed[GLFW_KEY_A])
+		{
+			menu_manager->OnLeft();
+			KeysProcessed[GLFW_KEY_A] = true;
+		}
+		if (Keys[GLFW_KEY_D] && !KeysProcessed[GLFW_KEY_D])
+		{
+			menu_manager->OnRight();
+			KeysProcessed[GLFW_KEY_D] = true;
+		}
+		if (Keys[GLFW_KEY_SPACE] && !KeysProcessed[GLFW_KEY_SPACE])
+		{
+			MenuObject* command = menu_manager->OnConfirm();
+			if (command)
+			{
+				if (command->GetID() == 101)
+				{
+					menu_manager->Close();
+					this->State = GameState::active;
+				}
+				else if (command->GetID() == 103)
+				{
+					this->Run = false;
+				}
+				// menu_manager->Close();
+			}
+
+			KeysProcessed[GLFW_KEY_SPACE] = true;
+		}
+		if (Keys[GLFW_KEY_ESCAPE] && !KeysProcessed[GLFW_KEY_ESCAPE])
+		{
+			menu_manager->OnBack();
+			if (menu_manager->MenuClosed())
+				this->State = GameState::active;
+			KeysProcessed[GLFW_KEY_ESCAPE] = true;
+		}
 	}
-	if (Keys[GLFW_KEY_SPACE])
-	{
-		TileCamera2D::SetRight(glm::vec2(1.0f, 0.0f));	
-		TileCamera2D::SetScale(glm::vec2(2.0f));	
-		Game::SetTileSize(Game::TileSize);	
-		player->RBody->LinearVelocity = glm::vec2(0.0f);
-	}
+
+
 	if (Keys[GLFW_KEY_F1] && !KeysProcessed[GLFW_KEY_F1])
 	{
 		wireframe_render = !wireframe_render;
@@ -185,32 +291,24 @@ void Game::ProcessInput(float dt)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		KeysProcessed[GLFW_KEY_F1] = true;		
 	}
-	if (Keys[GLFW_KEY_F2] && !KeysProcessed[GLFW_KEY_F2])
-	{
-		render_aabb = !render_aabb;
-		KeysProcessed[GLFW_KEY_F2] = true;
-	}
 
-	auto playerAnim = ResourceManager::GetAnimationManager("PlayerAnimations");
-	if (Keys[GLFW_KEY_LEFT_SHIFT] && !KeysProcessed[GLFW_KEY_LEFT_SHIFT])
-	{
-		playerAnim->PlayOnce("attack");
-		KeysProcessed[GLFW_KEY_LEFT_SHIFT] = true;
-	}	
 }
 void Game::Update(float dt)
 {
-	TileCamera2D::Update(dt);
-	w1.Restart();
-	Levels[CurrentLevel]->Update(dt);
-	w1.Stop();
-	player->Update(dt);
-	player->SetSprite(player->Animator->GetSprite());
+	if (State == GameState::active)
+	{
+		TileCamera2D::Update(dt);
+		w1.Restart();
+		Levels[CurrentLevel]->Update(dt);
+		w1.Stop();
+		player->Update(dt);
+		player->SetSprite(player->Animator->GetSprite());
 
-	// Update Animations
-	for (auto& [name, manager] : ResourceManager::AnimationManagers)
-		manager->Update(dt);
-	// player->PlayerSprite = ResourceManager::GetAnimationManager("PlayerAnimations")->GetSprite();
+		// Update Animations
+		for (auto& [name, manager] : ResourceManager::AnimationManagers)
+			manager->Update(dt);
+		// player->PlayerSprite = ResourceManager::GetAnimationManager("PlayerAnimations")->GetSprite();
+	}
 	
 	// Step update for FPS.
 	if (ref_fps < 2.0f) {
@@ -228,7 +326,7 @@ void Game::Update(float dt)
 void Game::Render()
 {
 	w2.Restart();
-	if (State == GameState::active)
+	if (State == GameState::active || State == GameState::ingame_paused)
 	{
 		renderer->DrawSprite(ResourceManager::GetTexture("background1"), glm::vec2(0.0f, 0.0f), glm::vec2(Width, Height), 0.0f);
 		// Render tilemap.		
@@ -269,13 +367,17 @@ void Game::Render()
 			basic_renderer->RenderShape(br_Shape::rectangle, player->GetSprite()->Position, player->GetSprite()->Size, 0.0f, glm::vec3(1.0f, 1.0f, 0.0f));
 		}
 	}
+	if (State == GameState::ingame_paused)
+	{
+		glm::vec2 vMenuSize = menu_manager->First().GetTotalSize(2.0f);
+		menu_renderer->Draw(*menu_manager, ResourceManager::GetTexture("menu_9patch"), (glm::vec2(Width, Height) - vMenuSize) * 0.5f, 2.0f);
+	}
 	w2.Stop();
 
 	// Render DEBUG text
 	char buf[256];
 	sprintf(buf, "FPS: %.f\nUpdate step: %f ms\nRender step: %f ms\nSpriteSize: %s",
 		fps, 
-		player->Velocity.x, player->Velocity.y,
 		w1.ElapsedMilliseconds(),
 		w2.ElapsedMilliseconds(),
 		("(" + std::to_string(player->GetSprite()->Size.x) + ", " + std::to_string(player->GetSprite()->Size.y) + ")").c_str()

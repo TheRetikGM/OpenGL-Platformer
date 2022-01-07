@@ -61,7 +61,7 @@ int main()
 		float deltaTime = 0.0f;
 		float lastFrame = 0.0f;
 
-		while (!glfwWindowShouldClose(window))
+		while (!glfwWindowShouldClose(window) && game->Run)
 		{
 			float currentFrame = (float)glfwGetTime();
 			deltaTime = currentFrame - lastFrame;
@@ -83,6 +83,8 @@ int main()
 			// Swap back and front buffers.
 			glfwSwapBuffers(window);
 		}
+		if (!game->Run)
+			glfwSetWindowShouldClose(window, true);
 	}
 	catch (const std::exception& e)
 	{
@@ -105,9 +107,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	game->OnResize();
 }
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
-{
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
+{		
 	if (key >= 0 && key < 1024)
 	{
 		if (action == GLFW_PRESS)
