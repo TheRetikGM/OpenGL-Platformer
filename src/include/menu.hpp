@@ -125,7 +125,6 @@ namespace MenuSystem
         {
             this->pTextRenderer = pTextRenderer;
             this->fTextScale = get_text_scale();
-            std::cout << "TextScale: " << fTextScale << std::endl;
 
             // Recursively build all children, so they can determine their size, use
             // that size to indicate cell sizes if this object contains more than
