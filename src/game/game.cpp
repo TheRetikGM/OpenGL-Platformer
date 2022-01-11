@@ -177,7 +177,14 @@ void Game::Init()
 	menu->SetPatchSize(glm::ivec2(16));
 	MenuObject& pauseMenu = menu->at("Pause Menu").SetTable(1, 3);
 	pauseMenu["Resume"].SetID(101);
-	pauseMenu["Options"];
+	pauseMenu["Options"].SetTable(2, 2);
+	pauseMenu["Options"]["option1"];
+	pauseMenu["Options"]["option2"];
+	pauseMenu["Options"]["option3"];
+	pauseMenu["Options"]["option4"];
+	pauseMenu["Options"]["option5"];
+	pauseMenu["Options"]["option6"];
+	pauseMenu["Options"]["option7"];
 	pauseMenu["Exit game"].SetID(103);
 	pauseMenu.Build(text_renderer);
 
