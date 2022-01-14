@@ -3,9 +3,9 @@
 #include <glm/glm.hpp>
 #include "shader.h"
 #include "sprite_renderer.h"
-#include "Interfaces/ITileSpace.h"
+#include "game/TileSpace.h"
 
-class Sprite : public ITileSpace
+class Sprite : public TileSpace
 {
 public:
     glm::vec2   Position;

@@ -2,7 +2,7 @@
 #include "game/GameObject.h"
 #include "sprite_renderer.h"
 #include "game/Sprite.h"
-#include "Interfaces/ITileSpace.h"
+#include "game/TileSpace.h"
 #include <memory>
 #include <RigidBody.h>
 #include <PhysicsWorld.h>
@@ -19,7 +19,7 @@ public:
 	PlayerControls() {}
 };
 
-class Player : public GameObject, public ITileSpace
+class Player : public GameObject, public TileSpace
 {
 public:	
 	bool		InCollision;

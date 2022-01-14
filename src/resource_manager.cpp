@@ -30,6 +30,11 @@ Shader ResourceManager::GetShader(std::string name)
 {
 	return Shaders[name];
 }
+void ResourceManager::DeleteShader(std::string name)
+{
+	glDeleteProgram(Shaders.at(name).ID);
+	Shaders.erase(name);
+}
 Texture2D& ResourceManager::LoadTexture(const char* file, bool alpha, std::string name)
 {
 	try
@@ -45,6 +50,11 @@ Texture2D& ResourceManager::LoadTexture(const char* file, bool alpha, std::strin
 Texture2D& ResourceManager::GetTexture(std::string name)
 {
 	return Textures[name];
+}
+void ResourceManager::DeleteTexture(std::string name)
+{
+	glDeleteTextures(1, &Textures.at(name).ID);
+	Textures.erase(name);
 }
 void ResourceManager::Clear()
 {
@@ -140,6 +150,11 @@ Tilemap* ResourceManager::GetTilemap(std::string name)
 {
 	return Tilemaps[name];
 }
+void ResourceManager::DeleteTilemap(std::string name)
+{
+	delete Tilemaps.at(name);
+	Tilemaps.erase(name);
+}
 AnimationManager* ResourceManager::LoadAnimationManager(const char* file)
 {
 	std::ifstream jsonFile(file);
@@ -160,4 +175,10 @@ AnimationManager* ResourceManager::LoadAnimationManager(const char* file)
 AnimationManager* ResourceManager::GetAnimationManager(std::string name)
 {
 	return AnimationManagers[name];
+}
+void ResourceManager::DeleteAnimationManager(std::string name)
+{
+	AnimationManagers.at(name)->DeleteAllTextures();
+	delete AnimationManagers.at(name);
+	AnimationManagers.erase(name);
 }

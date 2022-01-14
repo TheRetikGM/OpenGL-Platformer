@@ -56,7 +56,7 @@ int main()
 	try
 	{
 		game->Init();
-		game->ProcessScroll(0.0f);	// Trigger the ITileSpace onChange event for proper sizing of textures.
+		game->ProcessScroll(0.0f);	// Trigger the TileSpace onChange event for proper sizing of textures.
 
 		float deltaTime = 0.0f;
 		float lastFrame = 0.0f;

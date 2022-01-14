@@ -3,16 +3,16 @@
 #include <glm/glm.hpp>
 #include <algorithm>
 #include <vector>
-#include "Interfaces/ITileSpace.h"
+#include "game/TileSpace.h"
 #include <Tmx.h>
 #include "PhysicsWorld.h"
 #include "game/GameLevel.h"
 
 enum class GameState : uint8_t {
 	active,
-	menu,
 	loading,
-	ingame_paused
+	ingame_paused,
+	main_menu
 };
 
 enum class Direction : uint8_t {
@@ -31,11 +31,10 @@ public:
 	unsigned int	Width, Height;
 	glm::vec3		BackgroundColor;
 	std::string		WindowTitle = "Game";
-	std::vector<GameLevel*> Levels;
 	bool Run = true;
-	int CurrentLevel;
 
 	static glm::vec2 TileSize;
+	static glm::mat4 ProjectionMatrix;
 
 	Game(unsigned int width, unsigned int height);
 	~Game();
@@ -50,10 +49,6 @@ public:
 	void OnLayerRendered(const Tmx::Map* map, const Tmx::Layer* layer, int n_layer);
 
 	static void SetTileSize(glm::vec2 new_size);
-	static void AddTileSpaceObject(ITileSpace* obj) { tileSpaceObjects.push_back(obj); };
-	static void RemoveTileSpaceObject(ITileSpace* obj) { tileSpaceObjects.erase(std::remove(tileSpaceObjects.begin(), tileSpaceObjects.end(), obj), tileSpaceObjects.end()); };
 
 	void OnResize();
-protected:
-	static std::vector<ITileSpace*> tileSpaceObjects;
 };

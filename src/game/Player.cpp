@@ -15,13 +15,10 @@ Player::Player(glm::vec2 position, glm::vec2 size, Sprite* sprite, glm::vec3 col
 	, Controls()
 	, spriteOffset(0.0f)
 	, spriteRatio(sprite->Size.x / sprite->Size.y)
-{	
-	Game::AddTileSpaceObject(this);
-	onTileSizeChanged(Game::TileSize);
+{
 }
 Player::~Player()
 {
-	Game::RemoveTileSpaceObject(this);
 }
 
 void Player::SetRigidBody(std::shared_ptr<Physics2D::RigidBody> body)

@@ -1,7 +1,7 @@
 #pragma once
 #include "game/GameObject.h"
 #include <functional>
-#include "Interfaces/ITileSpace.h"
+#include "game/TileSpace.h"
 #define DEFAULT_CAMERA_MOVE_SPEED 250.0f
 
 enum class Camera2DMovement : int { up, down, left, right };

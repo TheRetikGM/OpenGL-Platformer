@@ -2,6 +2,14 @@
 #include "PhysicsWorld.h"
 #include "tilemap.h"
 #include "game/Player.h"
+#include "nlohmann/json.hpp"
+
+class level_locked_exception : public std::runtime_error
+{
+public:
+	level_locked_exception(const char* msg = "") : std::runtime_error(msg) {}
+	level_locked_exception(std::string msg = "") : std::runtime_error(msg) {}
+};
 
 struct GameLevelInfo
 {
@@ -10,69 +18,31 @@ struct GameLevelInfo
     bool bCompleted;
 	bool bLocked;
     std::string sTileMap;
-};
 
-class GameLevelsManager;
-class _GameLevel
-{
-public:
-	GameLevelInfo* info = nullptr;
-	Physics2D::PhysicsWorld* PhysicsWorld = nullptr;
-	Tilemap* Map = nullptr;
-
-	_GameLevel() {}
-
-	void Update(float dt);
-protected:
-	void init_world_objects();
-
-	friend class GameLevelsManager;
-};
-
-class GameLevelsManager
-{
-public:
-	GameLevelsManager(const char* levels_json);
-
-	// Loads level.
-	void Load(int nLevel);
-	// Info about active level.
-	const GameLevelInfo& GetInfo() const { return level_infos[nActiveLevel]; }
-	// Check if any level is loaded.
-	inline bool Active() const { return pActiveLevel != nullptr; }
-	// Save current level statistics.
-	void Save();
-	// Free level resources and unload the level.
-	void Unload();
-	// Reset all level progress and revert to default state.
-	void DeleteSavedStatistics();
-
-protected:
-	std::vector<GameLevelInfo> level_infos;
-	int nActiveLevel = 0;
-	_GameLevel* pActiveLevel = nullptr;
+	GameLevelInfo() 
+		: sName(""), nDifficulty(0), bCompleted(false), bLocked(true), sTileMap("") {}
 };
 
 class GameLevel
 {
 public:
-	std::string Name;
-	Physics2D::PhysicsWorld* PhysicsWorld;
-	Tilemap* Map;
+	GameLevelInfo* Info = nullptr;
+	Physics2D::PhysicsWorld* PhysicsWorld = nullptr;
+	Tilemap* Map = nullptr;
 
-	GameLevel(std::string name, Physics2D::PhysicsWorld* world, Tilemap* map): Name(name), PhysicsWorld(world), Map(map) {}
-	GameLevel() = default;
-	~GameLevel() {} 
+	GameLevel() {}
 
-	static GameLevel* Load(const char* path);
-	static void Delete(GameLevel* level);
+	void Update(float dt);
+	void Load(GameLevelInfo* pInfo);
+	void Unload();
 
-	void Update(float dt)
-	{
-		PhysicsWorld->Update(dt, 1);
-		Map->Update(dt);
-	}
-
-	void LoadObjectsFromTilemap();
-protected:	
+protected:
+	void init_physics_world();
+	void init_tilemap();
+	void init_world_objects();
 };
+
+void to_json(nlohmann::json& j, const GameLevelInfo& info);
+void from_json(const nlohmann::json& json, GameLevelInfo& info);
+void to_json(nlohmann::json& json, const std::vector<GameLevelInfo>& infos);
+void from_json(const nlohmann::json& json, std::vector<GameLevelInfo>& infos);

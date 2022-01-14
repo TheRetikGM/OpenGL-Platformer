@@ -1,16 +1,51 @@
 [
     {
-        "name": "Level 0",
-        "difficulty": 1,
         "completed": false,
+        "difficulty": 1,
         "locked": false,
+        "name": "Level 0",
         "tilemap": "tilemaps/map1/map1.tmx"
     },
     {
-        "name": "Level 1",
-        "difficulty": 2,
         "completed": false,
+        "difficulty": 2,
         "locked": true,
+        "name": "Level 1",
         "tilemap": "tilemaps/map2/map2.tmx"
+    },
+    {
+        "completed": false,
+        "difficulty": 3,
+        "locked": true,
+        "name": "Level 2",
+        "tilemap": "tilemaps/map3/map3.tmx"
+    },
+    {
+        "completed": false,
+        "difficulty": 4,
+        "locked": true,
+        "name": "Level 3",
+        "tilemap": "tilemaps/map4/map4.tmx"
+    },
+    {
+        "completed": false,
+        "difficulty": 5,
+        "locked": true,
+        "name": "Level 4",
+        "tilemap": "tilemaps/map5/map5.tmx"
+    },
+    {
+        "completed": false,
+        "difficulty": 6,
+        "locked": true,
+        "name": "Level 5",
+        "tilemap": "tilemaps/map6/map6.tmx"
+    },
+    {
+        "completed": false,
+        "difficulty": 7,
+        "locked": true,
+        "name": "Level 6",
+        "tilemap": "tilemaps/map7/map7.tmx"
     }
 ]

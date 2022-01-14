@@ -10,17 +10,13 @@ Sprite::Sprite(glm::vec2 position, glm::vec2 size, Texture2D texture)
     , Rotation(0.0f)
     , FlipTex_x(false)
     , FlipTex_y(false)
-    , ITileSpace()
 {
-    Game::AddTileSpaceObject(this);
 }
 Sprite::Sprite()
 {
-    Game::AddTileSpaceObject(this);
 }
 Sprite::~Sprite()
 {
-    Game::RemoveTileSpaceObject(this);
 }
 
 void Sprite::Draw(SpriteRenderer* renderer)

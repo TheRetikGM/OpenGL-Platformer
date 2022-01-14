@@ -16,12 +16,16 @@ public:
 
 	static Shader LoadShader(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile, std::string name);
 	static Shader GetShader(std::string name);
+	static void DeleteShader(std::string name);
 	static Texture2D& LoadTexture(const char* file, bool alpha, std::string name);
 	static Texture2D& GetTexture(std::string name);
+	static void DeleteTexture(std::string name);
 	static Tilemap* LoadTilemap(const char* file, std::string name);	
 	static Tilemap* GetTilemap(std::string name);
+	static void DeleteTilemap(std::string name);
 	static AnimationManager* LoadAnimationManager(const char* file);
 	static AnimationManager* GetAnimationManager(std::string name);
+	static void DeleteAnimationManager(std::string name);
 	static void Clear();
 private:
 	ResourceManager() { }

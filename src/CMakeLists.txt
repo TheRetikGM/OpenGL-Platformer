@@ -28,7 +28,6 @@ set (Camera
 set (INTERFACES
 	include/camera/Icamera.h
 	include/IAnimated.h
-	include/Interfaces/ITileSpace.h
 )
 file(GLOB game_files "game/*.cpp")
 file(GLOB game_includes "include/game/*.h" "include/game/*.hpp")
