@@ -7,6 +7,7 @@
 #include <Tmx.h>
 #include "PhysicsWorld.h"
 #include "game/GameLevel.h"
+#include "game/GameStates.h"
 
 enum class GameState : uint8_t {
 	active,
@@ -31,10 +32,11 @@ public:
 	unsigned int	Width, Height;
 	glm::vec3		BackgroundColor;
 	std::string		WindowTitle = "Game";
-	bool Run = true;
+	bool 			Run = true;
 
 	static glm::vec2 TileSize;
 	static glm::mat4 ProjectionMatrix;
+	static glm::vec2 ScreenSize;
 
 	Game(unsigned int width, unsigned int height);
 	~Game();

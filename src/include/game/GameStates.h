@@ -11,14 +11,14 @@ class IGameState
 {
 public:
     virtual void Init() = 0;
-    virtual void ProcessInput(int* keys, int* keys_processed, float dt) = 0;
-    virtual void Update(float dt) = 0;
+    virtual IGameState* ProcessInput(bool* keys, bool* keys_processed, float dt) = 0;
+    virtual IGameState* Update(float dt) = 0;
     virtual void Render() = 0;
     virtual void OnEnter() {};
     virtual void OnExit() {};
 };
 
-class DrawLevelState : public IGameState
+class InLevelState : public IGameState
 {
 public:
     TilemapRenderer*    pTilemapRenderer = nullptr;
@@ -27,27 +27,27 @@ public:
     GameLevel*          pLevel = nullptr;
 
     virtual void Init();
-    virtual void ProcessInput(int* keys, int* keys_processed, float dt) {}
-    virtual void Update(float dt) {}
+    virtual IGameState* ProcessInput(bool* keys, bool* keys_processed, float dt) { return nullptr; }
+    virtual IGameState* Update(float dt) { return nullptr; }
     virtual void Render();
     virtual void OnExit();
 
     void OnLayerRendered(const Tmx::Map *map, const Tmx::Layer *layer, int n_layer);
 };
-class ActiveLevelState : public DrawLevelState
+class ActiveLevelState : public InLevelState
 {
 public:
-    void Init() {}
-    void ProcessInput(int* keys, int* keys_processed, float dt) {}
-    void Update(float dt) {}
-    void Render() {}
+    void Init();
+    IGameState* ProcessInput(bool* keys, bool* keys_processed, float dt);
+    IGameState* Update(float dt);
+    // void Render();
 };
-class CompletedLevelState : public DrawLevelState
+class CompletedLevelState : public InLevelState
 {
 public:
     void Init() {}
-    void ProcessInput(int* keys, int* keys_processed, float dt) {}
-    void Update(float dt) {}
+    IGameState* ProcessInput(bool* keys, bool* keys_processed, float dt) { return nullptr; }
+    IGameState* Update(float dt) { return nullptr; }
     void Render() {}
 };
 
@@ -55,23 +55,23 @@ class MenuState : public IGameState
 {
 public:
     void Init() {}
-    void ProcessInput(int* keys, int* keys_processed, float dt) {}
-    void Update(float dt) {}
+    IGameState* ProcessInput(bool* keys, bool* keys_processed, float dt) { return nullptr; }
+    IGameState* Update(float dt) { return nullptr; }
     void Render() {}
 };
 class MainMenuState : public MenuState
 {
 public:
     void Init() {}
-    void ProcessInput(int* keys, int* keys_processed, float dt) {}
-    void Update(float dt) {}
+    IGameState* ProcessInput(bool* keys, bool* keys_processed, float dt) { return nullptr; }
+    IGameState* Update(float dt) { return nullptr; }
     void Render() {}
 };
-class PauseMenuState : public MenuState, public DrawLevelState
+class PauseMenuState : public MenuState, public InLevelState
 {
 public:
     void Init() {}
-    void ProcessInput(int* keys, int* keys_processed, float dt) {}
-    void Update(float dt) {}
+    IGameState* ProcessInput(bool* keys, bool* keys_processed, float dt) { return nullptr; }
+    IGameState* Update(float dt) { return nullptr; }
     void Render() {}
 };

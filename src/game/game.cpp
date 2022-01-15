@@ -22,6 +22,7 @@ using namespace std::placeholders;
 // Initialize static Game member variables.
 glm::vec2 Game::TileSize = glm::vec2(32.0f, 32.0f);
 glm::mat4 Game::ProjectionMatrix = glm::mat4(1.0f);
+glm::vec2 Game::ScreenSize = glm::vec2(500.0f, 800.0f);
 
 SpriteRenderer*	 renderer = nullptr;
 TilemapRenderer* tile_renderer = nullptr;
@@ -102,6 +103,7 @@ void Game::OnResize()
 	ResourceManager::GetShader("basic_render").Use().SetMat4("projection", projection);
 
 	Game::ProjectionMatrix = projection;
+	Game::ScreenSize = glm::vec2(float(this->Width), float(this->Height));
 }
 void Game::ProcessMouse(float xoffset, float yoffset)
 {

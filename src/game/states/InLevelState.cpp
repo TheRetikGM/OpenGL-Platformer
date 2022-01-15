@@ -8,7 +8,7 @@
 
 using namespace std::placeholders;
 
-void DrawLevelState::Init()
+void InLevelState::Init()
 {
     // Load shaders.
 	Shader tilemapShader = ResourceManager::LoadShader(SHADERS_DIR "tile_render.vert", SHADERS_DIR "tile_render.frag", nullptr, "drawlevel_tilemap");
@@ -26,7 +26,7 @@ void DrawLevelState::Init()
     // Create sprite and tilemap renderer.
     pTilemapRenderer = new TilemapRenderer(tilemapShader);
     pTilemapRenderer->Projection = Game::ProjectionMatrix;
-    pTilemapRenderer->AfterLayer_callback = std::bind(DrawLevelState::OnLayerRendered, this, _1, _2, _3);
+    pTilemapRenderer->AfterLayer_callback = std::bind(InLevelState::OnLayerRendered, this, _1, _2, _3);
 
     // Create player.
     pPlayer = new Player(
@@ -42,9 +42,10 @@ void DrawLevelState::Init()
 	pPlayer->Animator = playerAnimations;
 
     TileCamera2D::SetFollow(pPlayer);
+    TileCamera2D::OnScale = [&](glm::vec2 vScale) { this->pTilemapRenderer->HandleScale(vScale); };
     pPlayer->AddToWorld(pLevel->PhysicsWorld);
 }
-void DrawLevelState::OnExit()
+void InLevelState::OnExit()
 {
     if (pTilemapRenderer)
         delete pTilemapRenderer;
@@ -57,12 +58,17 @@ void DrawLevelState::OnExit()
     delete pPlayer;
 }
 
-void DrawLevelState::Render()
+void InLevelState::Render()
 {
-    // pSpriteRenderer->DrawSprite(ResourceManager::GetTexture("bg1"), glm::vec2(0.0f, 0.0f), glm::vec2(Width, Height), 0.0f);
+    pSpriteRenderer->DrawSprite(ResourceManager::GetTexture("bg1"), {0.0f, 0.0f}, Game::ScreenSize, 0.0f);
+    pTilemapRenderer->Draw(pLevel->Map, {0.0f, 0.0f});
 }
 
-void DrawLevelState::OnLayerRendered(const Tmx::Map *map, const Tmx::Layer *layer, int n_layer)
+void InLevelState::OnLayerRendered(const Tmx::Map *map, const Tmx::Layer *layer, int n_layer)
 {
-
+    if (layer->GetName() == "entity")
+    {
+        // Render player.
+        pPlayer->Draw(pSpriteRenderer);
+    }
 }
