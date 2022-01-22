@@ -267,6 +267,9 @@ void Player::ProcessKeyboard(InputInterface* input, float dt)
 	if (horizontal != 0)
 		Animator->SetParameter("horizontal", horizontal);
 
+	if (input->Pressed(GLFW_KEY_LEFT_SHIFT))
+		Animator->PlayOnce("attack");
+
 	canWallJump = false;
 }
 void Player::UpdatePositions()

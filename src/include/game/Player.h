@@ -16,6 +16,7 @@ public:
 	int JumpDown = GLFW_KEY_S;
 	int RunLeft = GLFW_KEY_A;
 	int RunRight = GLFW_KEY_D;
+	int Attack = GLFW_KEY_LEFT_SHIFT;
 
 	PlayerControls() {}
 };

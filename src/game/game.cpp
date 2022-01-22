@@ -238,12 +238,6 @@ void Game::ProcessInput(float dt)
 		if (Input->Pressed(GLFW_KEY_F2))
 			render_aabb = !render_aabb;
 
-
-		// ==== TODO: move this into player's code
-		auto playerAnim = ResourceManager::GetAnimationManager("PlayerAnimations");
-		if (Input->Pressed(GLFW_KEY_LEFT_SHIFT))
-			playerAnim->PlayOnce("attack");
-
 		if (Input->Pressed(GLFW_KEY_ESCAPE))
 		{
 			this->State = GameState::ingame_paused;	
