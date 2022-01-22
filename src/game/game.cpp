@@ -159,7 +159,7 @@ void Game::Init()
 
 	// Load Fonts and Initialize text renderer.
 	text_renderer = new TextRenderer(Width, Height);
-	text_renderer->Load(ASSETS_DIR "fonts/arial.ttf", 16, GL_NEAREST);
+	text_renderer->Load(ASSETS_DIR "fonts/arial.ttf", 32, GL_NEAREST);
 
 	// Initialize Camera	
 	TileCamera2D::SetPosition(glm::vec2(0.0f, 0.0f));
@@ -249,14 +249,12 @@ void Game::ProcessInput(float dt)
 		if (Input->Pressed(GLFW_KEY_ESCAPE))
 		{
 			this->State = GameState::ingame_paused;	
-			menu_manager->Open(&menu->at("Main Menu"));
+			menu_manager->Open(&menu->at("Pause Menu"));
 		}
 	}
 	else if (this->State == GameState::ingame_paused)
 	{
-		w1.Restart();
 		MenuObject* command = menuInputHandler->HandleInput(Input);
-		w1.Stop();
 		if (command)
 		{
 			switch(command->GetID())
@@ -304,8 +302,8 @@ void Game::Update(float dt)
 
 		// Update Animations
 		for (auto& [group, resources] : ResourceManager::AnimationManagers)
-			for (auto& [name, manager] : resources)
-				manager->Update(dt);
+			for (auto& [name, resource] : resources)
+				resource.obj->Update(dt);
 	}
 	
 	// Step update for FPS.
@@ -380,7 +378,7 @@ void Game::Render()
 		w2.ElapsedMilliseconds(),
 		("(" + std::to_string(player->GetSprite()->Size.x) + ", " + std::to_string(player->GetSprite()->Size.y) + ")").c_str()
 	);
-	text_renderer->RenderText(std::string(buf), 10.0f, 10.0f, 1.0f);
+	text_renderer->RenderText(std::string(buf), 10.0f, 10.0f, 0.5f);
 }
 
 // Callbacks
