@@ -7,6 +7,7 @@
 #include <Tmx.h>
 #include "PhysicsWorld.h"
 #include "game/GameLevel.h"
+#include "InputInterface.hpp"
 
 enum class GameState : uint8_t {
 	active,
@@ -32,6 +33,7 @@ public:
 	glm::vec3		BackgroundColor;
 	std::string		WindowTitle = "Game";
 	bool 			Run = true;
+	InputInterface* Input;
 
 	static glm::vec2 TileSize;
 	static glm::mat4 ProjectionMatrix;

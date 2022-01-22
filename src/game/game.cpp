@@ -60,6 +60,7 @@ Game::Game(unsigned int width, unsigned int height)
 	, Width(width), Height(height)
 	, Keys(), KeysProcessed()
 	, BackgroundColor(0.0f)
+	, Input(new InputInterface(Keys, KeysProcessed))
 {}
 Game::~Game()
 {	
@@ -83,6 +84,8 @@ Game::~Game()
 		delete levels_manager;
 	
 	ResourceManager::Clear();
+
+	delete Input;
 }
 void Game::SetTileSize(glm::vec2 new_size)
 {
@@ -219,68 +222,45 @@ void Game::ProcessInput(float dt)
 {
 	if (this->State == GameState::active)
 	{
-		player->ProcessKeyboard(Keys, KeysProcessed, dt);
+		player->ProcessKeyboard(Input, dt);
 
-		if (Keys[GLFW_KEY_Q])
-		{
+		if (Input->Held(GLFW_KEY_Q))
 			TileCamera2D::Rotate(glm::radians(45.0f) * dt);
-		}
-		if (Keys[GLFW_KEY_E])
-		{
+		if (Input->Held(GLFW_KEY_E))
 			TileCamera2D::Rotate(glm::radians(-45.0f) * dt);
-		}
-		if (Keys[GLFW_KEY_SPACE])
+		if (Input->Pressed(GLFW_KEY_SPACE))
 		{
 			TileCamera2D::SetRight(glm::vec2(1.0f, 0.0f));	
 			TileCamera2D::SetScale(glm::vec2(2.0f));	
 			Game::SetTileSize(Game::TileSize);	
 			player->RBody->LinearVelocity = glm::vec2(0.0f);
 		}
-		if (Keys[GLFW_KEY_F2] && !KeysProcessed[GLFW_KEY_F2])
-		{
+		if (Input->Pressed(GLFW_KEY_F2))
 			render_aabb = !render_aabb;
-			KeysProcessed[GLFW_KEY_F2] = true;
-		}
 
 
 		// ==== TODO: move this into player's code
 		auto playerAnim = ResourceManager::GetAnimationManager("PlayerAnimations");
-		if (Keys[GLFW_KEY_LEFT_SHIFT] && !KeysProcessed[GLFW_KEY_LEFT_SHIFT])
-		{
+		if (Input->Pressed(GLFW_KEY_LEFT_SHIFT))
 			playerAnim->PlayOnce("attack");
-			KeysProcessed[GLFW_KEY_LEFT_SHIFT] = true;
-		}
 
-		if (Keys[GLFW_KEY_ESCAPE] && !KeysProcessed[GLFW_KEY_ESCAPE])
+		if (Input->Pressed(GLFW_KEY_ESCAPE))
 		{
 			this->State = GameState::ingame_paused;	
 			menu_manager->Open(&menu->at("Main Menu"));
-			KeysProcessed[GLFW_KEY_ESCAPE] = true;
 		}
 	}
 	else if (this->State == GameState::ingame_paused)
 	{
-		if (Keys[GLFW_KEY_W] && !KeysProcessed[GLFW_KEY_W])
-		{
+		if (Input->Pressed(GLFW_KEY_W))
 			menu_manager->OnUp();
-			KeysProcessed[GLFW_KEY_W] = true;
-		}
-		if (Keys[GLFW_KEY_S] && !KeysProcessed[GLFW_KEY_S])
-		{
+		if (Input->Pressed(GLFW_KEY_S))
 			menu_manager->OnDown();
-			KeysProcessed[GLFW_KEY_S] = true;
-		}
-		if (Keys[GLFW_KEY_A] && !KeysProcessed[GLFW_KEY_A])
-		{
+		if (Input->Pressed(GLFW_KEY_A))
 			menu_manager->OnLeft();
-			KeysProcessed[GLFW_KEY_A] = true;
-		}
-		if (Keys[GLFW_KEY_D] && !KeysProcessed[GLFW_KEY_D])
-		{
+		if (Input->Pressed(GLFW_KEY_D))
 			menu_manager->OnRight();
-			KeysProcessed[GLFW_KEY_D] = true;
-		}
-		if (Keys[GLFW_KEY_SPACE] && !KeysProcessed[GLFW_KEY_SPACE])
+		if (Input->Pressed(GLFW_KEY_SPACE))
 		{
 			MenuObject* command = menu_manager->OnConfirm();
 			if (command)
@@ -302,27 +282,23 @@ void Game::ProcessInput(float dt)
 				}
 				// menu_manager->Close();
 			}
-
-			KeysProcessed[GLFW_KEY_SPACE] = true;
 		}
-		if (Keys[GLFW_KEY_ESCAPE] && !KeysProcessed[GLFW_KEY_ESCAPE])
+		if (Input->Pressed(GLFW_KEY_ESCAPE))
 		{
 			menu_manager->OnBack();
 			if (menu_manager->MenuClosed())
 				this->State = GameState::active;
-			KeysProcessed[GLFW_KEY_ESCAPE] = true;
 		}
 	}
 
 
-	if (Keys[GLFW_KEY_F1] && !KeysProcessed[GLFW_KEY_F1])
+	if (Input->Pressed(GLFW_KEY_F1))
 	{
 		wireframe_render = !wireframe_render;
 		if (wireframe_render)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		else
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		KeysProcessed[GLFW_KEY_F1] = true;		
 	}
 
 }

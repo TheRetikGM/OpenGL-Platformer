@@ -140,7 +140,7 @@ void Player::Update(float dt)
 	// this->SetSprite(Animator->GetSprite());
 }
 
-void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
+void Player::ProcessKeyboard(InputInterface* input, float dt)
 {
 	int horizontal = 0;
 	int vertical = 0;
@@ -165,7 +165,7 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 	static float FallGravityScale = 5.0f;
 
 	// Run left.
-	if (keys[Controls.RunLeft])
+	if (input->Held(Controls.RunLeft))
 	{
 		if (Velocity.x > 0.0f)
 			Acceleration.x += -hDeceleration;
@@ -175,7 +175,7 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 		horizontal += -1;
 	}
 	// Run right.
-	if (keys[Controls.RunRight])
+	if (input->Held(Controls.RunRight))
 	{
 		if (Velocity.x < 0.0f)
 			Acceleration.x += hDeceleration;
@@ -192,7 +192,7 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 	}
 
 	// Jump -- pressed once.
-	if (keys[Controls.JumpUp] && !keys_processed[Controls.JumpUp])
+	if (input->Pressed(Controls.JumpUp))
 	{
 		if (CanJump)
 		{ 
@@ -216,8 +216,6 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 			jumpCanceled = false;
 			jumpTime = 0.0f;
 		}
-
-		keys_processed[Controls.JumpUp] = true;
 	}
 	// Gravity scale
 	if (canWallJump && Acceleration.x != 0.0f && Acceleration.x * wallNormal.x < 0.0f && Velocity.y >= 0.0f) // Sliding wall
@@ -234,7 +232,7 @@ void Player::ProcessKeyboard(bool* keys, bool* keys_processed, float dt)
 	{
 		jumpTime += dt;
 		// Check for canceled jump.
-		if (!keys[Controls.JumpUp])
+		if (!input->Held(Controls.JumpUp))
 			jumpCanceled = true;
 		// 
 		if (jumpTime > buttonTime)

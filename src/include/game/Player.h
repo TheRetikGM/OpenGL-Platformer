@@ -8,6 +8,7 @@
 #include <PhysicsWorld.h>
 #include "game/AnimationManager.h"
 #include "GLFW/glfw3.h"
+#include "InputInterface.hpp"
 
 class PlayerControls {
 public:
@@ -41,7 +42,7 @@ public:
 	void DrawAt(SpriteRenderer* renderer, glm::vec2 pos);
 	void Update(float dt);
 	void UpdatePositions();
-	void ProcessKeyboard(bool* keys, bool* keys_processed, float dt);
+	void ProcessKeyboard(InputInterface* input, float dt);
 
 	void SetRigidBody(std::shared_ptr<Physics2D::RigidBody> body);
 	void SetPosition(glm::vec2 position);
