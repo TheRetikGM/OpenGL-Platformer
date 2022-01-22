@@ -11,10 +11,12 @@
 #include "game/Player.h"
 #include "TextRenderer.h"
 #include "Helper.hpp"
-#include "menu.hpp"
+#include "MenuSystem.hpp"
 #include "game/GameLevelsManager.h"
 #include <GLFW/glfw3.h>
 #include <thread>
+#include "MenuInputHandler.hpp"
+#include "CommandIDs.h"
 #define printf_v(name, vec, prec) std::printf(name ": [%" prec "f, %" prec "f]\n", (vec).x, (vec).y)
 
 using namespace std::placeholders;
@@ -45,6 +47,7 @@ using namespace MenuSystem;
 MenuObject* menu;
 MenuRenderer* menu_renderer;
 MenuManager* menu_manager;
+MenuInputHandler* menuInputHandler;
 
 // Temp
 Helper::Stopwatch w1;
@@ -82,6 +85,8 @@ Game::~Game()
 		delete menu_manager;
 	if (levels_manager)
 		delete levels_manager;
+	if (menuInputHandler)
+		delete menuInputHandler;
 	
 	ResourceManager::Clear();
 
@@ -188,7 +193,7 @@ void Game::Init()
 	menu = new MenuObject();
 	menu->SetPatchSize(glm::ivec2(16));
 	MenuObject& pauseMenu = menu->at("Pause Menu").SetTable(1, 4);
-	pauseMenu["Resume"].SetID(101);
+	pauseMenu["Resume"].SetID(RESUME_GAME_COMMAND);
 	pauseMenu["Options"].SetTable(2, 2);
 	pauseMenu["Options"]["option1"];
 	pauseMenu["Options"]["option2"];
@@ -197,14 +202,14 @@ void Game::Init()
 	pauseMenu["Options"]["option5"];
 	pauseMenu["Options"]["option6"];
 	pauseMenu["Options"]["option7"];
-	pauseMenu["Save"].SetID(102);
-	pauseMenu["Exit game"].SetID(103);
+	pauseMenu["Save"].SetID(SAVE_GAME_COMMAND);
+	pauseMenu["Exit"].SetID(EXIT_TO_MAIN_MENU_COMMAND);
 
 	MenuObject& mainMenu = menu->at("Main Menu").SetTable(1, 4);
 	mainMenu["Play"].SetTable(1,  3);
 	mainMenu["Options"];
 	mainMenu["Reset progress"];
-	mainMenu["Exit"].SetID(103);
+	mainMenu["Exit game"].SetID(EXIT_GAME_COMMAND);
 	auto& levelInfos = levels_manager->GetAllInfos();
 	for (const auto& i : levelInfos)
 		mainMenu["Play"][i.sName].Enable(!i.bLocked);
@@ -216,6 +221,9 @@ void Game::Init()
 
 	// Initialize menu renderer
 	menu_renderer = new MenuRenderer(renderer);
+
+	// Initialize menu input handler
+	menuInputHandler = new MenuInputHandler(menu_manager);
 }
 
 void Game::ProcessInput(float dt)
@@ -233,7 +241,7 @@ void Game::ProcessInput(float dt)
 			TileCamera2D::SetRight(glm::vec2(1.0f, 0.0f));	
 			TileCamera2D::SetScale(glm::vec2(2.0f));	
 			Game::SetTileSize(Game::TileSize);	
-			player->RBody->LinearVelocity = glm::vec2(0.0f);
+			player->Velocity = glm::vec2(0.0f);
 		}
 		if (Input->Pressed(GLFW_KEY_F2))
 			render_aabb = !render_aabb;
@@ -246,43 +254,30 @@ void Game::ProcessInput(float dt)
 	}
 	else if (this->State == GameState::ingame_paused)
 	{
-		if (Input->Pressed(GLFW_KEY_W))
-			menu_manager->OnUp();
-		if (Input->Pressed(GLFW_KEY_S))
-			menu_manager->OnDown();
-		if (Input->Pressed(GLFW_KEY_A))
-			menu_manager->OnLeft();
-		if (Input->Pressed(GLFW_KEY_D))
-			menu_manager->OnRight();
-		if (Input->Pressed(GLFW_KEY_SPACE))
+		w1.Restart();
+		MenuObject* command = menuInputHandler->HandleInput(Input);
+		w1.Stop();
+		if (command)
 		{
-			MenuObject* command = menu_manager->OnConfirm();
-			if (command)
+			switch(command->GetID())
 			{
-				switch(command->GetID())
-				{
-				case 101:	// Resume
-					menu_manager->Close();
-					this->State = GameState::active;
-					break;
-				case 102:	// Save
-					levels_manager->Save();
-					break;
-				case 103:	// Exit
-					this->Run = false;
-					break;
-				default:
-					break;
-				}
-				// menu_manager->Close();
+			case RESUME_GAME_COMMAND:
+				menu_manager->Close();
+				this->State = GameState::active;
+				break;
+			case SAVE_GAME_COMMAND:
+				levels_manager->Save();
+				break;
+			case EXIT_TO_MAIN_MENU_COMMAND:
+			case EXIT_GAME_COMMAND:
+				this->Run = false;
+				break;
+			default:
+				break;
 			}
 		}
-		if (Input->Pressed(GLFW_KEY_ESCAPE))
-		{
-			menu_manager->OnBack();
-			if (menu_manager->MenuClosed())
-				this->State = GameState::active;
-		}
+		if (menu_manager->MenuClosed())
+			this->State = GameState::active;
 	}
 
 
@@ -311,7 +306,6 @@ void Game::Update(float dt)
 		for (auto& [group, resources] : ResourceManager::AnimationManagers)
 			for (auto& [name, manager] : resources)
 				manager->Update(dt);
-		// player->PlayerSprite = ResourceManager::GetAnimationManager("PlayerAnimations")->GetSprite();
 	}
 	
 	// Step update for FPS.
