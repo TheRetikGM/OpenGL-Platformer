@@ -7,7 +7,6 @@
 #include <Tmx.h>
 #include "PhysicsWorld.h"
 #include "game/GameLevel.h"
-#include "game/GameStates.h"
 
 enum class GameState : uint8_t {
 	active,

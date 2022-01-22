@@ -9,71 +9,56 @@
 #include "DebugColors.h"
 #include <any>
 
-std::map<std::string, Shader> ResourceManager::Shaders;
-std::map<std::string, Texture2D> ResourceManager::Textures;
-std::map<std::string, Tilemap*> ResourceManager::Tilemaps;
-std::map<std::string, AnimationManager*> ResourceManager::AnimationManagers;
-Shader ResourceManager::LoadShader(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile, std::string name)
+std::unordered_map<std::string, std::unordered_map<std::string, Shader>> ResourceManager::Shaders;
+std::unordered_map<std::string, std::unordered_map<std::string, Texture2D>> ResourceManager::Textures;
+std::unordered_map<std::string, std::unordered_map<std::string, Tilemap*>> ResourceManager::Tilemaps;
+std::unordered_map<std::string, std::unordered_map<std::string, AnimationManager*>> ResourceManager::AnimationManagers;
+
+Shader& ResourceManager::LoadShader(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile, std::string name, std::string group)
 {
 	try
 	{
-		Shaders[name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
+		Shaders[group][name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
 	}
 	catch (const std::exception& e)
 	{
 		std::cerr << DC_ERROR " ResourceManager::LoadShader(): " << e.what() << '\n';
 	}
 
-	return Shaders[name];
+	return Shaders[group][name];
 }
-Shader ResourceManager::GetShader(std::string name)
+Shader& ResourceManager::GetShader(std::string name, std::string group)
 {
-	return Shaders[name];
+	return Shaders.at(group).at(name);
 }
-void ResourceManager::DeleteShader(std::string name)
+void ResourceManager::DeleteShader(std::string name, std::string group)
 {
-	glDeleteProgram(Shaders.at(name).ID);
-	Shaders.erase(name);
+	glDeleteProgram(Shaders.at(group).at(name).ID);
+	Shaders.at(group).erase(name);
 }
-Texture2D& ResourceManager::LoadTexture(const char* file, bool alpha, std::string name)
+
+Texture2D& ResourceManager::LoadTexture(const char* file, bool alpha, std::string name, std::string group)
 {
 	try
 	{
-		Textures[name] = loadTextureFromFile(file, alpha);
+		Textures[group][name] = loadTextureFromFile(file, alpha);
 	}
 	catch (const std::exception& e)
 	{
 		std::cerr << DC_ERROR " ResourceManager::LoadTexture(): " << e.what() << '\n';
 	}
-	return Textures[name];
+	return Textures[group][name];
 }
-Texture2D& ResourceManager::GetTexture(std::string name)
+Texture2D& ResourceManager::GetTexture(std::string name, std::string group)
 {
-	return Textures[name];
+	return Textures.at(group).at(name);
 }
-void ResourceManager::DeleteTexture(std::string name)
+void ResourceManager::DeleteTexture(std::string name, std::string group)
 {
-	glDeleteTextures(1, &Textures.at(name).ID);
-	Textures.erase(name);
+	glDeleteTextures(1, &Textures.at(group).at(name).ID);
+	Textures.at(group).erase(name);
 }
-void ResourceManager::Clear()
-{
-	for (auto& i : Shaders)
-		glDeleteProgram(i.second.ID);
-	for (auto& i : Textures)
-		glDeleteTextures(1, &i.second.ID);
-	for (auto& i : Tilemaps)
-		delete i.second;
-	for (auto& [name, manager] : AnimationManagers)
-	{
-		manager->DeleteAllTextures();
-		delete manager;
-	}
-	Shaders.clear();
-	Textures.clear();
-	Tilemaps.clear();
-	AnimationManagers.clear();
-}
+
 Shader ResourceManager::loadShaderFromFile(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile)
 {
 	std::string vertexCode;
@@ -133,12 +118,13 @@ Texture2D ResourceManager::loadTextureFromFile(const char* file, bool alpha)
 	stbi_image_free(data);
 	return texture;
 }
-Tilemap* ResourceManager::LoadTilemap(const char* file, std::string name)
+
+Tilemap* ResourceManager::LoadTilemap(const char* file, std::string name, std::string group)
 {
 	Tilemap* t = nullptr;
 	try {
 		t = new Tilemap(file);
-		Tilemaps[name] = t;
+		Tilemaps[group][name] = t;
 	}
 	catch (const std::exception& e)
 	{
@@ -146,16 +132,17 @@ Tilemap* ResourceManager::LoadTilemap(const char* file, std::string name)
 	}
 	return t;
 }
-Tilemap* ResourceManager::GetTilemap(std::string name)
+Tilemap* ResourceManager::GetTilemap(std::string name, std::string group)
 {
-	return Tilemaps[name];
+	return Tilemaps.at(group).at(name);
 }
-void ResourceManager::DeleteTilemap(std::string name)
+void ResourceManager::DeleteTilemap(std::string name, std::string group)
 {
-	delete Tilemaps.at(name);
-	Tilemaps.erase(name);
+	delete Tilemaps.at(group).at(name);
+	Tilemaps.at(group).erase(name);
 }
-AnimationManager* ResourceManager::LoadAnimationManager(const char* file)
+
+AnimationManager* ResourceManager::LoadAnimationManager(const char* file, std::string group)
 {
 	std::ifstream jsonFile(file);
 	if (!jsonFile.is_open())
@@ -167,18 +154,92 @@ AnimationManager* ResourceManager::LoadAnimationManager(const char* file)
 	json_data >> j;
 
 	auto man = j.get<AnimationManager>();
-	AnimationManagers[man.Name] = new AnimationManager();
-	*AnimationManagers[man.Name] = man;	
+	AnimationManagers[group][man.Name] = new AnimationManager();
+	*AnimationManagers[group][man.Name] = man;	
 
-	return AnimationManagers[man.Name];
+	return AnimationManagers[group][man.Name];
 }
-AnimationManager* ResourceManager::GetAnimationManager(std::string name)
+AnimationManager* ResourceManager::GetAnimationManager(std::string name, std::string group)
 {
-	return AnimationManagers[name];
+	return AnimationManagers.at(group).at(name);
 }
-void ResourceManager::DeleteAnimationManager(std::string name)
+void ResourceManager::DeleteAnimationManager(std::string name, std::string group)
 {
-	AnimationManagers.at(name)->DeleteAllTextures();
-	delete AnimationManagers.at(name);
-	AnimationManagers.erase(name);
+	AnimationManagers.at(group).at(name)->DeleteAllTextures();
+	AnimationManager* ptr = AnimationManagers.at(group).at(name);
+	delete ptr;
+	AnimationManagers.at(group).erase(name);
+}
+
+void ResourceManager::DeleteGroup(std::string group)
+{
+	if (Shaders.find(group) != Shaders.end())
+		DeleteShaderGroup(group);
+	if (Textures.find(group) != Textures.end())
+		DeleteTextureGroup(group);
+	if (Tilemaps.find(group) != Tilemaps.end())
+		DeleteTilemapGroup(group);
+	if (AnimationManagers.find(group) != AnimationManagers.end())
+		DeleteAnimationManagerGroup(group);
+}
+void ResourceManager::DeleteShaderGroup(std::string sGroupName, bool _erase_base)
+{
+	auto& group = Shaders.at(sGroupName);
+	std::vector<std::string> names;
+	for (auto& pair : group)
+		names.push_back(pair.first);
+	for (auto& name : names)
+		DeleteShader(name, sGroupName);
+	if (_erase_base)
+		Shaders.erase(sGroupName);
+}
+void ResourceManager::DeleteTextureGroup(std::string sGroupName, bool _erase_base)
+{
+	auto& group = Textures.at(sGroupName);
+	std::vector<std::string> names;
+	for (auto& pair : group)
+		names.push_back(pair.first);
+	for (auto& name : names)
+		DeleteTexture(name, sGroupName);
+	if (_erase_base)
+		Textures.erase(sGroupName);
+}
+void ResourceManager::DeleteTilemapGroup(std::string sGroupName, bool _erase_base)
+{
+	auto& group = Tilemaps.at(sGroupName);
+	std::vector<std::string> names;
+	for (auto& pair : group)
+		names.push_back(pair.first);
+	for (auto& name : names)
+		DeleteTilemap(name, sGroupName);
+	if (_erase_base)
+		Tilemaps.erase(sGroupName);
+}
+void ResourceManager::DeleteAnimationManagerGroup(std::string sGroupName, bool _erase_base)
+{
+	auto& group = AnimationManagers.at(sGroupName);
+	std::vector<std::string> names;
+	for (auto& pair : group)
+		names.push_back(pair.first);
+	for (auto& name : names)
+		DeleteAnimationManager(name, sGroupName);
+	if (_erase_base)
+		AnimationManagers.erase(sGroupName);
+}
+
+void ResourceManager::Clear()
+{
+	for (auto& i : Shaders)
+		DeleteShaderGroup(i.first, false);
+	for (auto& i : Textures)
+		DeleteTextureGroup(i.first, false);
+	for (auto& i : Tilemaps)
+		DeleteTilemapGroup(i.first, false);
+	for (auto& i : AnimationManagers)
+		DeleteAnimationManagerGroup(i.first, false);
+
+	Shaders.clear();
+	Textures.clear();
+	Tilemaps.clear();
+	AnimationManagers.clear();
 }

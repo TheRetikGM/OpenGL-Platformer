@@ -1,6 +1,6 @@
 #include "sprite_renderer.h"
 #include "config.h"
-#include "camera/tileCamera2D.h"
+#include "tileCamera2D.h"
 
 SpriteRenderer::SpriteRenderer(Shader shader)
 {

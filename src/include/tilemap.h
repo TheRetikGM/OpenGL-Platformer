@@ -3,7 +3,7 @@
 #include <map>
 #include <vector>
 #include "texture.h"
-#include "IAnimated.h"
+#include "interfaces/IAnimated.h"
 
 class AnimatedTile;
 

@@ -1,6 +1,6 @@
 #include "basic_renderer.h"
 #include <vector>
-#include "camera/tileCamera2D.h"
+#include "tileCamera2D.h"
 
 BasicRenderer::BasicRenderer(Shader shader)
 	: mp_shape_info(), shader(shader), lineWidth(1.0f)

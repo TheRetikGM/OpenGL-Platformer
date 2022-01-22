@@ -1,6 +1,6 @@
 #pragma once
 #include "game/Sprite.h"
-#include "IAnimated.h"
+#include "interfaces/IAnimated.h"
 #include <vector>
 #include <functional>
 

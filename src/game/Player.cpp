@@ -1,5 +1,5 @@
 #include "game/Player.h"
-#include "camera/tileCamera2D.h"
+#include "tileCamera2D.h"
 #include "game/game.h"
 
 #define ifFirstPressed(key, pred) if (keys[key] && !keys_processed[key]) { pred; keys_processed[key] = true; }

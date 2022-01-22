@@ -22,17 +22,27 @@ file(GLOB SHADERS
 	"shaders/*.vert"
 	"shaders/*.geom"
 )
-set (Camera	
-	camera/tileCamera2D.cpp include/camera/tileCamera2D.h
-)
+file(GLOB game_interfaces "include/game/interfaces/*.h")
+file(GLOB _interfaces "include/interfaces/*.h")
 set (INTERFACES
-	include/camera/Icamera.h
-	include/IAnimated.h
+	${game_interfaces}
+	${_interfaces}
 )
-file(GLOB game_files "game/*.cpp")
-file(GLOB game_includes "include/game/*.h" "include/game/*.hpp")
+file(GLOB game_files 
+	"game/*.cpp"
+	"game/states/*.cpp"
+)
+file(GLOB game_includes 
+	"include/game/*.h" 
+	"include/game/*.hpp"
+	"include/game/interfaces/*.h"
+)
 file(GLOB base_files "./*.cpp")
-file(GLOB base_includes "include/*.h" "include/*.hpp")
+file(GLOB base_includes 
+	"include/*.h" 
+	"include/*.hpp" 
+	"include/interfaces/*"
+)
 
 add_executable(${PROJECT_NAME}
 	../include/stb_image.h
@@ -40,7 +50,6 @@ add_executable(${PROJECT_NAME}
 	${CMAKE_CURRENT_BINARY_DIR}/config.h
 	${game_files} ${game_includes}
 	${base_files} ${base_includes}
-	${Camera}
 	${SHADERS}
 	${INTERFACES}
 )

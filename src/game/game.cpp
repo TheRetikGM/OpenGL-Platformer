@@ -6,7 +6,7 @@
 #include "sprite_renderer.h"
 #include "tilemap_renderer.h"
 #include "tilemap.h"
-#include "camera/tileCamera2D.h"
+#include "tileCamera2D.h"
 #include "basic_renderer.h"
 #include "game/Player.h"
 #include "TextRenderer.h"
@@ -338,8 +338,9 @@ void Game::Update(float dt)
 		player->SetSprite(player->Animator->GetSprite());
 
 		// Update Animations
-		for (auto& [name, manager] : ResourceManager::AnimationManagers)
-			manager->Update(dt);
+		for (auto& [group, resources] : ResourceManager::AnimationManagers)
+			for (auto& [name, manager] : resources)
+				manager->Update(dt);
 		// player->PlayerSprite = ResourceManager::GetAnimationManager("PlayerAnimations")->GetSprite();
 	}
 	
