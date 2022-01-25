@@ -38,6 +38,7 @@ void GameLevelsManager::Load(int nLevel)
     // Load level using level info/
     if (pActiveLevel)
         Unload();
+        
     pActiveLevel = new GameLevel();
     try
     {

@@ -300,13 +300,13 @@ void ResourceManager::DeleteAnimationManager(std::string name, std::string group
 void ResourceManager::DeleteGroup(std::string group)
 {
 	if (Shaders.find(group) != Shaders.end())
-		DeleteShaderGroup(group);
+		DeleteShaderGroup(group, true);
 	if (Textures.find(group) != Textures.end())
-		DeleteTextureGroup(group);
+		DeleteTextureGroup(group, true);
 	if (Tilemaps.find(group) != Tilemaps.end())
-		DeleteTilemapGroup(group);
+		DeleteTilemapGroup(group, true);
 	if (AnimationManagers.find(group) != AnimationManagers.end())
-		DeleteAnimationManagerGroup(group);
+		DeleteAnimationManagerGroup(group, true);
 }
 void ResourceManager::DeleteShaderGroup(std::string sGroupName, bool _erase_base)
 {

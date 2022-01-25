@@ -3,6 +3,7 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <list>
+#include <any>
 #include "texture.h"
 #include "shader.h"
 #include "TextRenderer.h"
@@ -212,6 +213,10 @@ namespace MenuSystem
             ClampCursor();
         }
 
+        MenuObject& SetCustomData(std::any data) { custom_data = data; return *this; }
+        std::any& GetCustomData() { return custom_data; }
+        template<class type> type GetCustomData() { return std::any_cast<type>(custom_data); }
+
         // Handles the on confirm event.
         // If item contains another menu, then the pointer to the submenu is returned.
         // Else pointer to this item is returned.
@@ -231,6 +236,7 @@ namespace MenuSystem
 
     protected:
         std::string sName = "";
+        std::any custom_data = 0;
         bool bEnabled = true;
         // ID for event identification.
         int nID = -1;
@@ -316,11 +322,18 @@ namespace MenuSystem
         }
         void OnBack()
         {
+            if (panels.size() == 1 && !bCloseOnBack)
+                return;
             if (!panels.empty())
                 panels.pop_back();
         }
         inline bool MenuClosed() { return panels.size() == 0; }
-        inline const MenuObject& First() { return *panels.front(); }
+        inline const MenuObject& First() 
+        {
+            if (panels.empty())
+                throw std::out_of_range("MenuManager::First(): Menu is not opened.");
+            return *panels.front(); 
+        }
 
         MenuObject* OnConfirm()
         {
@@ -341,10 +354,11 @@ namespace MenuSystem
 
             return nullptr;
         }
-
+        MenuManager& CloseOnBack(bool b) { bCloseOnBack = b; return *this; }
 
     protected:
         std::list<MenuObject*> panels;
+        bool bCloseOnBack = true;
 
         friend class MenuRenderer;
     };

@@ -11,6 +11,7 @@ struct Resource
 {
 	Type obj;
 	int instance_count = 1;
+	
 	Resource(Type o) : obj(o) {}
 	Resource() : obj() {}
 };

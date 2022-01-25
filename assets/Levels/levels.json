@@ -1,5 +1,6 @@
 [
     {
+        "background": "sprites/bg_1.png",
         "completed": false,
         "difficulty": 1,
         "locked": false,
@@ -7,6 +8,7 @@
         "tilemap": "tilemaps/map1/map1.tmx"
     },
     {
+        "background": "sprites/bg_1.png",
         "completed": false,
         "difficulty": 2,
         "locked": true,
@@ -14,6 +16,7 @@
         "tilemap": "tilemaps/map2/map2.tmx"
     },
     {
+        "background": "sprites/bg_1.png",
         "completed": false,
         "difficulty": 3,
         "locked": true,
@@ -21,6 +24,7 @@
         "tilemap": "tilemaps/map3/map3.tmx"
     },
     {
+        "background": "sprites/bg_1.png",
         "completed": false,
         "difficulty": 4,
         "locked": true,
@@ -28,6 +32,7 @@
         "tilemap": "tilemaps/map4/map4.tmx"
     },
     {
+        "background": "sprites/bg_1.png",
         "completed": false,
         "difficulty": 5,
         "locked": true,
@@ -35,6 +40,7 @@
         "tilemap": "tilemaps/map5/map5.tmx"
     },
     {
+        "background": "sprites/bg_1.png",
         "completed": false,
         "difficulty": 6,
         "locked": true,
@@ -42,6 +48,7 @@
         "tilemap": "tilemaps/map6/map6.tmx"
     },
     {
+        "background": "sprites/bg_1.png",
         "completed": false,
         "difficulty": 7,
         "locked": true,
