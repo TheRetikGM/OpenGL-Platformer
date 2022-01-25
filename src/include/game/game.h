@@ -49,7 +49,6 @@ public:
 	void ProcessScroll(float yoffset);
 	void Update(float dt);
 	void Render();
-	void OnLayerRendered(const Tmx::Map* map, const Tmx::Layer* layer, int n_layer);
 
 	static void SetTileSize(glm::vec2 new_size);
 

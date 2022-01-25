@@ -31,7 +31,6 @@ TilemapRenderer* tile_renderer = nullptr;
 BasicRenderer*	 basic_renderer = nullptr;
 TextRenderer* text_renderer = nullptr;
 
-Player* player = nullptr;
 GameLevelsManager* levels_manager = nullptr;
 
 // Render state variables.
@@ -73,8 +72,6 @@ Game::~Game()
 		delete tile_renderer;
 	if (basic_renderer)
 		delete basic_renderer;
-	if (player)
-		delete player;
 	if (text_renderer)
 		delete text_renderer;
 	if (menu)
@@ -125,7 +122,8 @@ void Game::ProcessScroll(float yoffset)
 void Game::Init()
 {
 	Game::SetTileSize(glm::vec2(32.0f, 32.0f));
-	this->BackgroundColor = glm::vec3(0.4f, 0.5f, 0.4f);
+	this->BackgroundColor = glm::vec3(45 / 255.0f, 61 / 255.0f, 30 / 255.0f);
+	Game::ScreenSize = glm::vec2(float(Width), float(Height));
 
 	// Load shaders
 	ResourceManager::LoadShader(SHADERS_DIR "SpriteRender.vert", SHADERS_DIR "SpriteRender.frag", nullptr, "sprite");
@@ -133,16 +131,10 @@ void Game::Init()
 	ResourceManager::LoadShader(SHADERS_DIR "BasicRender.vert", SHADERS_DIR "BasicRender.frag", nullptr, "basic_render");
 
 	// Load textures
-	ResourceManager::LoadTexture(ASSETS_DIR "sprites/bg_1.png", true, "background1");
 	ResourceManager::LoadTexture(ASSETS_DIR "textures/menu_9patch.png", true, "menu_9patch").SetMagFilter(GL_NEAREST).SetMinFilter(GL_NEAREST).UpdateParameters();
 
 	// Load levels manager
 	levels_manager = new GameLevelsManager(ASSETS_DIR "Levels/levels.json");
-	levels_manager->Load(0);
-	levels_manager->Completed(0, false);
-
-	// Load animations
-	AnimationManager* playerAnimations = ResourceManager::LoadAnimationManager(ASSETS_DIR "animations/PlayerAnimations_platformer.json");
 
 	// Projection used for 2D projection.
 	glm::mat4 projection = glm::ortho(0.0f, (float)this->Width, (float)this->Height, 0.0f, -1.0f, 1.0f);
@@ -159,34 +151,14 @@ void Game::Init()
 
 	// Load Fonts and Initialize text renderer.
 	text_renderer = new TextRenderer(Width, Height);
-	text_renderer->Load(ASSETS_DIR "fonts/arial.ttf", 16, GL_NEAREST);
+	text_renderer->Load(ASSETS_DIR "fonts/arial.ttf", 32, GL_NEAREST);
 
 	// Initialize Camera	
-	TileCamera2D::SetPosition(glm::vec2(0.0f, 0.0f));
-	TileCamera2D::SetRight(glm::vec2(1.0f, 0.0f));
-	TileCamera2D::ScreenCoords = glm::vec2((float)this->Width, this->Height);
-	TileCamera2D::SetScale(glm::vec2(2.0f));
 	TileCamera2D::OnScale = onCameraScale;
 
 	// Initialize tileset renderer
 	tile_renderer = new TilemapRenderer(ResourceManager::GetShader("tilemap"));
 	tile_renderer->Projection = projection;
-	tile_renderer->AfterLayer_callback = std::bind(&Game::OnLayerRendered, this, _1, _2, _3);
-
-	// Initialize player
-	player = new Player(glm::vec2(10.0f, 10.0f), glm::vec2(0.7f, 1.4f), playerAnimations->GetSprite(), glm::vec3(1.0f));
-	player->SetRigidBody(Physics2D::RigidBody::CreateRectangleBody(player->Position, { 0.7f, 1.4f }, 5.0f, false, 0.0f));
-	player->RBody->IsKinematic = true;
-	player->RBody->Name = "player";
-	player->RBody->Properties.Restitution = 0.0f;
-	player->RBody->GravityScale = 1.0f;
-	player->RBody->Properties.FrictionCoeff = 0.9f;
-	player->IsJumping = false;
-	player->Animator = playerAnimations;
-
-	// Set initial states.	
-	TileCamera2D::SetFollow(player);
-	player->AddToWorld(levels_manager->ActiveLevel().PhysicsWorld);
 
 	/* ====== Initizlie menu objects ======= */
 	// Initialize menus.
@@ -203,7 +175,7 @@ void Game::Init()
 	pauseMenu["Options"]["option6"];
 	pauseMenu["Options"]["option7"];
 	pauseMenu["Save"].SetID(SAVE_GAME_COMMAND);
-	pauseMenu["Exit"].SetID(EXIT_TO_MAIN_MENU_COMMAND);
+	pauseMenu["Main Menu"].SetID(EXIT_TO_MAIN_MENU_COMMAND);
 
 	MenuObject& mainMenu = menu->at("Main Menu").SetTable(1, 4);
 	mainMenu["Play"].SetTable(1,  3);
@@ -212,7 +184,7 @@ void Game::Init()
 	mainMenu["Exit game"].SetID(EXIT_GAME_COMMAND);
 	auto& levelInfos = levels_manager->GetAllInfos();
 	for (const auto& i : levelInfos)
-		mainMenu["Play"][i.sName].Enable(!i.bLocked);
+		mainMenu["Play"][i.sName].Enable(!i.bLocked).SetID(LOAD_LEVEL_COMMAND).SetCustomData(i.nLevel);
 
 	menu->Build(text_renderer);
 
@@ -224,13 +196,19 @@ void Game::Init()
 
 	// Initialize menu input handler
 	menuInputHandler = new MenuInputHandler(menu_manager);
+
+
+	// State options.
+	State = GameState::main_menu;
+	menu_manager->Open(&menu->at("Main Menu"));
+	menu_manager->CloseOnBack(false);
 }
 
 void Game::ProcessInput(float dt)
 {
 	if (this->State == GameState::active)
 	{
-		player->ProcessKeyboard(Input, dt);
+		levels_manager->ActiveLevel().ProcessInput(Input, dt);
 
 		if (Input->Held(GLFW_KEY_Q))
 			TileCamera2D::Rotate(glm::radians(45.0f) * dt);
@@ -241,7 +219,7 @@ void Game::ProcessInput(float dt)
 			TileCamera2D::SetRight(glm::vec2(1.0f, 0.0f));	
 			TileCamera2D::SetScale(glm::vec2(2.0f));	
 			Game::SetTileSize(Game::TileSize);	
-			player->Velocity = glm::vec2(0.0f);
+			// player->Velocity = glm::vec2(0.0f);
 		}
 		if (Input->Pressed(GLFW_KEY_F2))
 			render_aabb = !render_aabb;
@@ -249,14 +227,13 @@ void Game::ProcessInput(float dt)
 		if (Input->Pressed(GLFW_KEY_ESCAPE))
 		{
 			this->State = GameState::ingame_paused;	
-			menu_manager->Open(&menu->at("Main Menu"));
+			menu_manager->Open(&menu->at("Pause Menu"));
+			menu_manager->CloseOnBack(true);
 		}
 	}
 	else if (this->State == GameState::ingame_paused)
 	{
-		w1.Restart();
 		MenuObject* command = menuInputHandler->HandleInput(Input);
-		w1.Stop();
 		if (command)
 		{
 			switch(command->GetID())
@@ -269,6 +246,12 @@ void Game::ProcessInput(float dt)
 				levels_manager->Save();
 				break;
 			case EXIT_TO_MAIN_MENU_COMMAND:
+				levels_manager->Unload();
+				State = GameState::main_menu;
+				menu_manager->Close();
+				menu_manager->Open(&menu->at("Main Menu"));
+				menu_manager->CloseOnBack(false);
+				break;
 			case EXIT_GAME_COMMAND:
 				this->Run = false;
 				break;
@@ -278,6 +261,26 @@ void Game::ProcessInput(float dt)
 		}
 		if (menu_manager->MenuClosed())
 			this->State = GameState::active;
+	}
+	else if (this->State == GameState::main_menu)
+	{
+		MenuObject* command = menuInputHandler->HandleInput(Input);
+		if (command)
+		{
+			switch (command->GetID())
+			{
+			case LOAD_LEVEL_COMMAND:
+				levels_manager->Load(command->GetCustomData<int>());
+				State = GameState::active;
+				menu_manager->Close();
+				break;
+			case EXIT_GAME_COMMAND:
+				Run = false;
+				break;
+			default:
+				break;
+			}
+		}
 	}
 
 
@@ -292,22 +295,19 @@ void Game::ProcessInput(float dt)
 
 }
 void Game::Update(float dt)
-{
+{	
+	w1.Restart();
 	if (State == GameState::active)
 	{
-		TileCamera2D::Update(dt);
-		w1.Restart();
 		levels_manager->ActiveLevel().Update(dt);
-		w1.Stop();
-		player->Update(dt);
-		player->SetSprite(player->Animator->GetSprite());
 
 		// Update Animations
 		for (auto& [group, resources] : ResourceManager::AnimationManagers)
-			for (auto& [name, manager] : resources)
-				manager->Update(dt);
+			for (auto& [name, resource] : resources)
+				resource.obj->Update(dt);
 	}
-	
+	w1.Stop();
+
 	// Step update for FPS.
 	if (ref_fps < 2.0f) {
 		ref_fps += dt;
@@ -323,12 +323,13 @@ void Game::Update(float dt)
 }
 void Game::Render()
 {
+	if (!this->Run)
+		return;
+
 	w2.Restart();
 	if (State == GameState::active || State == GameState::ingame_paused)
 	{
-		renderer->DrawSprite(ResourceManager::GetTexture("background1"), glm::vec2(0.0f, 0.0f), glm::vec2(Width, Height), 0.0f);
-		// Render tilemap.		
-		tile_renderer->Draw(levels_manager->ActiveLevel().Map, glm::vec2(0.0f, 0.0f));		
+		levels_manager->ActiveLevel().Render(renderer, tile_renderer);
 
 		// Render colliders.
 		if (render_aabb)
@@ -362,10 +363,10 @@ void Game::Render()
 						0.0f, glm::vec3(1.0f));
 				}
 			}
-			basic_renderer->RenderShape(br_Shape::rectangle, player->GetSprite()->Position, player->GetSprite()->Size, 0.0f, glm::vec3(1.0f, 1.0f, 0.0f));
+			// basic_renderer->RenderShape(br_Shape::rectangle, player->GetSprite()->Position, player->GetSprite()->Size, 0.0f, glm::vec3(1.0f, 1.0f, 0.0f));
 		}
 	}
-	if (State == GameState::ingame_paused)
+	if (State == GameState::ingame_paused || State == GameState::main_menu)
 	{
 		glm::vec2 vMenuSize = menu_manager->First().GetTotalSize(2.0f);
 		menu_renderer->Draw(*menu_manager, ResourceManager::GetTexture("menu_9patch"), (glm::vec2(Width, Height) - vMenuSize) * 0.5f, 2.0f);
@@ -374,26 +375,15 @@ void Game::Render()
 
 	// Render DEBUG text
 	char buf[256];
-	sprintf(buf, "FPS: %.f\nUpdate step: %f ms\nRender step: %f ms\nSpriteSize: %s",
+	sprintf(buf, "FPS: %.f\nUpdate step: %f ms\nRender step: %f ms",
 		fps, 
 		w1.ElapsedMilliseconds(),
-		w2.ElapsedMilliseconds(),
-		("(" + std::to_string(player->GetSprite()->Size.x) + ", " + std::to_string(player->GetSprite()->Size.y) + ")").c_str()
+		w2.ElapsedMilliseconds()
 	);
-	text_renderer->RenderText(std::string(buf), 10.0f, 10.0f, 1.0f);
+	text_renderer->RenderText(std::string(buf), 10.0f, 10.0f, 0.5f);
 }
 
 // Callbacks
-/// Called AFTER the layer is drawn.
-void Game::OnLayerRendered(const Tmx::Map *map, const Tmx::Layer *layer, int n_layer)
-{
-	if (layer->GetName() == "entity")
-	{
-		// Render player.
-		player->Draw(renderer);
-		glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
-	}
-}
 void onCameraScale(glm::vec2 scale)
 {
 	tile_renderer->HandleScale(scale);

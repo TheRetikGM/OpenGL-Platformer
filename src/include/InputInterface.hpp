@@ -10,7 +10,7 @@ public:
     InputInterface(bool* pKeys, bool* pKeysProcessed) : pKeys(pKeys), pKeysProcessed(pKeysProcessed) {}
 
     // Checks ifs key was pressed (will return true only once until it is released).
-    bool Pressed(int key)
+    inline bool Pressed(int key)
     {
         if (pKeys[key] && !pKeysProcessed[key])
         {

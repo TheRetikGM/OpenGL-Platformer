@@ -105,6 +105,7 @@ void AnimationManager::DeleteAllTextures()
     //            glDeleteTextures(1, &frame.texture.ID);
     for (auto& [path, texture] : AnimationManager::LoadedTextures)
         glDeleteTextures(1, &texture.ID);
+    AnimationManager::LoadedTextures.clear();
 }
 void AnimationManager::resetLastAnimation()
 {

@@ -9,54 +9,114 @@
 #include "DebugColors.h"
 #include <any>
 
-std::unordered_map<std::string, std::unordered_map<std::string, Shader>> ResourceManager::Shaders;
-std::unordered_map<std::string, std::unordered_map<std::string, Texture2D>> ResourceManager::Textures;
-std::unordered_map<std::string, std::unordered_map<std::string, Tilemap*>> ResourceManager::Tilemaps;
-std::unordered_map<std::string, std::unordered_map<std::string, AnimationManager*>> ResourceManager::AnimationManagers;
+std::unordered_map<std::string, std::unordered_map<std::string, Resource<Shader>>> ResourceManager::Shaders;
+std::unordered_map<std::string, std::unordered_map<std::string, Resource<Texture2D>>> ResourceManager::Textures;
+std::unordered_map<std::string, std::unordered_map<std::string, Resource<Tilemap*>>> ResourceManager::Tilemaps;
+std::unordered_map<std::string, std::unordered_map<std::string, Resource<AnimationManager*>>> ResourceManager::AnimationManagers;
 
 Shader& ResourceManager::LoadShader(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile, std::string name, std::string group)
 {
 	try
 	{
-		Shaders[group][name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
+		auto& resource_group = Shaders[group];
+
+		// Create resource or return an already existing one.
+		auto result = resource_group.find(name);
+		if (result != resource_group.end())
+		{
+			// Increase resource instance count.
+			result->second.instance_count++;
+			return result->second.obj;
+		}
+		else
+		{
+			resource_group.emplace(name, Resource<Shader>(loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile)));
+			return resource_group[name].obj;
+		}
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << DC_ERROR " ResourceManager::LoadShader(): " << e.what() << '\n';
+		throw std::runtime_error("ResourceManager::LoadShader(): " + std::string(e.what()));
 	}
-
-	return Shaders[group][name];
 }
 Shader& ResourceManager::GetShader(std::string name, std::string group)
 {
-	return Shaders.at(group).at(name);
+	try
+	{
+		return Shaders.at(group).at(name).obj;	
+	}
+	catch(const std::out_of_range& e)
+	{
+		throw std::out_of_range("ResourceManager::GetShader(): Resource not found. Group = '" + group + "' Name = '" + name + "'");
+	}
 }
 void ResourceManager::DeleteShader(std::string name, std::string group)
 {
-	glDeleteProgram(Shaders.at(group).at(name).ID);
-	Shaders.at(group).erase(name);
+	try
+	{
+		Resource<Shader>& res = Shaders.at(group).at(name);
+		res.instance_count--;
+		if (res.instance_count == 0)
+		{
+			glDeleteProgram(res.obj.ID);
+			Shaders.at(group).erase(name);
+		}
+	}
+	catch(const std::out_of_range& e)
+	{
+		throw std::out_of_range("ResourceManager::DeleteShader(): Resource not found. Group = '" + group + "' Name = '" + name + "'");
+	}
 }
 
 Texture2D& ResourceManager::LoadTexture(const char* file, bool alpha, std::string name, std::string group)
 {
 	try
 	{
-		Textures[group][name] = loadTextureFromFile(file, alpha);
+		auto& resource_group = Textures[group];
+
+		auto result = resource_group.find(name);
+		if (result != resource_group.end())
+		{
+			result->second.instance_count++;
+			return result->second.obj;
+		}
+		else {
+			resource_group.emplace(name, Resource<Texture2D>(loadTextureFromFile(file, alpha)));
+			return resource_group[name].obj;
+		}
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << DC_ERROR " ResourceManager::LoadTexture(): " << e.what() << '\n';
+		throw std::runtime_error("ResourceManager::LoadTexture(): " + std::string(e.what()));
 	}
-	return Textures[group][name];
 }
 Texture2D& ResourceManager::GetTexture(std::string name, std::string group)
 {
-	return Textures.at(group).at(name);
+	try
+	{
+		return Textures.at(group).at(name).obj;	
+	}
+	catch(const std::out_of_range& e)
+	{
+		throw std::out_of_range("ResourceManager::GetTexture(): Resource not found. Group = '" + group + "' Name = '" + name + "'");
+	}
 }
 void ResourceManager::DeleteTexture(std::string name, std::string group)
 {
-	glDeleteTextures(1, &Textures.at(group).at(name).ID);
-	Textures.at(group).erase(name);
+	try
+	{
+		Resource<Texture2D>& res = Textures.at(group).at(name);
+		res.instance_count--;
+		if (res.instance_count == 0)
+		{
+			glDeleteTextures(1, &res.obj.ID);
+			Textures.at(group).erase(name);
+		}
+	}
+	catch(const std::out_of_range& e)
+	{
+		throw std::out_of_range("ResourceManager::DeleteTexture(): Resource not found. Group = '" + group + "' Name = '" + name + "'");
+	}
 }
 
 Shader ResourceManager::loadShaderFromFile(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile)
@@ -121,66 +181,132 @@ Texture2D ResourceManager::loadTextureFromFile(const char* file, bool alpha)
 
 Tilemap* ResourceManager::LoadTilemap(const char* file, std::string name, std::string group)
 {
-	Tilemap* t = nullptr;
 	try {
-		t = new Tilemap(file);
-		Tilemaps[group][name] = t;
+		auto& resource_group = Tilemaps[group];
+
+		auto result = resource_group.find(name);
+		if (result != resource_group.end())
+		{
+			result->second.instance_count++;
+			return result->second.obj;
+		}
+		else
+		{
+			Tilemap* t = new Tilemap(file);
+			resource_group.emplace(name, Resource<Tilemap*>(t));
+			return t;
+		}
 	}
 	catch (const std::exception& e)
 	{
-		std::cerr << DC_ERROR " ResourceManager::LoadTilemap(): " << e.what() << std::endl;
+		throw std::runtime_error(" ResourceManager::LoadTilemap(): " + std::string(e.what()));
 	}
-	return t;
 }
 Tilemap* ResourceManager::GetTilemap(std::string name, std::string group)
 {
-	return Tilemaps.at(group).at(name);
+	try
+	{
+		return Tilemaps.at(group).at(name).obj;	
+	}
+	catch(const std::out_of_range& e)
+	{
+		throw std::out_of_range("ResourceManager::GetTilemap(): Resource not found. Group = '" + group + "' Name = '" + name + "'");
+	}
 }
 void ResourceManager::DeleteTilemap(std::string name, std::string group)
 {
-	delete Tilemaps.at(group).at(name);
-	Tilemaps.at(group).erase(name);
+	try
+	{
+		Resource<Tilemap*>& res = Tilemaps.at(group).at(name);
+		res.instance_count--;
+		if (res.instance_count == 0)
+		{
+			delete res.obj;
+			Tilemaps.at(group).erase(name);
+		}
+	}
+	catch(const std::out_of_range& e)
+	{
+		throw std::out_of_range("ResourceManager::DeleteTilemap(): Resource not found. Group = '" + group + "' Name = '" + name + "'");
+	}
 }
 
 AnimationManager* ResourceManager::LoadAnimationManager(const char* file, std::string group)
 {
-	std::ifstream jsonFile(file);
-	if (!jsonFile.is_open())
-		throw std::runtime_error("Could not load AnimationManager at '" + std::string(file) + "'.");
-	std::stringstream json_data;
-	json_data << jsonFile.rdbuf();
+	try
+	{
+		std::ifstream jsonFile(file);
+		if (!jsonFile.is_open())
+			throw std::runtime_error("Could not load AnimationManager at '" + std::string(file) + "'.");
+		std::stringstream json_data;
+		json_data << jsonFile.rdbuf();
 
-	nlohmann::json j;
-	json_data >> j;
+		nlohmann::json j;
+		json_data >> j;
 
-	auto man = j.get<AnimationManager>();
-	AnimationManagers[group][man.Name] = new AnimationManager();
-	*AnimationManagers[group][man.Name] = man;	
+		std::string name = j.at("name");
+		auto& resource_group = AnimationManagers[group];
 
-	return AnimationManagers[group][man.Name];
+		auto result = resource_group.find(name);
+		if (result != resource_group.end())
+		{
+			result->second.instance_count++;
+			return result->second.obj;
+		}
+		else
+		{
+			auto man = j.get<AnimationManager>();
+			AnimationManager* pMan = new AnimationManager();
+			*pMan = man;
+			AnimationManagers[group].emplace(name, Resource<AnimationManager*>(pMan));
+			return pMan;
+		}
+	}
+	catch(const std::exception& e)
+	{
+		throw std::runtime_error("ResourceManager::LoadAnimationManager(): " + std::string(e.what()));
+	}
 }
 AnimationManager* ResourceManager::GetAnimationManager(std::string name, std::string group)
 {
-	return AnimationManagers.at(group).at(name);
+	try
+	{
+		return AnimationManagers.at(group).at(name).obj;	
+	}
+	catch(const std::out_of_range& e)
+	{
+		throw std::out_of_range("ResourceManager::GetAnimationManager(): Resource not found. Group = '" + group + "' Name = '" + name + "'");
+	}
 }
 void ResourceManager::DeleteAnimationManager(std::string name, std::string group)
 {
-	AnimationManagers.at(group).at(name)->DeleteAllTextures();
-	AnimationManager* ptr = AnimationManagers.at(group).at(name);
-	delete ptr;
-	AnimationManagers.at(group).erase(name);
+	try
+	{
+		Resource<AnimationManager*>& res = AnimationManagers.at(group).at(name);
+		res.instance_count--;
+		if (res.instance_count == 0)
+		{
+			res.obj->DeleteAllTextures();
+			delete res.obj;
+			AnimationManagers.at(group).erase(name);
+		}
+	}
+	catch(const std::out_of_range& e)
+	{
+		throw std::out_of_range("ResourceManager::DeleteAnimationManager(): Resource not found. Group = '" + group + "' Name = '" + name + "'");
+	}
 }
 
 void ResourceManager::DeleteGroup(std::string group)
 {
 	if (Shaders.find(group) != Shaders.end())
-		DeleteShaderGroup(group);
+		DeleteShaderGroup(group, true);
 	if (Textures.find(group) != Textures.end())
-		DeleteTextureGroup(group);
+		DeleteTextureGroup(group, true);
 	if (Tilemaps.find(group) != Tilemaps.end())
-		DeleteTilemapGroup(group);
+		DeleteTilemapGroup(group, true);
 	if (AnimationManagers.find(group) != AnimationManagers.end())
-		DeleteAnimationManagerGroup(group);
+		DeleteAnimationManagerGroup(group, true);
 }
 void ResourceManager::DeleteShaderGroup(std::string sGroupName, bool _erase_base)
 {

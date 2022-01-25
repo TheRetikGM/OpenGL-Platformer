@@ -9,6 +9,10 @@ uniform vec4 spriteScaleOffset;
 void main()
 {
 	vec2 texCoords = TexCoords * spriteScaleOffset.xy + spriteScaleOffset.zw;
-	FragColor = vec4(spriteColor, 1.0) * texture(spriteImage, texCoords);
+	vec4 t = texture(spriteImage, texCoords);
+	if (spriteColor.x == 1.0f)
+		FragColor = vec4(spriteColor, 1.0) * texture(spriteImage, texCoords);
+	else
+		FragColor = vec4(spriteColor, t.a);
 	// FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 }

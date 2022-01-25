@@ -6,13 +6,24 @@
 #include "tilemap.h"
 #include "game/AnimationManager.h"
 
+template<class Type>
+struct Resource
+{
+	Type obj;
+	int instance_count = 1;
+	
+	Resource(Type o) : obj(o) {}
+	Resource() : obj() {}
+};
+
 class ResourceManager
 {
 public:
-	static std::unordered_map<std::string, std::unordered_map<std::string, Shader>>	Shaders;
-	static std::unordered_map<std::string, std::unordered_map<std::string, Texture2D>> Textures;
-	static std::unordered_map<std::string, std::unordered_map<std::string, Tilemap*>> Tilemaps;
-	static std::unordered_map<std::string, std::unordered_map<std::string, AnimationManager*>> AnimationManagers;
+	// Group --> Resource Name --> Resource
+	static std::unordered_map<std::string, std::unordered_map<std::string, Resource<Shader>>>	Shaders;
+	static std::unordered_map<std::string, std::unordered_map<std::string, Resource<Texture2D>>> Textures;
+	static std::unordered_map<std::string, std::unordered_map<std::string, Resource<Tilemap*>>> Tilemaps;
+	static std::unordered_map<std::string, std::unordered_map<std::string, Resource<AnimationManager*>>> AnimationManagers;
 
 	static Shader& 				LoadShader(const char* vShaderFile, const char* fShaderFile, const char* gShaderFile, std::string name, std::string group = "");
 	static Texture2D& 			LoadTexture(const char* file, bool alpha, std::string name, std::string group = "");

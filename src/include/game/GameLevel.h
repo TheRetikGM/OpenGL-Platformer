@@ -3,6 +3,9 @@
 #include "tilemap.h"
 #include "game/Player.h"
 #include "nlohmann/json.hpp"
+#include "InputInterface.hpp"
+#include "sprite_renderer.h"
+#include "tilemap_renderer.h"
 
 class level_locked_exception : public std::runtime_error
 {
@@ -13,14 +16,16 @@ public:
 
 struct GameLevelInfo
 {
+	int nLevel;
     std::string sName;
     int nDifficulty;
     bool bCompleted;
 	bool bLocked;
     std::string sTileMap;
+	std::string sBackground;
 
 	GameLevelInfo() 
-		: sName(""), nDifficulty(0), bCompleted(false), bLocked(true), sTileMap("") {}
+		: sName(""), nDifficulty(0), bCompleted(false), bLocked(true), sTileMap(""), nLevel(0) {}
 };
 
 class GameLevel
@@ -29,17 +34,28 @@ public:
 	GameLevelInfo* Info = nullptr;
 	Physics2D::PhysicsWorld* PhysicsWorld = nullptr;
 	Tilemap* Map = nullptr;
+	Texture2D* Background = nullptr;
+	Player* pPlayer = nullptr;
 
 	GameLevel() {}
 
+	void ProcessInput(InputInterface* input, float dt);
 	void Update(float dt);
+	void Render(SpriteRenderer* pSpriteRenderer, TilemapRenderer* pTilemapRenderer);
+
 	void Load(GameLevelInfo* pInfo);
 	void Unload();
 
 protected:
+	// Initial position of the player in tile-space.
+	glm::vec2 vInitPlayerPosition = glm::vec2(0.0f, 0.0f);
+
 	void init_physics_world();
 	void init_tilemap();
 	void init_world_objects();
+	void init_background();
+	void init_player();
+	void init_tilecamera();
 };
 
 void to_json(nlohmann::json& j, const GameLevelInfo& info);

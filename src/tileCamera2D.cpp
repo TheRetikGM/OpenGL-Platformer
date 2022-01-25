@@ -122,7 +122,7 @@ void TileCamera2D::Update(float dt)
     glm::vec2 move_step = sign * relative_position * relative_position * dt * 2.0f;
     
     // If the distance to player is small move to the player position in 1 / 3 of a second.
-    auto in_range = [](const float& val, float a, float b) { return val >= a && val <= b; };
+    static auto in_range = [](const float& val, float a, float b) { return val >= a && val <= b; };
     if (in_range(move_step.x, -0.001f, 0.001f) || in_range(move_step.y, -0.001f, 0.001f))
         move_step = relative_position * dt * 3.0f;
 
