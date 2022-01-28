@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.5" tiledversion="1.7.2" name="environment" tilewidth="16" tileheight="16" tilecount="72" columns="12">
- <image source="tileset.png" width="192" height="96"/>
+<tileset version="1.5" tiledversion="1.7.2" name="environment" tilewidth="16" tileheight="16" tilecount="84" columns="12">
+ <image source="tileset.png" width="192" height="112"/>
  <tile id="0">
   <objectgroup draworder="index" id="2">
    <object id="1" x="0" y="0" width="16" height="16">
@@ -172,6 +172,54 @@
     <properties>
      <property name="name" value="ground"/>
     </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="66">
+  <objectgroup draworder="index" id="4">
+   <object id="3" x="0" y="0" width="16" height="16"/>
+   <object id="4" x="0" y="0" width="16" height="5.26087">
+    <properties>
+     <property name="name" value="platform"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="67">
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="0" y="0" width="16" height="5.13043">
+    <properties>
+     <property name="name" value="platform"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="68">
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="0" y="0" width="16" height="5.26087">
+    <properties>
+     <property name="name" value="platform"/>
+    </properties>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="77">
+  <objectgroup draworder="index" id="2">
+   <object id="1" name="spikes" x="0" y="0">
+    <properties>
+     <property name="name" value="spikes"/>
+    </properties>
+    <polygon points="0,0 0,3 1,6.5625 13.087,6.65217 16,2.95652 16,0"/>
+   </object>
+  </objectgroup>
+ </tile>
+ <tile id="78">
+  <objectgroup draworder="index" id="2">
+   <object id="1" name="spikes" x="0" y="0">
+    <properties>
+     <property name="name" value="spikes"/>
+    </properties>
+    <polygon points="0,0 16,0 16,7.5 12.9063,11.5313 1.0625,11.4375 0,7.53125"/>
    </object>
   </objectgroup>
  </tile>

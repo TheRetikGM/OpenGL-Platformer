@@ -105,6 +105,7 @@ void GameLevel::init_background()
 {
     Background = &ResourceManager::LoadTexture((ASSETS_DIR + Info->sBackground).c_str(), true, "background", Info->sName);
 }
+
 void GameLevel::init_world_objects()
 {
     // ==== Load objects from tilemap ====
@@ -124,6 +125,7 @@ void GameLevel::init_world_objects()
 
             const Tmx::Tileset* set = map->GetTileset(nTileset);
             const Tmx::Tile* tile = set->GetTile(layer->GetTileId(x, y));
+            const Tmx::MapTile& map_tile = layer->GetTile(x, y);
             if (tile && tile->HasObjects())
             {
                 for (Tmx::Object* obj : tile->GetObjects())
@@ -136,13 +138,48 @@ void GameLevel::init_world_objects()
 
                     if (polygon)
                     {
-                        // Translate polygon points to correct position.
+                        // Convert polygon points into range 0..1 of tile
                         std::vector<glm::vec2> points;
                         for (int nPoint = 0; nPoint < polygon->GetNumPoints(); nPoint++)
                         {
                             const Tmx::Point point = polygon->GetPoint(nPoint);
-                            points.push_back(tilespace_pos + glm::vec2(point.x, point.y) / set_tile_size);
+                            points.push_back(glm::vec2(point.x, point.y) / set_tile_size);
                         }
+                        
+                        // Rotate tile as needed.
+                        glm::vec2 polygon_center = Physics2D::GetPolygonCenter(points) - glm::vec2(0.5f);
+                        for (size_t nPoint = 0; nPoint < points.size(); nPoint++)
+                        {
+                            glm::vec2& point = points[nPoint];
+                            point -= glm::vec2(0.5f);   // Translate to tile center. As we are flipping over the tile center.
+
+                            if (map_tile.flippedHorizontally) {
+                                if (nPoint == 0)
+                                    polygon_center.x = -polygon_center.x;
+                                point.x = -point.x;
+                            }
+                            if (map_tile.flippedVertically) {
+                                if (nPoint == 0)
+                                    polygon_center.y = -polygon_center.y;
+                                point.y = -point.y;
+                            }
+                            if (map_tile.flippedDiagonally)
+                            {
+                                const auto flip_diag = [](glm::vec2& p) {
+                                    p = glm::vec2(M_SQRT1_2 * (p.x - p.y), -M_SQRT1_2 * (p.x + p.y));
+                                    p.x = -p.x;
+                                    p = glm::vec2(-M_SQRT1_2 * (p.x - p.y), M_SQRT1_2 * (p.x + p.y));
+                                };
+                                if (nPoint == 0)
+                                    flip_diag(polygon_center);
+                                flip_diag(point);
+                            }
+                            
+                            point += glm::vec2(0.5f); // Translate back.
+                        }
+                        polygon_center += glm::vec2(0.5f);
+
+                        tilespace_pos += polygon_center;  // Polygon has position in the center.
                         body = this->PhysicsWorld->AddPolygonBody(tilespace_pos, points, 2.0f, true, 1.0f);
 					}
 					else {
