@@ -98,8 +98,8 @@ void TilemapRenderer::Draw(Tilemap* tilemap, glm::vec2 pos)
 
 		// Get offset for tiles.
 		glm::vec2 offset = TileCamera2D::GetFirstVisibleTile();
-		glm::ivec2 nVisibleTiles = TileCamera2D::GetNVisibleTiles();		
-		glm::vec2 tileOffset = glm::vec2(offset.x - (int)offset.x, offset.y - (int)offset.y);		
+		glm::ivec2 nVisibleTiles = TileCamera2D::GetNVisibleTiles();
+		glm::vec2 tileOffset = glm::vec2(offset.x - (int)offset.x, offset.y - (int)offset.y);
 
 		for (int x = -1; x <= nVisibleTiles.x + 1; x++)
 		{
@@ -113,14 +113,21 @@ void TilemapRenderer::Draw(Tilemap* tilemap, glm::vec2 pos)
 				// Check if tile is NOT empty
 				if (i_tileset != -1)
 				{
+					// Get the tile ID
 					const Tmx::Tileset* set = map->GetTileset(i_tileset);
 					int tile_id = tilemap->GetTileId(layer, c_tile.x, c_tile.y);
+					glm::vec2 wanted_tile_size = Game::TileSize * scale;
+					glm::vec2 new_scale = wanted_tile_size / glm::vec2(float(map->GetTileWidth()), float(map->GetTileHeight()));
+					glm::vec2 position = (pos + glm::vec2(float(x), float(y)) - tileOffset) * wanted_tile_size;
 
 					glm::mat4 model(1.0f);
-					model = glm::translate(model, glm::vec3((pos + glm::vec2((float)x, (float)y) - tileOffset) * scale * Game::TileSize, 0.0f));
-					if (set->GetTileHeight() > map->GetTileHeight())
-						model = glm::translate(model, glm::vec3(0.0f, -scale.y * (set->GetTileHeight() - map->GetTileHeight()), 0.0f));
-					model = glm::scale(model, glm::vec3(scale * Game::TileSize, 1.0f));
+					// Translate tile to its position in pixel-space. (counting scale)
+					model = glm::translate(model, glm::vec3(position, 0.0f));
+					// Translate tile up if its height is bigger than height of tile of map.
+					if (set->GetTileHeight() != map->GetTileHeight())
+						model = glm::translate(model, glm::vec3(0.0f, -new_scale.y * (set->GetTileHeight() - map->GetTileHeight()), 0.0f));
+					// Scale tile to the wanted tile size.
+					model = glm::scale(model, glm::vec3(glm::vec2(float(set->GetTileWidth()), float(set->GetTileHeight())) * new_scale, 0.0f));
 
 					InstanceInfo inf = initInstanceInfo();
 					inf.PVM = this->Projection * TileCamera2D::GetViewMatrix() * model;
@@ -133,7 +140,6 @@ void TilemapRenderer::Draw(Tilemap* tilemap, glm::vec2 pos)
 				else if (n_layer == 0 && !map->GetBackgroundColor().IsTransparent())
 				{
 					glm::mat4 model(1.0f);
-					glm::vec2 mapDimen(map->GetTileWidth(), map->GetTileHeight());
 					model = glm::translate(model, glm::vec3((pos + glm::vec2(x, y) - tileOffset) * scale * Game::TileSize, 0.0f));
 					model = glm::scale(model, glm::vec3(scale * Game::TileSize, 1.0f));
 
