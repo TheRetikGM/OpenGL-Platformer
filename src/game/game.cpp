@@ -121,7 +121,7 @@ void Game::ProcessScroll(float yoffset)
 }
 void Game::Init()
 {
-	Game::SetTileSize(glm::vec2(32.0f, 32.0f));
+	Game::SetTileSize(glm::vec2(32.0f));
 	this->BackgroundColor = glm::vec3(45 / 255.0f, 61 / 255.0f, 30 / 255.0f);
 	Game::ScreenSize = glm::vec2(float(Width), float(Height));
 
@@ -174,7 +174,7 @@ void Game::Init()
 	pauseMenu["Options"]["option5"];
 	pauseMenu["Options"]["option6"];
 	pauseMenu["Options"]["option7"];
-	pauseMenu["Save"].SetID(SAVE_GAME_COMMAND);
+	pauseMenu["Restart"].SetID(RESTART_LEVEL_COMMAND);
 	pauseMenu["Main Menu"].SetID(EXIT_TO_MAIN_MENU_COMMAND);
 
 	MenuObject& mainMenu = menu->at("Main Menu").SetTable(1, 4);
@@ -196,7 +196,6 @@ void Game::Init()
 
 	// Initialize menu input handler
 	menuInputHandler = new MenuInputHandler(menu_manager);
-
 
 	// State options.
 	State = GameState::main_menu;

@@ -99,10 +99,6 @@ bool AnimationManager::CompareParameter(std::string name, std::any value)
 }
 void AnimationManager::DeleteAllTextures()
 {
-    //for (auto& [kind, variants] : Animations)
-    //    for (auto& [variant, sprite] : variants)
-    //        for (auto& frame : sprite.Frames)
-    //            glDeleteTextures(1, &frame.texture.ID);
     for (auto& [path, texture] : AnimationManager::LoadedTextures)
         glDeleteTextures(1, &texture.ID);
     AnimationManager::LoadedTextures.clear();

@@ -181,8 +181,7 @@ int Tilemap::GetTileId(const Tmx::TileLayer* layer, int x, int y)
 AnimatedTile::AnimatedTile(const Tmx::Tile* tile)
 	: CurrentFrame(0), Frames(tile->GetFrames()), duration_left(0)
 {
-	CurrentFrame = 0;
-	duration_left = (*Frames.begin()).GetDuration() / 1000.0f;
+	duration_left = Frames[CurrentFrame].GetDuration() / 1000.0f;
 }
 void AnimatedTile::Update(float dt)
 {
