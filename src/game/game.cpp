@@ -338,6 +338,7 @@ void Game::Render()
 			{
 				auto body = world->GetBody(i);
 				auto p = body->GetCollider();
+
 				if (body->GetCollider()->GetType() != Physics2D::ColliderType::capsule)
 				{
 					basic_renderer->RenderClosedPolygon(
@@ -346,7 +347,8 @@ void Game::Render()
 						glm::vec2(world->GetInvMeterUnitRatio()) * Game::TileSize * TileCamera2D::GetScale(),
 						glm::vec3(1.0f, 1.0f, 1.0f));
 				}
-				else {
+				else 
+				{
 					auto cap = body->GetCollider()->Get<Physics2D::CapsuleCollider*>();
 					basic_renderer->RenderShape(br_Shape::circle_empty,
 						TileCamera2D::GetScreenPosition(cap->TopCollider->GetAABB().GetMin(true)),

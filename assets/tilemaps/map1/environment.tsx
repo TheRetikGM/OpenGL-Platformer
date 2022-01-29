@@ -205,21 +205,21 @@
  </tile>
  <tile id="77">
   <objectgroup draworder="index" id="2">
-   <object id="1" name="spikes" x="0" y="0">
+   <object id="1" name="spikes" x="1.34783" y="0">
     <properties>
      <property name="name" value="spikes"/>
     </properties>
-    <polygon points="0,0 0,3 1,6.5625 13.087,6.65217 16,2.95652 16,0"/>
+    <polygon points="0,0 0,3 0.668478,6.12772 11.6765,6.13043 13.5217,4.3913 13.4783,0"/>
    </object>
   </objectgroup>
  </tile>
  <tile id="78">
   <objectgroup draworder="index" id="2">
-   <object id="1" name="spikes" x="0" y="0">
+   <object id="1" name="spikes" x="0.956522" y="0">
     <properties>
      <property name="name" value="spikes"/>
     </properties>
-    <polygon points="0,0 16,0 16,7.5 12.9063,11.5313 1.0625,11.4375 0,7.53125"/>
+    <polygon points="0,0 14.0435,0 14.0435,9.54348 11.3281,11.5313 1.31909,11.394 0,7.53125"/>
    </object>
   </objectgroup>
  </tile>

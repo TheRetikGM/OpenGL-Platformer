@@ -92,20 +92,25 @@ void Player::Update(float dt)
 	// so that the player will not get stuck 
 	// between tiles.
 	std::sort(collisions.begin(), collisions.end(), [](const collision& a, const collision& b) { return a.dist < b.dist; });
+	Physics2D::CollisionInfo info;
 	for (auto& c : collisions) {
-		Physics2D::CollisionInfo info;
+		if (c.body->Name != "ground")
+			continue;
 		if (Physics2D::CheckCollision(RBody.get(), c.body, info)) {
-			if (c.body->Name == "ground")
+			// On ground
+			if (glm::dot(info.normal, glm::vec2(0.0f, -1.0f)) > 0.0f)
 			{
-				// On ground
-				if (glm::dot(info.normal, glm::vec2(0.0f, -1.0f)) > 0.0f)
-				{
-					CanJump = true;
-					canWallJump = false;
-					Velocity.y = 0.0f;
-				}
+				CanJump = true;
+				canWallJump = false;
+				Velocity.y = 0.0f;
 			}
 			RBody->MoveOutOfCollision(info);
+		}
+	}
+	for (auto& c : collisions) {
+		if (Physics2D::CheckCollision(RBody.get(), c.body, info)) {
+			if (info.depth > 0.01f && c.body->Name == "spikes")
+				printf("Ouch!! %i\n", rand());
 		}
 	}
 	collisions.clear();

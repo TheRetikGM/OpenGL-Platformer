@@ -106,6 +106,35 @@ void GameLevel::init_background()
     Background = &ResourceManager::LoadTexture((ASSETS_DIR + Info->sBackground).c_str(), true, "background", Info->sName);
 }
 
+// Sort polygon vertices in clockwise order.
+void sort_polygon(const glm::vec2& poly_center, std::vector<glm::vec2>& points)
+{
+    struct polar_coord { glm::vec2 orig; float r; float phi; };
+    std::vector<polar_coord> points_polar;
+    points_polar.reserve(points.size());
+
+    // Convert Cartesian to polar. x --> r, y --> phi
+    for (auto& point : points)
+    {
+        point -= poly_center;
+        float r = std::sqrt(point.x * point.x + point.y * point.y);
+        float phi = std::atan2(point.y, point.x);
+        if (phi < 0.0f)
+            phi = M_PI * 2.0f + phi;
+        points_polar.push_back(polar_coord{ point, r, phi });
+    }
+
+    // Sort in ascending order. 
+    // Note: our y axis is pointing down, so we sort in ascending order, because the angle "points" down too.
+    // std::sort(points.begin(), points.end(), [](const glm::vec2& a, const glm::vec2& b) { return a.y < b.y; });
+    std::sort(points_polar.begin(), points_polar.end(), [](auto a, auto b) { return a.phi < b.phi; });
+
+    // Convert polar back to Cartesian.
+    for (size_t i = 0; i < points_polar.size(); i++)
+    {
+        points[i] = points_polar[i].orig + poly_center;
+    }
+}
 void GameLevel::init_world_objects()
 {
     // ==== Load objects from tilemap ====
@@ -132,7 +161,8 @@ void GameLevel::init_world_objects()
                 {
                     const Tmx::Polygon* polygon = obj->GetPolygon();
                     glm::vec2 set_tile_size = glm::vec2(set->GetTileWidth(), set->GetTileHeight());
-					glm::vec2 tilespace_pos = glm::vec2(obj->GetX(), obj->GetY()) / set_tile_size + glm::vec2(x, y);
+					glm::vec2 tilespace_pos = glm::vec2(x, y);
+                    glm::vec2 local_offset = glm::vec2(obj->GetX(), obj->GetY()) / set_tile_size;
 					glm::vec2 local_size = glm::vec2(obj->GetWidth(), obj->GetHeight()) / set_tile_size;
 					Physics2D::RigidBody* body = nullptr;
 
@@ -143,11 +173,13 @@ void GameLevel::init_world_objects()
                         for (int nPoint = 0; nPoint < polygon->GetNumPoints(); nPoint++)
                         {
                             const Tmx::Point point = polygon->GetPoint(nPoint);
-                            points.push_back(glm::vec2(point.x, point.y) / set_tile_size);
+                            points.push_back(glm::vec2(point.x, point.y) / set_tile_size + local_offset);
                         }
                         
                         // Rotate tile as needed.
-                        glm::vec2 polygon_center = Physics2D::GetPolygonCenter(points) - glm::vec2(0.5f);
+                        glm::vec2 polygon_center = Physics2D::GetPolygonCenter(points);
+                        polygon_center -= glm::vec2(0.5f);
+
                         for (size_t nPoint = 0; nPoint < points.size(); nPoint++)
                         {
                             glm::vec2& point = points[nPoint];
@@ -178,12 +210,15 @@ void GameLevel::init_world_objects()
                             point += glm::vec2(0.5f); // Translate back.
                         }
                         polygon_center += glm::vec2(0.5f);
+                        sort_polygon(polygon_center, points);
+
+                        polygon_center = Physics2D::GetPolygonCenter(points);
 
                         tilespace_pos += polygon_center;  // Polygon has position in the center.
                         body = this->PhysicsWorld->AddPolygonBody(tilespace_pos, points, 2.0f, true, 1.0f);
 					}
 					else {
-						body = this->PhysicsWorld->AddRectangleBody(tilespace_pos, local_size, 2.0f, true, 1.0f);
+						body = this->PhysicsWorld->AddRectangleBody(tilespace_pos + local_offset, local_size, 2.0f, true, 1.0f);
 					}
 
                     // Assign body the additional properties set on the collider.
