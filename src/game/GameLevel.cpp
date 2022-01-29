@@ -11,6 +11,7 @@
 #include "game/game.h"
 #include "game/AnimationManager.h"
 #include "tileCamera2D.h"
+#include "game/GameEvents.h"
 
 using nlohmann::json;
 
@@ -56,6 +57,24 @@ void from_json(const json& json, std::vector<GameLevelInfo>& infos)
 // ************************
 // GameLevel definitions
 // ************************
+void GameLevel::OnNotify(IObserverSubject* obj, int message)
+{
+    switch (message)
+    {
+    case PLAYER_HIT_SPIKES:
+        printf("Player hit the spikes!!! %i\n", int(rand()));
+        break;
+    case PLAYER_JUMPED:
+        // pPlayer->Animator->PlayOnce("before_jump");
+        break;
+    case PLAYER_LANDED:
+        pPlayer->Animator->PlayOnce("after_jump");
+        break;
+    default:
+        notify(message);
+        break;
+    }
+}
 void GameLevel::ProcessInput(InputInterface* input, float dt)
 {
     pPlayer->ProcessKeyboard(input, dt);
@@ -255,6 +274,7 @@ void GameLevel::init_player()
 	pPlayer->IsJumping = false;
 	pPlayer->Animator = pAnim;
     pPlayer->AddToWorld(PhysicsWorld);
+    pPlayer->AddObserver(this);
 }
 void GameLevel::init_tilecamera()
 {
@@ -270,7 +290,7 @@ void GameLevel::Unload()
 {
     // Check for null just in case some of the initializations failed.
     if (!(Map && PhysicsWorld && pPlayer))
-        throw std::runtime_error("GameLevel::Unload(): Failed. Level is not initialized.");
+        return; //throw std::runtime_error("GameLevel::Unload(): Failed. Level is not initialized.");
 
     delete Map;
     delete PhysicsWorld;

@@ -8,6 +8,7 @@
 #include "PhysicsWorld.h"
 #include "game/GameLevel.h"
 #include "InputInterface.hpp"
+#include "interfaces/Observer.h"
 
 enum class GameState : uint8_t {
 	active,
@@ -23,7 +24,7 @@ enum class Direction : uint8_t {
 	right = 3
 };
 
-class Game
+class Game : public IObserver
 {
 public:
 	GameState		State;
@@ -53,4 +54,7 @@ public:
 	static void SetTileSize(glm::vec2 new_size);
 
 	void OnResize();
+
+	// Implementation of Observer functions.
+	void OnNotify(IObserverSubject* obj, int message);
 };

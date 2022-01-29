@@ -1,6 +1,7 @@
 #include "game/Player.h"
 #include "tileCamera2D.h"
 #include "game/game.h"
+#include "game/GameEvents.h"
 
 #define ifFirstPressed(key, pred) if (keys[key] && !keys_processed[key]) { pred; keys_processed[key] = true; }
 
@@ -100,6 +101,9 @@ void Player::Update(float dt)
 			// On ground
 			if (glm::dot(info.normal, glm::vec2(0.0f, -1.0f)) > 0.0f)
 			{
+				if (!CanJump)
+					notify(PLAYER_LANDED);
+					
 				CanJump = true;
 				canWallJump = false;
 				Velocity.y = 0.0f;
@@ -110,7 +114,7 @@ void Player::Update(float dt)
 	for (auto& c : collisions) {
 		if (Physics2D::CheckCollision(RBody.get(), c.body, info)) {
 			if (info.depth > 0.01f && c.body->Name == "spikes")
-				printf("Ouch!! %i\n", rand());
+				notify(PLAYER_HIT_SPIKES);
 		}
 	}
 	collisions.clear();
@@ -200,7 +204,7 @@ void Player::ProcessKeyboard(InputInterface* input, float dt)
 	if (input->Pressed(Controls.JumpUp))
 	{
 		if (CanJump)
-		{ 
+		{
 			float jump_impulse = std::sqrt(2.0f * Gravity * GravityScale * jumpHeight);
 			Velocity.y = -jump_impulse;
 
@@ -209,6 +213,8 @@ void Player::ProcessKeyboard(InputInterface* input, float dt)
 			CanJump = false;
 			jumpCanceled = false;
 			jumpTime = 0.0f;
+
+			notify(PLAYER_JUMPED);
 		}
 		if (canWallJump)
 		{

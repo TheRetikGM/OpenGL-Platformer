@@ -118,6 +118,46 @@
 				"source": "player/herochar_jump_down_anim_strip_3.png"
 			}
 		}
+	},
+	"before_jump": {
+		"right": {
+			"duration": 60,
+			"mirrored": false,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/before_jump.png"
+			}
+		},
+		"left": {
+			"duration": 60,
+			"mirrored": true,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/before_jump.png"
+			}
+		}
+	},
+	"after_jump": {
+		"right": {
+			"duration": 50,
+			"mirrored": false,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/after_jump.png"
+			}
+		},
+		"left": {
+			"duration": 50,
+			"mirrored": true,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/after_jump.png"
+			}
+		}
 	}
   }
 }

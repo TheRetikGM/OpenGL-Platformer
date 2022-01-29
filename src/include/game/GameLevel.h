@@ -6,6 +6,7 @@
 #include "InputInterface.hpp"
 #include "sprite_renderer.h"
 #include "tilemap_renderer.h"
+#include "BasicObserverSubject.hpp"
 
 class level_locked_exception : public std::runtime_error
 {
@@ -28,7 +29,11 @@ struct GameLevelInfo
 		: sName(""), nDifficulty(0), bCompleted(false), bLocked(true), sTileMap(""), nLevel(0) {}
 };
 
-class GameLevel
+/*
+* Represents game level.
+* Note: Implements observer pattern. Can observe player and it can be observed by game (for example.)
+*/
+class GameLevel : public IObserver, public BasicObserverSubject
 {
 public:
 	GameLevelInfo* Info = nullptr;
@@ -45,6 +50,9 @@ public:
 
 	void Load(GameLevelInfo* pInfo);
 	void Unload();
+
+	// Observer implementation.
+	void OnNotify(IObserverSubject* obj, int message);
 
 protected:
 	// Initial position of the player in tile-space.

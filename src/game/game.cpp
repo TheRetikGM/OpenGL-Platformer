@@ -203,6 +203,10 @@ void Game::Init()
 	menu_manager->CloseOnBack(false);
 }
 
+void Game::OnNotify(IObserverSubject* obj, int message)
+{
+	
+}
 void Game::ProcessInput(float dt)
 {
 	if (this->State == GameState::active)

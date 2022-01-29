@@ -6,6 +6,7 @@
 #include <memory>
 #include <RigidBody.h>
 #include <PhysicsWorld.h>
+#include "BasicObserverSubject.hpp"
 #include "game/AnimationManager.h"
 #include "GLFW/glfw3.h"
 #include "InputInterface.hpp"
@@ -21,9 +22,10 @@ public:
 	PlayerControls() {}
 };
 
-class Player : public GameObject, public TileSpace
+class Player : public GameObject, public TileSpace, public BasicObserverSubject
 {
-public:	
+public:
+	uint8_t		Lives;		// The amount of hearts.
 	bool		InCollision;
 	bool		CanJump;
 	bool		IsJumping;
@@ -56,10 +58,15 @@ public:
 	glm::vec2 GetScreenPosition() override;
 	void onTileSizeChanged(glm::vec2 newTileSize) override;
 
-private:
+protected:
 	Sprite* 	playerSprite;
 	float 		spriteRatio;
 	glm::vec2	spriteOffset;
+	
+	// Invincibility.
+	float fInvincibilityDuration = 2.0f;	// 2 seconds.
+	bool bInvincible = false;
+	float fInvincibility = 0.0f;
 
 	glm::vec2 lastSlidingDir = glm::vec2(0.0f, 0.0f);
 	std::shared_ptr<Physics2D::RigidBody> leftBody;
