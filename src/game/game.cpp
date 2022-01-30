@@ -203,7 +203,7 @@ void Game::Init()
 	menu_manager->CloseOnBack(false);
 }
 
-void Game::OnNotify(IObserverSubject* obj, int message)
+void Game::OnNotify(IObserverSubject* obj, int message, void* args)
 {
 	
 }
@@ -343,6 +343,14 @@ void Game::Render()
 				auto body = world->GetBody(i);
 				auto p = body->GetCollider();
 
+				if (body->GetCollider()->GetType() == Physics2D::ColliderType::circle)
+				{
+					basic_renderer->RenderShape(br_Shape::circle_empty, 
+						TileCamera2D::GetScreenPosition(p->GetAABB().GetMin(true)),
+						p->GetAABB().GetSize(true) * Game::TileSize * TileCamera2D::GetScale(),
+						0.0f, glm::vec3(1.0f, 1.0f, 1.0f)
+					);
+				}
 				if (body->GetCollider()->GetType() != Physics2D::ColliderType::capsule)
 				{
 					basic_renderer->RenderClosedPolygon(

@@ -7,6 +7,9 @@
 #include "sprite_renderer.h"
 #include "tilemap_renderer.h"
 #include "BasicObserverSubject.hpp"
+#include "game/GameEvents.h"
+#include <unordered_map>
+#include <queue>
 
 class level_locked_exception : public std::runtime_error
 {
@@ -52,9 +55,20 @@ public:
 	void Unload();
 
 	// Observer implementation.
-	void OnNotify(IObserverSubject* obj, int message);
+	void OnNotify(IObserverSubject* obj, int message, void* args = nullptr);
 
 protected:
+	// Binding of coins to physics2D objects (eg. RigidBody -> tile_gid).
+	std::unordered_map<Physics2D::RigidBody*, MapTileInfo> coins;
+	// Event queue;
+	struct Event { IObserverSubject* sender; int message; void* args; };
+	std::queue<Event> eventQueue;
+	std::array<int, 4> acceptedMessages = {
+		PLAYER_HIT_SPIKES,
+		PLAYER_JUMPED,
+		PLAYER_LANDED,
+		PLAYER_COLLIDE_COIN
+	};
 	// Initial position of the player in tile-space.
 	glm::vec2 vInitPlayerPosition = glm::vec2(0.0f, 0.0f);
 
@@ -64,6 +78,7 @@ protected:
 	void init_background();
 	void init_player();
 	void init_tilecamera();
+	void handle_events(float dt);
 };
 
 void to_json(nlohmann::json& j, const GameLevelInfo& info);

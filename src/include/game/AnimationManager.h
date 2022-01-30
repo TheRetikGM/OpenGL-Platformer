@@ -25,7 +25,6 @@ public:
     static std::vector<std::pair<std::string, Texture2D>> LoadedTextures;
 
     AnimationManager() = default;
-    //AnimationManager(const AnimationManager& manager);
 
     void SetParameter(std::string name, std::any value);
     template<class T> T GetParamater(std::string name)
@@ -41,7 +40,6 @@ public:
         }
         return val;
     }
-    // template<class T> T GetParamater(const char* name) { GetParameter<T>(std::string(name)); }
     AnimatedSprite* GetSprite();
     bool CompareParameter(std::string name, std::any value);
     static void DeleteAllTextures();    

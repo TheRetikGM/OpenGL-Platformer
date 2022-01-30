@@ -57,30 +57,49 @@ void from_json(const json& json, std::vector<GameLevelInfo>& infos)
 // ************************
 // GameLevel definitions
 // ************************
-void GameLevel::OnNotify(IObserverSubject* obj, int message)
+void GameLevel::OnNotify(IObserverSubject* obj, int message, void* args)
 {
-    switch (message)
+    if (std::find(acceptedMessages.begin(), acceptedMessages.end(), message) != acceptedMessages.end())
+        eventQueue.emplace(Event{ obj, message, args });
+    notify(message);
+}
+void GameLevel::handle_events(float dt)
+{
+    while (!eventQueue.empty())
     {
-    case PLAYER_HIT_SPIKES:
-        printf("Player hit the spikes!!! %i\n", int(rand()));
-        break;
-    case PLAYER_JUMPED:
-        // pPlayer->Animator->PlayOnce("before_jump");
-        break;
-    case PLAYER_LANDED:
-        pPlayer->Animator->PlayOnce("after_jump");
-        break;
-    default:
-        notify(message);
-        break;
+        Event e = eventQueue.front();
+        eventQueue.pop();
+        switch (e.message)
+        {
+        case PLAYER_HIT_SPIKES:
+            printf("Player hit the spikes!!! %i\n", int(rand()));
+            break;
+        case PLAYER_JUMPED:
+            // pPlayer->Animator->PlayOnce("before_jump");
+            break;
+        case PLAYER_LANDED:
+            pPlayer->Animator->PlayOnce("after_jump");
+            break;
+        case PLAYER_COLLIDE_COIN:
+            printf("Coin?! hehe... %i\n", rand());
+            PhysicsWorld->RemoveBody(PhysicsWorld->GetBodyIndex((Physics2D::RigidBody*)e.args));
+            Map->HideTile(coins[(Physics2D::RigidBody*)e.args]);
+            break;
+        default:
+            break;
+        }
     }
 }
 void GameLevel::ProcessInput(InputInterface* input, float dt)
 {
     pPlayer->ProcessKeyboard(input, dt);
+
+    if (input->Pressed(GLFW_KEY_SPACE))
+        pPlayer->SetPosition(vInitPlayerPosition);
 }
 void GameLevel::Update(float dt)
 {
+    handle_events(dt);
     TileCamera2D::Update(dt);
     this->PhysicsWorld->Update(dt, 5.0f);
     Map->Update(dt);
@@ -158,6 +177,7 @@ void GameLevel::init_world_objects()
 {
     // ==== Load objects from tilemap ====
     Tmx::Map* map = Map->Map;
+    glm::vec2 map_tile_size = glm::vec2(map->GetTileWidth(), map->GetTileHeight());
     // Load objects from tilesets and put them in correct locations in world.
     for (int nLayer = 0; nLayer < map->GetNumTileLayers(); nLayer++)
     {
@@ -179,6 +199,7 @@ void GameLevel::init_world_objects()
                 for (Tmx::Object* obj : tile->GetObjects())
                 {
                     const Tmx::Polygon* polygon = obj->GetPolygon();
+                    const Tmx::Ellipse* ellipse = obj->GetEllipse();
                     glm::vec2 set_tile_size = glm::vec2(set->GetTileWidth(), set->GetTileHeight());
 					glm::vec2 tilespace_pos = glm::vec2(x, y);
                     glm::vec2 local_offset = glm::vec2(obj->GetX(), obj->GetY()) / set_tile_size;
@@ -236,6 +257,22 @@ void GameLevel::init_world_objects()
                         tilespace_pos += polygon_center;  // Polygon has position in the center.
                         body = this->PhysicsWorld->AddPolygonBody(tilespace_pos, points, 2.0f, true, 1.0f);
 					}
+                    else if (ellipse)
+                    {
+                        glm::vec2 size_ratio(1.0f);
+                        if (set_tile_size != map_tile_size)
+                        {
+                            size_ratio = set_tile_size / map_tile_size;
+                            glm::vec2 rel_size = glm::vec2(0.0f, 1.0f - size_ratio.y);
+                            tilespace_pos += rel_size;
+                        }
+
+                        float r_local = ((ellipse->GetRadiusX() + ellipse->GetRadiusY()) * 0.5f) / set_tile_size.x;
+                        r_local *= size_ratio.x;
+                        local_offset *= size_ratio;
+                        tilespace_pos += local_offset + glm::vec2(r_local);
+                        body = this->PhysicsWorld->AddCircleBody(tilespace_pos, r_local, 2.0f, true, 1.0f);
+                    }
 					else {
 						body = this->PhysicsWorld->AddRectangleBody(tilespace_pos + local_offset, local_size, 2.0f, true, 1.0f);
 					}
@@ -243,6 +280,10 @@ void GameLevel::init_world_objects()
                     // Assign body the additional properties set on the collider.
 					if (body)
 						body->Name = obj->GetProperties().GetStringProperty("name");
+                    if (body->Name == "coin")
+                    {
+                        coins[body] = MapTileInfo(layer->GetName(), x, y);
+                    }
                 }
             }
         }

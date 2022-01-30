@@ -106,6 +106,9 @@ void TilemapRenderer::Draw(Tilemap* tilemap, glm::vec2 pos)
 			for (int y = -1; y <= nVisibleTiles.y + 1; y++)
 			{
 				glm::ivec2 c_tile = glm::ivec2(x + (int)offset.x, y + (int)offset.y);
+				if (tilemap->IsHidden(layer->GetName(), c_tile.x, c_tile.y))
+					continue;
+
 				int i_tileset = -1;
 				if (c_tile.x >= 0 && c_tile.x < layer->GetWidth() && c_tile.y >= 0 && c_tile.y < layer->GetHeight())
 					i_tileset = layer->GetTileTilesetIndex(c_tile.x, c_tile.y);
@@ -116,6 +119,7 @@ void TilemapRenderer::Draw(Tilemap* tilemap, glm::vec2 pos)
 					// Get the tile ID
 					const Tmx::Tileset* set = map->GetTileset(i_tileset);
 					int tile_id = tilemap->GetTileId(layer, c_tile.x, c_tile.y);
+
 					glm::vec2 wanted_tile_size = Game::TileSize * scale;
 					glm::vec2 new_scale = wanted_tile_size / glm::vec2(float(map->GetTileWidth()), float(map->GetTileHeight()));
 					glm::vec2 position = (pos + glm::vec2(float(x), float(y)) - tileOffset) * wanted_tile_size;
