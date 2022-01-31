@@ -258,6 +258,11 @@ void Game::ProcessInput(float dt)
 			case EXIT_GAME_COMMAND:
 				this->Run = false;
 				break;
+			case RESTART_LEVEL_COMMAND:
+				levels_manager->ActiveLevel().Restart();
+				State = GameState::active;
+				menu_manager->Close();
+				break;
 			default:
 				break;
 			}
@@ -333,7 +338,6 @@ void Game::Render()
 	if (State == GameState::active || State == GameState::ingame_paused)
 	{
 		levels_manager->ActiveLevel().Render(renderer, tile_renderer);
-
 		// Render colliders.
 		if (render_aabb)
 		{

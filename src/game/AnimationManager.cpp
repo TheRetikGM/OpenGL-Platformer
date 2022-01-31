@@ -101,7 +101,6 @@ void AnimationManager::DeleteAllTextures()
 {
     for (auto& [path, texture] : AnimationManager::LoadedTextures)
         glDeleteTextures(1, &texture.ID);
-    AnimationManager::LoadedTextures.clear();
 }
 void AnimationManager::resetLastAnimation()
 {
@@ -322,7 +321,8 @@ void from_json(const json& j, AnimationManager& m)
     }
     m.DefaultAnimation = std::make_tuple(j.at("defaultAnimation").at("kind").get<std::string>(), j.at("defaultAnimation").at("variant").get<std::string>());
     m.SetLastDifferentAnimation(m.DefaultAnimation);
-    int a = 0;
+    
+    AnimationManager::LoadedTextures.clear();
 }
 void to_json(json& j, const AnimationManager& m)
 {

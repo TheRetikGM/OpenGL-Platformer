@@ -26,7 +26,8 @@ void to_json(json& j, const GameLevelInfo& info)
         {"completed", info.bCompleted},
         {"locked", info.bLocked},
         {"tilemap", info.sTileMap},
-        {"background", info.sBackground}
+        {"background", info.sBackground},
+        {"single_animations", info.sSingleAnimationsPath}
     };
 }
 void from_json(const json& json, GameLevelInfo& info)
@@ -37,6 +38,7 @@ void from_json(const json& json, GameLevelInfo& info)
     json.at("locked").get_to(info.bLocked);
     json.at("tilemap").get_to(info.sTileMap);
     json.at("background").get_to(info.sBackground);
+    json.at("single_animations").get_to(info.sSingleAnimationsPath);
 }
 void to_json(json& json, const std::vector<GameLevelInfo>& infos)
 {
@@ -76,26 +78,32 @@ void GameLevel::handle_events(float dt)
             break;
         case PLAYER_JUMPED:
             // pPlayer->Animator->PlayOnce("before_jump");
+            pSingleAnimations->Play("before_jump", "", glm::vec2(glm::ivec2(pPlayer->Position)), glm::vec2(1.0f, 1.0f), true);
             break;
         case PLAYER_LANDED:
             pPlayer->Animator->PlayOnce("after_jump");
+            pSingleAnimations->Play("after_jump", "", glm::vec2(glm::ivec2(pPlayer->Position)), glm::vec2(1.0f, 1.0f), true);
             break;
         case PLAYER_COLLIDE_COIN:
             printf("Coin?! hehe... %i\n", rand());
-            PhysicsWorld->RemoveBody(PhysicsWorld->GetBodyIndex((Physics2D::RigidBody*)e.args));
-            Map->HideTile(coins[(Physics2D::RigidBody*)e.args]);
+            pickup_coin((Physics2D::RigidBody*)e.args);
             break;
         default:
             break;
         }
     }
 }
+void GameLevel::pickup_coin(Physics2D::RigidBody* coin)
+{
+    MapTileInfo inf = coins[coin];
+    coins.erase(coin);
+    Map->HideTile(inf);
+    pSingleAnimations->Play("pickup_coin", "", coin->GetPosition() - glm::vec2(0.0f, 1.0f), glm::vec2(0.5f, 1.0f), true);
+    PhysicsWorld->RemoveBody(PhysicsWorld->GetBodyIndex(coin));
+}
 void GameLevel::ProcessInput(InputInterface* input, float dt)
 {
     pPlayer->ProcessKeyboard(input, dt);
-
-    if (input->Pressed(GLFW_KEY_SPACE))
-        pPlayer->SetPosition(vInitPlayerPosition);
 }
 void GameLevel::Update(float dt)
 {
@@ -105,6 +113,7 @@ void GameLevel::Update(float dt)
     Map->Update(dt);
     pPlayer->Update(dt);
     pPlayer->SetSprite(pPlayer->Animator->GetSprite());
+    pSingleAnimations->Update(dt);
 }
 void GameLevel::Render(SpriteRenderer* pSpriteRenderer, TilemapRenderer* pTilemapRenderer)
 {
@@ -114,6 +123,7 @@ void GameLevel::Render(SpriteRenderer* pSpriteRenderer, TilemapRenderer* pTilema
             pPlayer->Draw(pSpriteRenderer);
     };
     pTilemapRenderer->Draw(Map, glm::vec2(0.0f, 0.0f));
+    pSingleAnimations->Render(pSpriteRenderer);
 }
 void GameLevel::Load(GameLevelInfo* pInfo)
 {
@@ -126,6 +136,7 @@ void GameLevel::Load(GameLevelInfo* pInfo)
     init_background();
     init_player();
     init_tilecamera();
+    init_single_animations();
 }
 void GameLevel::init_physics_world()
 {
@@ -325,17 +336,22 @@ void GameLevel::init_tilecamera()
 	TileCamera2D::SetScale(glm::vec2(2.0f));
     TileCamera2D::SetFollow(pPlayer);
 }
+void GameLevel::init_single_animations()
+{
+    pSingleAnimations = new SingleAnimations(ASSETS_DIR + Info->sSingleAnimationsPath, "level_" + std::to_string(Info->nLevel) + "_single_animations");
+}
 
 // Free all allocated resources for this level.
 void GameLevel::Unload()
 {
     // Check for null just in case some of the initializations failed.
     if (!(Map && PhysicsWorld && pPlayer))
-        return; //throw std::runtime_error("GameLevel::Unload(): Failed. Level is not initialized.");
+        return;
 
     delete Map;
     delete PhysicsWorld;
     delete pPlayer;
+    delete pSingleAnimations;
     ResourceManager::DeleteGroup(Info->sName);
     Info = nullptr;
 }

@@ -102,7 +102,7 @@ void Player::Update(float dt)
 			if (glm::dot(info.normal, glm::vec2(0.0f, -1.0f)) > 0.0f)
 			{
 				if (!CanJump)
-					notify(PLAYER_LANDED);
+					notify(PLAYER_LANDED, this);
 					
 				CanJump = true;
 				canWallJump = false;
@@ -221,7 +221,7 @@ void Player::ProcessKeyboard(InputInterface* input, float dt)
 			jumpCanceled = false;
 			jumpTime = 0.0f;
 
-			notify(PLAYER_JUMPED);
+			notify(PLAYER_JUMPED, this);
 		}
 		if (canWallJump)
 		{

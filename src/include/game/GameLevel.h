@@ -8,6 +8,7 @@
 #include "tilemap_renderer.h"
 #include "BasicObserverSubject.hpp"
 #include "game/GameEvents.h"
+#include "game/SingleAnimations.h"
 #include <unordered_map>
 #include <queue>
 
@@ -27,9 +28,10 @@ struct GameLevelInfo
 	bool bLocked;
     std::string sTileMap;
 	std::string sBackground;
+	std::string sSingleAnimationsPath;
 
 	GameLevelInfo() 
-		: sName(""), nDifficulty(0), bCompleted(false), bLocked(true), sTileMap(""), nLevel(0) {}
+		: sName(""), nDifficulty(0), bCompleted(false), bLocked(true), sTileMap(""), nLevel(0), sSingleAnimationsPath("") {}
 };
 
 /*
@@ -44,6 +46,7 @@ public:
 	Tilemap* Map = nullptr;
 	Texture2D* Background = nullptr;
 	Player* pPlayer = nullptr;
+	SingleAnimations* pSingleAnimations = nullptr;
 
 	GameLevel() {}
 
@@ -53,6 +56,12 @@ public:
 
 	void Load(GameLevelInfo* pInfo);
 	void Unload();
+	void Restart() {
+		assert(Info != nullptr);
+		GameLevelInfo* tmp = Info;
+		Unload();
+		Load(tmp);
+	}
 
 	// Observer implementation.
 	void OnNotify(IObserverSubject* obj, int message, void* args = nullptr);
@@ -78,7 +87,9 @@ protected:
 	void init_background();
 	void init_player();
 	void init_tilecamera();
+	void init_single_animations();
 	void handle_events(float dt);
+	void pickup_coin(Physics2D::RigidBody* coin);
 };
 
 void to_json(nlohmann::json& j, const GameLevelInfo& info);
