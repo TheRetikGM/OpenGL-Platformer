@@ -13,6 +13,12 @@
 #include "tileCamera2D.h"
 #include "game/GameEvents.h"
 
+// Define square root just in case that some platform does not have it. (ig. Windows..)
+#ifndef M_SQRT1_2
+    // 1/2 * sqrt(2)
+    #define M_SQRT1_2 0.707106781186547524401
+#endif
+
 using nlohmann::json;
 
 // ***********************************************
