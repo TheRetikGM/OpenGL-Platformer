@@ -5,7 +5,8 @@
         "difficulty": 1,
         "locked": false,
         "name": "Level 0",
-        "tilemap": "tilemaps/map1/map1.tmx"
+        "tilemap": "tilemaps/map1/map1.tmx",
+        "single_animations": "animations/one_time/properties.json"
     },
     {
         "background": "sprites/bg_1.png",
@@ -13,7 +14,8 @@
         "difficulty": 2,
         "locked": true,
         "name": "Level 1",
-        "tilemap": "tilemaps/map2/map2.tmx"
+        "tilemap": "tilemaps/map2/map2.tmx",
+        "single_animations": "animations/one_time/properties.json"
     },
     {
         "background": "sprites/bg_1.png",
@@ -21,7 +23,8 @@
         "difficulty": 3,
         "locked": true,
         "name": "Level 2",
-        "tilemap": "tilemaps/map3/map3.tmx"
+        "tilemap": "tilemaps/map3/map3.tmx",
+        "single_animations": "animations/one_time/properties.json"
     },
     {
         "background": "sprites/bg_1.png",
@@ -29,7 +32,8 @@
         "difficulty": 4,
         "locked": true,
         "name": "Level 3",
-        "tilemap": "tilemaps/map4/map4.tmx"
+        "tilemap": "tilemaps/map4/map4.tmx",
+        "single_animations": "animations/one_time/properties.json"
     },
     {
         "background": "sprites/bg_1.png",
@@ -37,7 +41,8 @@
         "difficulty": 5,
         "locked": true,
         "name": "Level 4",
-        "tilemap": "tilemaps/map5/map5.tmx"
+        "tilemap": "tilemaps/map5/map5.tmx",
+        "single_animations": "animations/one_time/properties.json"
     },
     {
         "background": "sprites/bg_1.png",
@@ -45,7 +50,8 @@
         "difficulty": 6,
         "locked": true,
         "name": "Level 5",
-        "tilemap": "tilemaps/map6/map6.tmx"
+        "tilemap": "tilemaps/map6/map6.tmx",
+        "single_animations": "animations/one_time/properties.json"
     },
     {
         "background": "sprites/bg_1.png",
@@ -53,6 +59,7 @@
         "difficulty": 7,
         "locked": true,
         "name": "Level 6",
-        "tilemap": "tilemaps/map7/map7.tmx"
+        "tilemap": "tilemaps/map7/map7.tmx",
+        "single_animations": "animations/one_time/properties.json"
     }
 ]

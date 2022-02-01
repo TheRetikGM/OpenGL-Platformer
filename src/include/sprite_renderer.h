@@ -15,10 +15,10 @@ public:
 
 	// Draws only part of the texture.
 	void DrawPartialSprite(Texture2D texture
-						 , glm::vec2 vPartOffset
-						 , glm::vec2 vPartSize
-						 , glm::vec2 vPosition
-						 , glm::vec2 vSize
+						 , glm::vec2 vPartOffset	// Part offset in pixels
+						 , glm::vec2 vPartSize		// part size in pixels
+						 , glm::vec2 vPosition		// Pozition in pixels
+						 , glm::vec2 vSize			// Wanted size in pixels
 						 , float fRotate = 0.0f
 						 , glm::vec3 vColor = glm::vec3(1.0f)
 	);

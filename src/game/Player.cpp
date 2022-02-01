@@ -102,7 +102,7 @@ void Player::Update(float dt)
 			if (glm::dot(info.normal, glm::vec2(0.0f, -1.0f)) > 0.0f)
 			{
 				if (!CanJump)
-					notify(PLAYER_LANDED);
+					notify(PLAYER_LANDED, this);
 					
 				CanJump = true;
 				canWallJump = false;
@@ -113,8 +113,15 @@ void Player::Update(float dt)
 	}
 	for (auto& c : collisions) {
 		if (Physics2D::CheckCollision(RBody.get(), c.body, info)) {
-			if (info.depth > 0.01f && c.body->Name == "spikes")
-				notify(PLAYER_HIT_SPIKES);
+			if (info.depth > 0.01f)
+			{
+				if (c.body->Name == "spikes")
+					notify(PLAYER_HIT_SPIKES);
+				else if (c.body->Name == "coin")
+				{
+					notify(PLAYER_COLLIDE_COIN, (void*)c.body);
+				}
+			}
 		}
 	}
 	collisions.clear();
@@ -214,7 +221,7 @@ void Player::ProcessKeyboard(InputInterface* input, float dt)
 			jumpCanceled = false;
 			jumpTime = 0.0f;
 
-			notify(PLAYER_JUMPED);
+			notify(PLAYER_JUMPED, this);
 		}
 		if (canWallJump)
 		{
@@ -331,6 +338,7 @@ void Player::onRightCollision(Physics2D::RigidBody* body, const Physics2D::Colli
 void Player::SetPosition(glm::vec2 position)
 {
 	this->Position = position;
+	RBody->MoveTo(position, true);
 }
 
 void Player::onTileSizeChanged(glm::vec2 newTileSize)

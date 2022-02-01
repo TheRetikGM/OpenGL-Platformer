@@ -56,5 +56,5 @@ public:
 	void OnResize();
 
 	// Implementation of Observer functions.
-	void OnNotify(IObserverSubject* obj, int message);
+	void OnNotify(IObserverSubject* obj, int message, void* args = nullptr);
 };

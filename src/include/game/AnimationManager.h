@@ -21,11 +21,14 @@ public:
     // 		Variant				   Parameter	its value
     std::map<std::string, std::map<std::string, std::any>> ConditionVariants;
     std::tuple<std::string, std::string> DefaultAnimation;
+
+    // Loaded textures are **ONLY** for intermediate step when loading the animated
+    // sprites. It isn't for actually storing loaded textures. Those can be 
+    // found in Animations std::map above.
     //                            path to texture
     static std::vector<std::pair<std::string, Texture2D>> LoadedTextures;
 
     AnimationManager() = default;
-    //AnimationManager(const AnimationManager& manager);
 
     void SetParameter(std::string name, std::any value);
     template<class T> T GetParamater(std::string name)
@@ -41,10 +44,9 @@ public:
         }
         return val;
     }
-    // template<class T> T GetParamater(const char* name) { GetParameter<T>(std::string(name)); }
     AnimatedSprite* GetSprite();
     bool CompareParameter(std::string name, std::any value);
-    static void DeleteAllTextures();    
+    void DeleteAllTextures();    
     void Update(float dt);
 
     // Animation control.

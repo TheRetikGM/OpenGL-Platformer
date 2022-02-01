@@ -1,0 +1,29 @@
+{
+	"spritesheet": "animations/one_time/sheet.png",
+	"animations": {
+		"pickup_coin": {
+			"offset": [0, 0],
+			"size": [48, 16],
+			"tile_size": [8, 16],
+			"duration": 50
+		},
+		"after_jump": {
+			"offset": [0, 16],
+			"size": [64, 16],
+			"tile_size": [16, 16],
+			"duration": 100
+		},
+		"before_jump": {
+			"offset": [0, 32],
+			"size": [64, 16],
+			"tile_size": [16, 16],
+			"duration": 100
+		},
+		"vase_breaking": {
+			"offset": [0, 48],
+			"size": [80, 16],
+			"tile_size": [16, 16],
+			"duration": 100
+		}
+	}
+}

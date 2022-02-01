@@ -12,7 +12,7 @@
  </tile>
  <tile id="1">
   <objectgroup draworder="index" id="2">
-   <object id="1" x="0" y="0" width="16" height="16">
+   <object id="1" x="0" y="0" width="16" height="5.875">
     <properties>
      <property name="name" value="ground"/>
     </properties>
@@ -39,7 +39,7 @@
  </tile>
  <tile id="4">
   <objectgroup draworder="index" id="2">
-   <object id="1" x="0" y="0" width="16" height="16">
+   <object id="2" x="0" y="10" width="16" height="6">
     <properties>
      <property name="name" value="ground"/>
     </properties>
@@ -57,7 +57,7 @@
  </tile>
  <tile id="12">
   <objectgroup draworder="index" id="2">
-   <object id="1" x="0" y="0" width="16" height="16">
+   <object id="1" x="0" y="0" width="6.25" height="16">
     <properties>
      <property name="name" value="ground"/>
     </properties>
@@ -66,7 +66,7 @@
  </tile>
  <tile id="14">
   <objectgroup draworder="index" id="2">
-   <object id="1" x="0" y="0" width="16" height="16">
+   <object id="1" x="9.5625" y="0" width="6.4375" height="16">
     <properties>
      <property name="name" value="ground"/>
     </properties>
@@ -75,7 +75,7 @@
  </tile>
  <tile id="15">
   <objectgroup draworder="index" id="2">
-   <object id="1" x="0" y="0" width="16" height="16">
+   <object id="2" x="10.6875" y="0" width="5.3125" height="16">
     <properties>
      <property name="name" value="ground"/>
     </properties>
@@ -84,7 +84,7 @@
  </tile>
  <tile id="17">
   <objectgroup draworder="index" id="2">
-   <object id="1" x="0" y="0" width="16" height="16">
+   <object id="2" x="0" y="0" width="5.5" height="16">
     <properties>
      <property name="name" value="ground"/>
     </properties>
@@ -102,7 +102,7 @@
  </tile>
  <tile id="25">
   <objectgroup draworder="index" id="2">
-   <object id="1" x="0" y="0" width="16" height="16">
+   <object id="1" x="0" y="9.375" width="16" height="6.625">
     <properties>
      <property name="name" value="ground"/>
     </properties>
@@ -129,7 +129,7 @@
  </tile>
  <tile id="28">
   <objectgroup draworder="index" id="2">
-   <object id="1" x="0" y="0" width="16" height="16">
+   <object id="1" x="0" y="0" width="16" height="5.9375">
     <properties>
      <property name="name" value="ground"/>
     </properties>
@@ -159,7 +159,7 @@
  </tile>
  <tile id="43">
   <objectgroup draworder="index" id="2">
-   <object id="1" x="0" y="0" width="16" height="16">
+   <object id="1" x="0" y="0" width="16" height="6.5625">
     <properties>
      <property name="name" value="ground"/>
     </properties>
@@ -198,7 +198,7 @@
   <objectgroup draworder="index" id="2">
    <object id="1" x="0" y="0" width="16" height="5.26087">
     <properties>
-     <property name="name" value="platform"/>
+     <property name="name" value="ground"/>
     </properties>
    </object>
   </objectgroup>
