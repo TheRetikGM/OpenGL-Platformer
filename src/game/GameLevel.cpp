@@ -69,7 +69,7 @@ void GameLevel::OnNotify(IObserverSubject* obj, int message, void* args)
 {
     if (std::find(acceptedMessages.begin(), acceptedMessages.end(), message) != acceptedMessages.end())
         eventQueue.emplace(Event{ obj, message, args });
-    notify(message);
+    notify(message, args);
 }
 void GameLevel::handle_events(float dt)
 {
