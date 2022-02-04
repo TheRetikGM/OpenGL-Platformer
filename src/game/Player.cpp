@@ -116,7 +116,7 @@ void Player::Update(float dt)
 			if (info.depth > 0.01f)
 			{
 				if (c.body->Name == "spikes")
-					notify(PLAYER_HIT_SPIKES);
+					OnHit();
 				else if (c.body->Name == "coin")
 				{
 					notify(PLAYER_COLLIDE_COIN, (void*)c.body);
@@ -151,6 +151,7 @@ void Player::Update(float dt)
 		}
 	}
 
+	invincibilityTimer.Update(dt);
 
 	// Update the sprite.
 	// this->SetSprite(Animator->GetSprite());
@@ -233,6 +234,8 @@ void Player::ProcessKeyboard(InputInterface* input, float dt)
 			IsJumping = true;
 			jumpCanceled = false;
 			jumpTime = 0.0f;
+
+			notify(PLAYER_WALL_JUMPED, this);
 		}
 	}
 	// Gravity scale
@@ -344,4 +347,18 @@ void Player::SetPosition(glm::vec2 position)
 void Player::onTileSizeChanged(glm::vec2 newTileSize)
 {
 	// screenPosition = TileCamera2D::GetScreenPosition(Position) - (Size * Game::TileSize * TileCamera2D::GetScale()) / 2.0f;
+}
+
+void Player::OnHit()
+{
+	if (bCanLoseLife)
+	{
+		Lives--;
+		bCanLoseLife = false;
+		invincibilityTimer.Restart(fInvincibilityDuration, [&](Timer* t){
+			bCanLoseLife = true;
+		});
+
+		notify(PLAYER_LOST_LIFE);
+	}
 }

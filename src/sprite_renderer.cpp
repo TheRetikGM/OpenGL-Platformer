@@ -12,7 +12,7 @@ SpriteRenderer::~SpriteRenderer()
 	glDeleteVertexArrays(1, &this->quadVAO);
 }
 
-void SpriteRenderer::DrawSprite(Texture2D texture, glm::vec2 position, glm::vec2 size, float rotate, glm::vec3 color)
+SpriteRenderer& SpriteRenderer::DrawSprite(Texture2D texture, glm::vec2 position, glm::vec2 size, float rotate, glm::vec3 color)
 {
 	this->shader.Use();
 
@@ -33,8 +33,10 @@ void SpriteRenderer::DrawSprite(Texture2D texture, glm::vec2 position, glm::vec2
 	glBindVertexArray(this->quadVAO);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindVertexArray(0);
+
+	return *this;
 }
-void SpriteRenderer::DrawPartialSprite(Texture2D texture, glm::vec2 vPartOffset, glm::vec2 vPartSize, glm::vec2 vPosition, glm::vec2 vSize, float fRotate, glm::vec3 vColor)
+SpriteRenderer& SpriteRenderer::DrawPartialSprite(Texture2D texture, glm::vec2 vPartOffset, glm::vec2 vPartSize, glm::vec2 vPosition, glm::vec2 vSize, float fRotate, glm::vec3 vColor)
 {
 	this->shader.Use();
 
@@ -58,6 +60,8 @@ void SpriteRenderer::DrawPartialSprite(Texture2D texture, glm::vec2 vPartOffset,
 	glBindVertexArray(this->quadVAO);
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindVertexArray(0);
+
+	return *this;
 }
 void SpriteRenderer::initRenderData()
 {

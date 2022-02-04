@@ -3,13 +3,14 @@
 #include "sprite_renderer.h"
 #include "game/Sprite.h"
 #include "game/TileSpace.h"
-#include <memory>
-#include <RigidBody.h>
-#include <PhysicsWorld.h>
 #include "BasicObserverSubject.hpp"
 #include "game/AnimationManager.h"
 #include "GLFW/glfw3.h"
 #include "InputInterface.hpp"
+#include "Timer.hpp"
+#include <memory>
+#include <RigidBody.h>
+#include <PhysicsWorld.h>
 
 class PlayerControls {
 public:
@@ -25,7 +26,7 @@ public:
 class Player : public GameObject, public TileSpace, public BasicObserverSubject
 {
 public:
-	uint8_t		Lives;		// The amount of hearts.
+	int			Lives;		// The amount of hearts.
 	bool		InCollision;
 	bool		CanJump;
 	bool		IsJumping;
@@ -37,6 +38,7 @@ public:
 	float GravityScale = 2.0f;
 	bool canWallJump = false;
 	glm::vec2 wallNormal;
+	bool bCanLoseLife = true;
 	
 	Player(glm::vec2 position, glm::vec2 size, Sprite* sprite, glm::vec3 color);
 	~Player();
@@ -52,6 +54,7 @@ public:
 	void SetSpriteOffset(glm::vec2 offset_in_tiles);
 	void SetSprite(Sprite* spr);
 	Sprite* GetSprite() { return playerSprite; }
+	void OnHit();
 
 	void AddToWorld(Physics2D::PhysicsWorld* world);
 
@@ -62,11 +65,10 @@ protected:
 	Sprite* 	playerSprite;
 	float 		spriteRatio;
 	glm::vec2	spriteOffset;
-	
+
 	// Invincibility.
-	float fInvincibilityDuration = 2.0f;	// 2 seconds.
-	bool bInvincible = false;
-	float fInvincibility = 0.0f;
+	float fInvincibilityDuration = 1.0f;	// in seconds
+	Timer invincibilityTimer;
 
 	glm::vec2 lastSlidingDir = glm::vec2(0.0f, 0.0f);
 	std::shared_ptr<Physics2D::RigidBody> leftBody;

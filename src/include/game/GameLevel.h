@@ -9,6 +9,7 @@
 #include "BasicObserverSubject.hpp"
 #include "game/GameEvents.h"
 #include "game/SingleAnimations.h"
+#include "game/InGameHUD.h"
 #include <unordered_map>
 #include <queue>
 
@@ -24,6 +25,7 @@ struct GameLevelInfo
 	int nLevel;
     std::string sName;
     int nDifficulty;
+	int nLives;
     bool bCompleted;
 	bool bLocked;
     std::string sTileMap;
@@ -47,8 +49,9 @@ public:
 	Texture2D* Background = nullptr;
 	Player* pPlayer = nullptr;
 	SingleAnimations* pSingleAnimations = nullptr;
+	InGameHUD* pHUD = nullptr;
 
-	GameLevel() {}
+	GameLevel() : nCoins(0), nCoinsTotal(0) {}
 
 	void ProcessInput(InputInterface* input, float dt);
 	void Update(float dt);
@@ -58,25 +61,39 @@ public:
 	void Unload();
 	void Restart() {
 		assert(Info != nullptr);
+		nCoins = nCoinsTotal = 0;
+		fElapsedTime = 0.0f;
 		GameLevelInfo* tmp = Info;
 		Unload();
 		Load(tmp);
+		notify(LEVEL_RESTARTED);
 	}
+	void OnPlayerDied();
 
 	// Observer implementation.
 	void OnNotify(IObserverSubject* obj, int message, void* args = nullptr);
 
+	int GetCoins() const { return nCoins; }
+	int GetCoinsTotal() const { return nCoinsTotal; }
+	float GetElapsedTime() const { return fElapsedTime; }
+
 protected:
+	// Elapsed time in seconds.
+	float fElapsedTime = 0.0f;
 	// Binding of coins to physics2D objects (eg. RigidBody -> tile_gid).
 	std::unordered_map<Physics2D::RigidBody*, MapTileInfo> coins;
+	// Amount of collected coins. Should be equal to above coins.size().
+	int nCoins = 0;
+	// Total amount of coins.
+	int nCoinsTotal = 0;
 	// Event queue;
-	struct Event { IObserverSubject* sender; int message; void* args; };
 	std::queue<Event> eventQueue;
-	std::array<int, 4> acceptedMessages = {
-		PLAYER_HIT_SPIKES,
+	std::array<int, 5> acceptedMessages = {
+		PLAYER_LOST_LIFE,
 		PLAYER_JUMPED,
 		PLAYER_LANDED,
-		PLAYER_COLLIDE_COIN
+		PLAYER_COLLIDE_COIN,
+		PLAYER_WALL_JUMPED
 	};
 	// Initial position of the player in tile-space.
 	glm::vec2 vInitPlayerPosition = glm::vec2(0.0f, 0.0f);
@@ -88,10 +105,16 @@ protected:
 	void init_player();
 	void init_tilecamera();
 	void init_single_animations();
+	void init_hud();
+
 	void handle_events(float dt);
 	void pickup_coin(Physics2D::RigidBody* coin);
+
+	friend class InGameHUD;
 };
 
+// Just to make sure that serializatin functions are defined in
+// the same namespace as GameLevelInfo.
 void to_json(nlohmann::json& j, const GameLevelInfo& info);
 void from_json(const nlohmann::json& json, GameLevelInfo& info);
 void to_json(nlohmann::json& json, const std::vector<GameLevelInfo>& infos);

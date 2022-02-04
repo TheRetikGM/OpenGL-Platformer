@@ -107,8 +107,11 @@ void AnimationManager::resetLastAnimation()
     if (std::get<0>(last_animation) != "" && std::get<1>(last_animation) != "")
         Animations.at(std::get<0>(last_animation)).at(std::get<1>(last_animation)).ResetAnimation();
 }
-void AnimationManager::PlayOnce(std::string kind, std::string variant)
+void AnimationManager::PlayOnce(std::string kind, std::string variant, bool force)
 {
+    if (playing && !force)
+        return;
+
     resetLastAnimation();
     if (variant == "")
     {

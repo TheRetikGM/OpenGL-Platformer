@@ -158,6 +158,66 @@
 				"source": "player/after_jump.png"
 			}
 		}
+	},
+	"hit": {
+		"right": {
+			"duration": 100,
+			"mirrored": false,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/herochar_hit.png"
+			}
+		},
+		"left": {
+			"duration": 100,
+			"mirrored": true,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/herochar_hit.png"
+			}
+		}
+	},
+	"double_jump": {
+		"right": {
+			"duration": 100,
+			"mirrored": false,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/herochar_jump_double.png"
+			}
+		},
+		"left": {
+			"duration": 100,
+			"mirrored": true,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/herochar_jump_double.png"
+			}
+		}
+	},
+	"die": {
+		"right": {
+			"duration": 100,
+			"mirrored": false,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/herochar_death.png"
+			}
+		},
+		"left": {
+			"duration": 100,
+			"mirrored": true,
+			"spritesheet": {
+				"sprite_width": 16, "sprite_height": 16,
+				"offset": 0, "margin": 0,
+				"source": "player/herochar_death.png"
+			}
+		}
 	}
   }
 }

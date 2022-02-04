@@ -33,7 +33,8 @@ void to_json(json& j, const GameLevelInfo& info)
         {"locked", info.bLocked},
         {"tilemap", info.sTileMap},
         {"background", info.sBackground},
-        {"single_animations", info.sSingleAnimationsPath}
+        {"single_animations", info.sSingleAnimationsPath},
+        {"lives", info.nLives}
     };
 }
 void from_json(const json& json, GameLevelInfo& info)
@@ -45,6 +46,7 @@ void from_json(const json& json, GameLevelInfo& info)
     json.at("tilemap").get_to(info.sTileMap);
     json.at("background").get_to(info.sBackground);
     json.at("single_animations").get_to(info.sSingleAnimationsPath);
+    json.at("lives").get_to(info.nLives);
 }
 void to_json(json& json, const std::vector<GameLevelInfo>& infos)
 {
@@ -79,33 +81,49 @@ void GameLevel::handle_events(float dt)
         eventQueue.pop();
         switch (e.message)
         {
-        case PLAYER_HIT_SPIKES:
-            printf("Player hit the spikes!!! %i\n", int(rand()));
+        case PLAYER_LOST_LIFE:
+            if (pPlayer->Lives == 0)
+                OnPlayerDied();
+            else
+                pPlayer->Animator->PlayOnce("hit", "", true);
             break;
         case PLAYER_JUMPED:
             // pPlayer->Animator->PlayOnce("before_jump");
-            pSingleAnimations->Play("before_jump", "", glm::vec2(glm::ivec2(pPlayer->Position)), glm::vec2(1.0f, 1.0f), true);
+            pSingleAnimations->Play("before_jump", "", glm::vec2(pPlayer->Position.x - 0.5f, int(pPlayer->Position.y)), glm::vec2(1.0f, 1.0f), true);
             break;
         case PLAYER_LANDED:
             pPlayer->Animator->PlayOnce("after_jump");
-            pSingleAnimations->Play("after_jump", "", glm::vec2(glm::ivec2(pPlayer->Position)), glm::vec2(1.0f, 1.0f), true);
+            pSingleAnimations->Play("after_jump", "", glm::vec2(pPlayer->Position.x - 0.5f, int(pPlayer->Position.y)), glm::vec2(1.0f, 1.0f), true);
             break;
         case PLAYER_COLLIDE_COIN:
-            printf("Coin?! hehe... %i\n", rand());
             pickup_coin((Physics2D::RigidBody*)e.args);
+            break;
+        case PLAYER_WALL_JUMPED:
+            pPlayer->Animator->PlayOnce("double_jump");
             break;
         default:
             break;
         }
     }
 }
+void GameLevel::OnPlayerDied()
+{
+    pPlayer->Animator->PlayOnce("die", "", true);
+    notify(PLAYER_DIED);
+}
 void GameLevel::pickup_coin(Physics2D::RigidBody* coin)
 {
+    if (coins.count(coin) == 0)
+        return;
     MapTileInfo inf = coins[coin];
-    coins.erase(coin);
-    Map->HideTile(inf);
-    pSingleAnimations->Play("pickup_coin", "", coin->GetPosition() - glm::vec2(0.0f, 1.0f), glm::vec2(0.5f, 1.0f), true);
-    PhysicsWorld->RemoveBody(PhysicsWorld->GetBodyIndex(coin));
+    if (!Map->IsHidden(inf))
+    {
+        coins.erase(coin);
+        Map->HideTile(inf);
+        pSingleAnimations->Play("pickup_coin", "", coin->GetPosition() - glm::vec2(0.0f, 1.0f), glm::vec2(0.5f, 1.0f), true);
+        PhysicsWorld->RemoveBody(PhysicsWorld->GetBodyIndex(coin));
+        nCoins++;
+    }
 }
 void GameLevel::ProcessInput(InputInterface* input, float dt)
 {
@@ -120,16 +138,19 @@ void GameLevel::Update(float dt)
     pPlayer->Update(dt);
     pPlayer->SetSprite(pPlayer->Animator->GetSprite());
     pSingleAnimations->Update(dt);
+    pHUD->Update(dt);
+    fElapsedTime += dt;
 }
 void GameLevel::Render(SpriteRenderer* pSpriteRenderer, TilemapRenderer* pTilemapRenderer)
 {
-    pSpriteRenderer->DrawSprite(*Background, glm::vec2(0.0f, 0.0f), Game::ScreenSize, 0.0f, glm::vec3(70 / 255.0f, 96 / 255.0f, 46 / 255.0f));
+    pSpriteRenderer->ForceColor(true).DrawSprite(*Background, glm::vec2(0.0f, 0.0f), Game::ScreenSize, 0.0f, glm::vec3(70 / 255.0f, 96 / 255.0f, 46 / 255.0f)).ForceColor(false);
     pTilemapRenderer->AfterLayer_callback = [&](const Tmx::Map* map, const Tmx::Layer* layer, int nLayer) {
         if (layer->GetName() == "entity")
             pPlayer->Draw(pSpriteRenderer);
     };
     pTilemapRenderer->Draw(Map, glm::vec2(0.0f, 0.0f));
     pSingleAnimations->Render(pSpriteRenderer);
+    pHUD->Render(pSpriteRenderer);
 }
 void GameLevel::Load(GameLevelInfo* pInfo)
 {
@@ -143,6 +164,7 @@ void GameLevel::Load(GameLevelInfo* pInfo)
     init_player();
     init_tilecamera();
     init_single_animations();
+    init_hud();
 }
 void GameLevel::init_physics_world()
 {
@@ -299,6 +321,7 @@ void GameLevel::init_world_objects()
 						body->Name = obj->GetProperties().GetStringProperty("name");
                     if (body->Name == "coin")
                     {
+                        nCoinsTotal++;
                         coins[body] = MapTileInfo(layer->GetName(), x, y);
                     }
                 }
@@ -333,6 +356,8 @@ void GameLevel::init_player()
 	pPlayer->Animator = pAnim;
     pPlayer->AddToWorld(PhysicsWorld);
     pPlayer->AddObserver(this);
+    pPlayer->Size = { 0.7f, 1.4f };
+    pPlayer->Lives = Info->nLives;
 }
 void GameLevel::init_tilecamera()
 {
@@ -346,6 +371,16 @@ void GameLevel::init_single_animations()
 {
     pSingleAnimations = new SingleAnimations(ASSETS_DIR + Info->sSingleAnimationsPath, "level_" + std::to_string(Info->nLevel) + "_single_animations");
 }
+void GameLevel::init_hud()
+{
+    Texture2D& tex = ResourceManager::LoadTexture(ASSETS_DIR "sprites/HUD.png", true, "hud_texture", Info->sName);
+    tex.SetMagFilter(GL_NEAREST).SetMinFilter(GL_NEAREST).UpdateParameters();
+
+    Texture2D& font = ResourceManager::LoadTexture(ASSETS_DIR "fonts/atlas.png", true, "font_atlas", Info->sName);
+    font.SetMagFilter(GL_NEAREST).SetMinFilter(GL_NEAREST).UpdateParameters();
+
+    pHUD = new InGameHUD(this, tex, font, glm::vec2(7.0f));
+}
 
 // Free all allocated resources for this level.
 void GameLevel::Unload()
@@ -354,6 +389,7 @@ void GameLevel::Unload()
     if (!(Map && PhysicsWorld && pPlayer))
         return;
 
+    delete pHUD;
     delete Map;
     delete PhysicsWorld;
     delete pPlayer;

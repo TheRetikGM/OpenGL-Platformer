@@ -1,20 +1,22 @@
 #pragma once
 #include "interfaces/Observer.h"
 #include <list>
+#include <algorithm>
 
 class BasicObserverSubject : public IObserverSubject
 {
 public:
-    void AddObserver(IObserver* o) {
-        observers.emplace_back(o);
+    virtual void AddObserver(IObserver* o) {
+        if (std::find(observers.begin(), observers.end(), o) == observers.end())
+            observers.emplace_back(o);
     }
-    void RemoveObserver(IObserver* o) {
+    virtual void RemoveObserver(IObserver* o) {
         observers.remove(o);
     }
 protected:
     std::list<IObserver*> observers;
 
-    void notify(int message, void* args = nullptr)
+    virtual void notify(int message, void* args = nullptr)
     {
         for (IObserver* o : observers)
             o->OnNotify(this, message, args);

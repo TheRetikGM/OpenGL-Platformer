@@ -397,7 +397,7 @@ void Game::Render()
 		w1.ElapsedMilliseconds(),
 		w2.ElapsedMilliseconds()
 	);
-	text_renderer->RenderText(std::string(buf), 10.0f, 10.0f, 0.5f);
+	text_renderer->RenderText(std::string(buf), Width - 200.0f, 10.0f, 0.5f, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 // Callbacks

@@ -51,7 +51,7 @@ public:
 
     // Animation control.
     /// Select last variant if (variant == "").
-    void PlayOnce(std::string kind, std::string variant = "");
+    void PlayOnce(std::string kind, std::string variant = "", bool force = false);
     void Play(std::string kind, std::string variant = "");
     void Stop(std::string kind, std::string variant = "");
 

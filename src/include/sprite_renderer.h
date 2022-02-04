@@ -9,12 +9,12 @@ public:
 	SpriteRenderer(Shader shader);
 	~SpriteRenderer();
 
-	void DrawSprite(Texture2D texture, glm::vec2 position,
+	SpriteRenderer& DrawSprite(Texture2D texture, glm::vec2 position,
 		glm::vec2 size = glm::vec2(10.0f, 10.0f), float rotate = 0.0f,
 		glm::vec3 color = glm::vec3(1.0f));
 
 	// Draws only part of the texture.
-	void DrawPartialSprite(Texture2D texture
+	SpriteRenderer& DrawPartialSprite(Texture2D texture
 						 , glm::vec2 vPartOffset	// Part offset in pixels
 						 , glm::vec2 vPartSize		// part size in pixels
 						 , glm::vec2 vPosition		// Pozition in pixels
@@ -24,6 +24,7 @@ public:
 	);
 
 	Shader GetShader() const { return shader; };
+	SpriteRenderer& ForceColor(bool b) { shader.SetInt("force_color", int(b), true); return *this; }
 private:
 	Shader shader;
 	unsigned int quadVAO;
