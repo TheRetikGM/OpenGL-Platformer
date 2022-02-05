@@ -88,7 +88,6 @@ void GameLevel::handle_events(float dt)
                 pPlayer->Animator->PlayOnce("hit", "", true);
             break;
         case PLAYER_JUMPED:
-            // pPlayer->Animator->PlayOnce("before_jump");
             pSingleAnimations->Play("before_jump", "", glm::vec2(pPlayer->Position.x - 0.5f, int(pPlayer->Position.y)), glm::vec2(1.0f, 1.0f), true);
             break;
         case PLAYER_LANDED:

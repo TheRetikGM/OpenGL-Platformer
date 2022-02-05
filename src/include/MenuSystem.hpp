@@ -30,7 +30,7 @@ namespace MenuSystem
 {
     // 16 pixels per one patch.
     // const int patch_size = 16;
-    const glm::vec3 vTextColor = glm::vec3(0.0f, 0.0f, 1.0f);   // Blue
+    const glm::vec3 vTextColor = glm::vec3(1.0f, 1.0f, 1.0f);   // Blue
     const glm::vec3 vTextColor_disabled = glm::vec3(0.2f, 0.2f, 0.2f);  // Dark gray
 
     // Handles drawing of the menu.
