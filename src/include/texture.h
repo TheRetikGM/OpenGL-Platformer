@@ -15,7 +15,7 @@ public:
 	~Texture2D();
 
 	void Generate(unsigned int width, unsigned int height, unsigned char* data);
-	void UpdateParameters();
+	Texture2D& UpdateParameters();
 
 	Texture2D& SetMagFilter(int filter) { Filter_mag = filter; return *this; }
 	Texture2D& SetMinFilter(int filter) { Filter_min = filter; return *this; }

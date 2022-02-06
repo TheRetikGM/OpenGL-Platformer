@@ -12,6 +12,7 @@
 #include "game/AnimationManager.h"
 #include "tileCamera2D.h"
 #include "game/GameEvents.h"
+#include "Helper.hpp"
 
 // Define square root just in case that some platform does not have it. (ig. Windows..)
 #ifndef M_SQRT1_2
@@ -126,19 +127,26 @@ void GameLevel::pickup_coin(Physics2D::RigidBody* coin)
 }
 void GameLevel::ProcessInput(InputInterface* input, float dt)
 {
-    pPlayer->ProcessKeyboard(input, dt);
+    if (State == InGameState::running)
+        pPlayer->ProcessKeyboard(input, dt);
+
+    if (input->Pressed(GLFW_KEY_P))
+        State = (State == InGameState::running) ? InGameState::paused_dialog : InGameState::running;
 }
 void GameLevel::Update(float dt)
 {
-    handle_events(dt);
-    TileCamera2D::Update(dt);
-    this->PhysicsWorld->Update(dt, 5.0f);
-    Map->Update(dt);
-    pPlayer->Update(dt);
-    pPlayer->SetSprite(pPlayer->Animator->GetSprite());
-    pSingleAnimations->Update(dt);
-    pHUD->Update(dt);
-    fElapsedTime += dt;
+    if (State == InGameState::running)
+    {
+        handle_events(dt);
+        TileCamera2D::Update(dt);
+        this->PhysicsWorld->Update(dt, 5.0f);
+        Map->Update(dt);
+        pPlayer->Update(dt);
+        pPlayer->SetSprite(pPlayer->Animator->GetSprite());
+        pSingleAnimations->Update(dt);
+        pHUD->Update(dt);
+        fElapsedTime += dt;
+    }
 }
 void GameLevel::Render(SpriteRenderer* pSpriteRenderer, TilemapRenderer* pTilemapRenderer)
 {
@@ -150,6 +158,11 @@ void GameLevel::Render(SpriteRenderer* pSpriteRenderer, TilemapRenderer* pTilema
     pTilemapRenderer->Draw(Map, glm::vec2(0.0f, 0.0f));
     pSingleAnimations->Render(pSpriteRenderer);
     pHUD->Render(pSpriteRenderer);
+    
+    if (State == InGameState::paused_dialog)
+    {
+        mForms["won"]->Render(pSpriteRenderer);
+    }
 }
 void GameLevel::Load(GameLevelInfo* pInfo)
 {
@@ -164,6 +177,7 @@ void GameLevel::Load(GameLevelInfo* pInfo)
     init_tilecamera();
     init_single_animations();
     init_hud();
+    init_forms();
 }
 void GameLevel::init_physics_world()
 {
@@ -377,8 +391,34 @@ void GameLevel::init_hud()
 
     Texture2D& font = ResourceManager::LoadTexture(ASSETS_DIR "fonts/atlas.png", true, "font_atlas", Info->sName);
     font.SetMagFilter(GL_NEAREST).SetMinFilter(GL_NEAREST).UpdateParameters();
+    pTextRenderer = new AtlasTextRenderer();
+    pTextRenderer->Load(font, glm::vec2(7.0f));
 
-    pHUD = new InGameHUD(this, tex, font, glm::vec2(7.0f));
+    pHUD = new InGameHUD(this, tex, pTextRenderer);
+}
+void GameLevel::init_forms()
+{
+    // You won form initialization.
+    mForms["won"] = std::make_shared<Forms::Form>(pTextRenderer);
+    mForms["won"]->AddLabel("lblWon", "You won!", glm::vec2(64.0f), Helper::HexToRGB(0xfcff00));
+
+	auto label1 = new Forms::Label("Coins", glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f, 1.0f, 0.0f), pTextRenderer);
+	auto label2 = new Forms::Label("27/40", glm::vec2(0.0f), glm::vec2(36.0f), glm::vec3(1.0f, 1.0f, 1.0f), pTextRenderer);
+	mForms["won"]->AddPair("pairCoins", std::shared_ptr<Forms::Control>(label1), std::shared_ptr<Forms::Control>(label2));
+
+    label1 = new Forms::Label("Time", glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(0.0f, 0.7f, 0.08f), pTextRenderer);
+	label2 = new Forms::Label("230s", glm::vec2(0.0f), glm::vec2(36.0f), glm::vec3(1.0f, 1.0f, 1.0f), pTextRenderer);
+	mForms["won"]->AddPair("pairTime", std::shared_ptr<Forms::Control>(label1), std::shared_ptr<Forms::Control>(label2));
+
+    mForms["won"]->AddLabel("lblAnyKey", "Press any key to continue", glm::vec2(24.0f), glm::vec3(0.1f, 0.9f, 0.8f));
+    mForms["won"]->SetGravity(Forms::Gravity::center);
+    mForms["won"]->MoveTo((Game::ScreenSize - mForms["won"]->vSize) * 0.5f);
+}
+
+void GameLevel::OnResize()
+{
+    if (mForms.count("won") != 0)
+        mForms["won"]->MoveTo((Game::ScreenSize - mForms["won"]->vSize) * 0.5f);
 }
 
 // Free all allocated resources for this level.
@@ -393,6 +433,8 @@ void GameLevel::Unload()
     delete PhysicsWorld;
     delete pPlayer;
     delete pSingleAnimations;
+    delete pTextRenderer;
+    mForms.clear();
     ResourceManager::DeleteGroup(Info->sName);
     Info = nullptr;
 }

@@ -6,8 +6,9 @@
 #include <any>
 #include "texture.h"
 #include "shader.h"
-#include "TextRenderer.h"
+#include "AtlasTextRenderer.hpp"
 #include "sprite_renderer.h"
+#include "Helper.hpp"   // Only for debugging. Not needed.
 
 /*
 *  Menu system inspired by https://www.youtube.com/watch?v=jde1Jq5dF0E&list=WL&index=13
@@ -28,11 +29,6 @@
 
 namespace MenuSystem
 {
-    // 16 pixels per one patch.
-    // const int patch_size = 16;
-    const glm::vec3 vTextColor = glm::vec3(1.0f, 1.0f, 1.0f);   // Blue
-    const glm::vec3 vTextColor_disabled = glm::vec3(0.2f, 0.2f, 0.2f);  // Dark gray
-
     // Handles drawing of the menu.
     class MenuRenderer;
     // Handles input and navigating the menu.
@@ -88,16 +84,13 @@ namespace MenuSystem
         }
         // Size required to display the name of the menu object.
         // For now, cells are simply one line strings.
-        glm::ivec2 GetSize(TextRenderer* pTextRenderer) const
+        glm::ivec2 GetSize(AtlasTextRenderer* pTextRenderer) const
         {
-            glm::ivec2 vNameSize = pTextRenderer->GetStringSize(sName);
+            glm::vec2 vNameSize = pTextRenderer->GetStringSize(sName);
 
-            // Scale the text and keep ratio.
-            float ratio = vNameSize.x / vNameSize.y;
-            vNameSize.y *= fTextScale;
-            vNameSize.x = ratio * vNameSize.y;
+            vNameSize *= vTextScale;
+            float width = vNameSize.x / vPatchSize.x + (((int(vNameSize.x) % vPatchSize.x) != 0) ? 1 : 0);
 
-            float width = vNameSize.x / vPatchSize.x + (((vNameSize.x % vPatchSize.x) != 0) ? 2 : 1);
             return glm::ivec2(width, 1);
         }
         bool HasChildren() const
@@ -119,13 +112,18 @@ namespace MenuSystem
         {
             return operator[](name);
         }
-
+        MenuObject& SetTextColor(glm::vec3 color) {
+            this->vTextColor = color; 
+            return *this; 
+        }
+        MenuObject& SetDisabledTextColor(glm::vec3 color) { this->vTextColor_disabled = color; return *this; }
         // Populates the menuobject internal variables with relevant sizes for drawing.
         // Required for usage.
-        void Build(TextRenderer* pTextRenderer)
+        void Build(AtlasTextRenderer* pTextRenderer)
         {
             this->pTextRenderer = pTextRenderer;
-            this->fTextScale = get_text_scale();
+            this->vTextScale = get_text_scale();
+            this->vTextOffset = get_text_offset();
 
             // Recursively build all children, so they can determine their size, use
             // that size to indicate cell sizes if this object contains more than
@@ -134,8 +132,10 @@ namespace MenuSystem
             {
                 if (object.HasChildren())
                     object.Build(pTextRenderer);
-                else
-                    object.fTextScale = get_text_scale();
+                else {
+                    object.vTextScale = get_text_scale();
+                    object.vTextOffset = get_text_offset();
+                }
 
                 // Longest child name determines cell width (in patches).
                 vCellSize.x = std::max(vCellSize.x, object.GetSize(pTextRenderer).x);
@@ -235,6 +235,8 @@ namespace MenuSystem
 
 
     protected:
+        glm::vec3 vTextColor = glm::vec3(1.0f, 1.0f, 1.0f);   // Blue
+        glm::vec3 vTextColor_disabled = glm::vec3(0.2f, 0.2f, 0.2f);  // Dark gray
         std::string sName = "";
         std::any custom_data = 0;
         bool bEnabled = true;
@@ -250,13 +252,15 @@ namespace MenuSystem
         // Size of one cell in patches.
         glm::ivec2 vCellSize = glm::ivec2(0, 0);    // Is calcualted in the Build() fucntion.
         // Padding between table cells in pathes.
-        glm::ivec2 vCellPadding = glm::ivec2(2, 0);
+        glm::ivec2 vCellPadding = glm::ivec2(1, 0);
 
         // Size of one patch (for rendering **NOT** for sampling).
         glm::ivec2 vPatchSize = glm::ivec2(30.0f);
         // Size of this menuobject in patches.
         glm::ivec2 vSizeInPatches = glm::vec2(0, 0);
-        float fTextScale = 1.0f;
+        glm::vec2 vTextScale = glm::vec2(1.0f);
+        // Offset of the text in pixels.
+        glm::vec2 vTextOffset = glm::vec2(0.0f, 0.0f);
 
         // Stored items.
         std::unordered_map<std::string, size_t> itemsPointer;
@@ -270,15 +274,21 @@ namespace MenuSystem
         glm::ivec2 vCursorPos = glm::ivec2(0, 0);
 
         // Text renderer, for which this menu was built.
-        TextRenderer* pTextRenderer = nullptr;
+        AtlasTextRenderer* pTextRenderer = nullptr;
 
         // Calculate required text scale with the current size
         // of one patch and current text renderer in use.
-        float get_text_scale()
+        glm::vec2 get_text_scale()
         {
-            // Take only 90% of the calculated scale for some spacing between rows.
-            const float bias = 0.9f;
-            return (vPatchSize.y / float(pTextRenderer->Characters['H'].Size.y)) * bias;
+            // Take only 60% of the calculated scale for some spacing between rows.
+            const float bias = 0.6f;
+            return (glm::vec2(vPatchSize) / pTextRenderer->vCharSize) * bias;
+        }
+        // Calculate required offset for the text to be in the vertical center of the patch row.
+        glm::vec2 get_text_offset()
+        {
+            float offset = 0.4f * vPatchSize.y;
+            return glm::vec2(0.0f, offset);
         }
 
         // Manager and renderer classes can access protected members.
@@ -440,10 +450,10 @@ namespace MenuSystem
                 glm::vec2 vScreenLocation = glm::vec2(vPatchPos * menu.vPatchSize) * scale + glm::vec2(vScreenOffset);
 
                 // Draw item header.
-                menu.pTextRenderer->RenderText(menu.items[nTopLeftItem + i].sName
-                                             , vScreenLocation.x, vScreenLocation.y
-                                             , menu.fTextScale * scale
-                                             , menu.items[nTopLeftItem + i].bEnabled ? vTextColor : vTextColor_disabled
+                menu.pTextRenderer->RenderText(pSpriteRenderer, menu.items[nTopLeftItem + i].sName
+                                             , vScreenLocation + menu.vTextOffset
+                                             , menu.vTextScale * scale
+                                             , menu.items[nTopLeftItem + i].bEnabled ? menu.items[nTopLeftItem + i].vTextColor : menu.items[nTopLeftItem + i].vTextColor_disabled
                 );
 
                 if (menu.items[nTopLeftItem + i].HasChildren())

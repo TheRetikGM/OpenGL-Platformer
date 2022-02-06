@@ -1,6 +1,7 @@
 #pragma once
 #include <chrono>
 #include <random>
+#include <glm/glm.hpp>
 
 namespace Helper
 {
@@ -74,5 +75,28 @@ namespace Helper
 		std::mt19937 gen(rd());
 		std::uniform_real_distribution<float> dis(min, max);
 		return dis(gen);
+	}
+
+	inline glm::vec3 HexToRGB(uint32_t color)
+	{
+		return glm::vec3(
+			float((color >> 16) & 0xff) / 255.0f,
+			float((color >> 8)  & 0xff) / 255.0f,
+			float((color >> 0)  & 0xff) / 255.0f
+		);
+	}
+	inline glm::vec4 HexToRGBA(uint32_t color)
+	{
+		return glm::vec4(
+			float((color >> 16) & 0xff) / 255.0f,
+			float((color >> 8)  & 0xff) / 255.0f,
+			float((color >> 0)  & 0xff) / 255.0f,
+			float((color >> 24) & 0xff) / 255.0f
+		);
+	}
+	inline void printf_v3(std::string name, std::string precision, glm::vec3 vec)
+	{
+		std::string format = "%s: [%" + precision + "f, " + "%" + precision + "f, " + "%" + precision + "f]\n";
+		std::printf(format.c_str(), name.c_str(), vec.x, vec.y, vec.z);
 	}
 }

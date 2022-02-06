@@ -2,16 +2,15 @@
 #include "game/GameLevel.h"
 #include "game/game.h"
 
-InGameHUD::InGameHUD(GameLevel* pLevel, Texture2D texHUD, Texture2D texFontAtlas, glm::vec2 fontSize) 
+InGameHUD::InGameHUD(GameLevel* pLevel, Texture2D texHUD, AtlasTextRenderer* pTextRenderer) 
     : pLevel(pLevel)
     , HUDTexture(texHUD)
-    , text_renderer()
-    , vFontSize(fontSize)
+    , pTextRenderer(pTextRenderer)
+    , vFontSize(pTextRenderer->vCharSize)
 {
     if (!pLevel->Info)
         throw std::invalid_argument("InGameHUD::InGameHUD(): pLevel->Info == nullptr. Did you forget to load the level first?");
     pLevel->AddObserver(this);
-    text_renderer.Load(texFontAtlas, fontSize);
 }
 InGameHUD::~InGameHUD()
 {
@@ -49,7 +48,7 @@ void InGameHUD::render_coins(SpriteRenderer* pSpriteRenderer)
     std::string coins = std::to_string(pLevel->nCoins) + "/" + std::to_string(pLevel->nCoinsTotal);
     glm::vec2 text_scale = get_text_scale(mapping.vCoinText);
 
-    text_renderer.RenderText(
+    pTextRenderer->RenderText(
         pSpriteRenderer, 
         coins,
         offset + (get_offset(mapping.vCoinScreen) + glm::vec2(mapping.vCoinScreen.z + 2, 1.0f) * vScale),
@@ -82,7 +81,7 @@ void InGameHUD::render_hp(SpriteRenderer* pSpriteRenderer)
 void InGameHUD::render_time(SpriteRenderer* pSpriteRenderer)
 {
     glm::vec2 text_scale = get_text_scale(mapping.vElapsedTimeText) * vScale;
-    glm::vec2 max_size = text_renderer.GetStringSize("0000", text_scale);
+    glm::vec2 max_size = pTextRenderer->GetStringSize("0000", text_scale);
 
     glm::vec2 pos(0.0f);
     pos.x = Game::ScreenSize.x - max_size.x - vPadding.x;
@@ -90,7 +89,7 @@ void InGameHUD::render_time(SpriteRenderer* pSpriteRenderer)
 
     std::string sTime = std::to_string(int(pLevel->fElapsedTime));
 
-    text_renderer.RenderText(
+    pTextRenderer->RenderText(
         pSpriteRenderer,
         sTime, pos, 
         text_scale

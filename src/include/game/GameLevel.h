@@ -10,8 +10,10 @@
 #include "game/GameEvents.h"
 #include "game/SingleAnimations.h"
 #include "game/InGameHUD.h"
+#include "game/Forms.hpp"
 #include <unordered_map>
 #include <queue>
+#include <memory>
 
 class level_locked_exception : public std::runtime_error
 {
@@ -36,6 +38,8 @@ struct GameLevelInfo
 		: sName(""), nDifficulty(0), bCompleted(false), bLocked(true), sTileMap(""), nLevel(0), sSingleAnimationsPath("") {}
 };
 
+enum class InGameState : int { running, paused_dialog };
+
 /*
 * Represents game level.
 * Note: Implements observer pattern. Can observe player and it can be observed by game (for example.)
@@ -43,13 +47,14 @@ struct GameLevelInfo
 class GameLevel : public IObserver, public BasicObserverSubject
 {
 public:
-	GameLevelInfo* Info = nullptr;
-	Physics2D::PhysicsWorld* PhysicsWorld = nullptr;
-	Tilemap* Map = nullptr;
-	Texture2D* Background = nullptr;
-	Player* pPlayer = nullptr;
-	SingleAnimations* pSingleAnimations = nullptr;
-	InGameHUD* pHUD = nullptr;
+	GameLevelInfo* 				Info = nullptr;
+	Physics2D::PhysicsWorld* 	PhysicsWorld = nullptr;
+	Tilemap* 					Map = nullptr;
+	Texture2D* 					Background = nullptr;
+	Player* 					pPlayer = nullptr;
+	SingleAnimations* 			pSingleAnimations = nullptr;
+	InGameHUD* 					pHUD = nullptr;
+	InGameState					State = InGameState::running;
 
 	GameLevel() : nCoins(0), nCoinsTotal(0) {}
 
@@ -69,6 +74,8 @@ public:
 		notify(LEVEL_RESTARTED);
 	}
 	void OnPlayerDied();
+
+	void OnResize();
 
 	// Observer implementation.
 	void OnNotify(IObserverSubject* obj, int message, void* args = nullptr);
@@ -97,6 +104,11 @@ protected:
 	};
 	// Initial position of the player in tile-space.
 	glm::vec2 vInitPlayerPosition = glm::vec2(0.0f, 0.0f);
+	// Atlas text renderer for rendering in-game text.
+	AtlasTextRenderer* pTextRenderer = nullptr;
+	// === In Game dialogs ===
+	// You died form
+	std::unordered_map<std::string, std::shared_ptr<Forms::Form>> mForms;
 
 	void init_physics_world();
 	void init_tilemap();
@@ -106,6 +118,7 @@ protected:
 	void init_tilecamera();
 	void init_single_animations();
 	void init_hud();
+	void init_forms();
 
 	void handle_events(float dt);
 	void pickup_coin(Physics2D::RigidBody* coin);

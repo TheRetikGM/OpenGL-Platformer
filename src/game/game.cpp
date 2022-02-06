@@ -17,7 +17,7 @@
 #include <thread>
 #include "MenuInputHandler.hpp"
 #include "CommandIDs.h"
-#define printf_v(name, vec, prec) std::printf(name ": [%" prec "f, %" prec "f]\n", (vec).x, (vec).y)
+#include "game/Forms.hpp"
 
 using namespace std::placeholders;
 
@@ -30,6 +30,7 @@ SpriteRenderer*	 renderer = nullptr;
 TilemapRenderer* tile_renderer = nullptr;
 BasicRenderer*	 basic_renderer = nullptr;
 TextRenderer* text_renderer = nullptr;
+AtlasTextRenderer* atlas_text_renderer = nullptr;
 
 GameLevelsManager* levels_manager = nullptr;
 
@@ -52,6 +53,7 @@ MenuInputHandler* menuInputHandler;
 Helper::Stopwatch w1;
 Helper::Stopwatch w2;
 Helper::Stopwatch w3;
+Forms::Form* form = nullptr; 
 
 // Callbacks.
 void onLayerDraw(const Tmx::Map *map, const Tmx::Layer *layer, int n_layer);
@@ -84,6 +86,10 @@ Game::~Game()
 		delete levels_manager;
 	if (menuInputHandler)
 		delete menuInputHandler;
+	if (atlas_text_renderer)
+		delete atlas_text_renderer;
+	if (form)
+		delete form;
 	
 	ResourceManager::Clear();
 
@@ -107,8 +113,16 @@ void Game::OnResize()
 
 	ResourceManager::GetShader("basic_render").Use().SetMat4("projection", projection);
 
+	text_renderer->SetProjection(projection);
+
 	Game::ProjectionMatrix = projection;
 	Game::ScreenSize = glm::vec2(float(this->Width), float(this->Height));
+	
+	if (levels_manager->Active())
+		levels_manager->ActiveLevel().OnResize();
+
+	// temp
+	form->MoveTo(glm::vec2((Game::ScreenSize.x - form->vSize.x) * 0.5f, 20.0f));
 }
 void Game::ProcessMouse(float xoffset, float yoffset)
 {
@@ -122,7 +136,7 @@ void Game::ProcessScroll(float yoffset)
 void Game::Init()
 {
 	Game::SetTileSize(glm::vec2(32.0f));
-	this->BackgroundColor = glm::vec3(45 / 255.0f, 61 / 255.0f, 30 / 255.0f);
+	this->BackgroundColor = Helper::HexToRGB(0x2D3D1E);
 	Game::ScreenSize = glm::vec2(float(Width), float(Height));
 
 	// Load shaders
@@ -132,6 +146,7 @@ void Game::Init()
 
 	// Load textures
 	ResourceManager::LoadTexture(ASSETS_DIR "textures/menu_9patch.png", true, "menu_9patch").SetMagFilter(GL_NEAREST).SetMinFilter(GL_NEAREST).UpdateParameters();
+	Texture2D& font_atlas = ResourceManager::LoadTexture(ASSETS_DIR "fonts/atlas.png", true, "font_atlas").SetMagFilter(GL_NEAREST).SetMinFilter(GL_NEAREST).UpdateParameters();
 
 	// Load levels manager
 	levels_manager = new GameLevelsManager(ASSETS_DIR "Levels/levels.json");
@@ -152,6 +167,8 @@ void Game::Init()
 	// Load Fonts and Initialize text renderer.
 	text_renderer = new TextRenderer(Width, Height);
 	text_renderer->Load(ASSETS_DIR "fonts/arial.ttf", 32, GL_NEAREST);
+	atlas_text_renderer = new AtlasTextRenderer();
+	atlas_text_renderer->Load(font_atlas, glm::vec2(7.0f));
 
 	// Initialize Camera	
 	TileCamera2D::OnScale = onCameraScale;
@@ -183,10 +200,13 @@ void Game::Init()
 	mainMenu["Reset progress"];
 	mainMenu["Exit game"].SetID(EXIT_GAME_COMMAND);
 	auto& levelInfos = levels_manager->GetAllInfos();
-	for (const auto& i : levelInfos)
+	for (const auto& i : levelInfos) {
 		mainMenu["Play"][i.sName].Enable(!i.bLocked).SetID(LOAD_LEVEL_COMMAND).SetCustomData(i.nLevel);
+		if (i.bCompleted)
+			mainMenu["Play"][i.sName].SetTextColor(Helper::HexToRGB(0x2b9f28));
+	}
 
-	menu->Build(text_renderer);
+	menu->Build(atlas_text_renderer);
 
 	// Initilize menu manager
 	menu_manager = new MenuManager();
@@ -201,6 +221,18 @@ void Game::Init()
 	State = GameState::main_menu;
 	menu_manager->Open(&menu->at("Main Menu"));
 	menu_manager->CloseOnBack(false);
+
+	// ====== Initialize main menu form ======
+	form = new Forms::Form(atlas_text_renderer);
+	form->AddLabel("lblGameName", "Platformer Game!", glm::vec2(64.0f), Helper::HexToRGB(0xa83f45));
+	form->AddLabel("lblInfo", "beta", glm::vec2(32.0f), glm::vec3(0.1f, 0.9f, 0.8f));
+
+	auto label1 = new Forms::Label("By", glm::vec2(0.0f), glm::vec2(32.0f), glm::vec3(1.0f), atlas_text_renderer);
+	auto label2 = new Forms::Label("Jakub Kloub", glm::vec2(0.0f), glm::vec2(40.0f), glm::vec3(0.0f, 0.0f, 1.0f), atlas_text_renderer);
+	form->AddPair("pairCredit", std::shared_ptr<Forms::Control>(label1), std::shared_ptr<Forms::Control>(label2));
+
+	form->SetGravity(Forms::Gravity::center);
+	form->MoveTo(glm::vec2((Game::ScreenSize.x - form->vSize.x) * 0.5f, 20.0f));
 }
 
 void Game::OnNotify(IObserverSubject* obj, int message, void* args)
@@ -387,6 +419,9 @@ void Game::Render()
 	{
 		glm::vec2 vMenuSize = menu_manager->First().GetTotalSize(2.0f);
 		menu_renderer->Draw(*menu_manager, ResourceManager::GetTexture("menu_9patch"), (glm::vec2(Width, Height) - vMenuSize) * 0.5f, 2.0f);
+
+		if (State == GameState::main_menu)
+			form->Render(renderer);	// Render game name.
 	}
 	w2.Stop();
 

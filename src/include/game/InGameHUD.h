@@ -44,7 +44,7 @@ public:
     glm::vec2 vFontSize;
     
     // Level **MUST** be loaded.
-    InGameHUD(GameLevel* pLevel, Texture2D texHUD, Texture2D texFonts, glm::vec2 fontSize);
+    InGameHUD(GameLevel* pLevel, Texture2D texHUD, AtlasTextRenderer* pTextRenderer);
     ~InGameHUD();
 
     void Update(float dt);
@@ -57,7 +57,7 @@ protected:
     const HUD_mapping mapping;
     std::queue<Event> events;
     float fTextScale = 1.0f;
-    AtlasTextRenderer text_renderer;
+    AtlasTextRenderer* pTextRenderer;
     int skip_heart = -1;
 
     void handle_events();

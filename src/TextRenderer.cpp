@@ -37,6 +37,11 @@ void TextRenderer::delete_textures()
         glDeleteTextures(1, &character.TextureID);
 }
 
+void TextRenderer::SetProjection(glm::mat4 projection)
+{
+    this->TextShader.SetMat4("projection", projection, true);
+}
+
 void TextRenderer::Load(std::string font, unsigned int fontSize, int mag_filter, int min_filter)
 {
     delete_textures();

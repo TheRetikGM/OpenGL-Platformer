@@ -1,10 +1,10 @@
 [
     {
         "background": "sprites/bg_1.png",
-        "completed": false,
+        "completed": true,
         "difficulty": 1,
         "locked": false,
-        "name": "Level 0",
+        "name": "Tutorial",
         "lives": 8,
         "tilemap": "tilemaps/map1/map1.tmx",
         "single_animations": "animations/one_time/properties.json"
@@ -13,7 +13,7 @@
         "background": "sprites/bg_1.png",
         "completed": false,
         "difficulty": 2,
-        "locked": true,
+        "locked": false,
         "name": "Level 1",
         "lives": 5,
         "tilemap": "tilemaps/map2/map2.tmx",

@@ -33,6 +33,7 @@ public:
     void RenderText(std::string text, float x, float y, float scale, glm::vec3 color = glm::vec3(1.0f)) const;
     glm::ivec2 GetStringSize(std::string str, float scale = 1.0f) const;
     unsigned int GetFontSize() const { return fontSize; }
+    void SetProjection(glm::mat4 projection);
 
 private:
     unsigned int VAO, VBO;

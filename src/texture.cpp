@@ -45,7 +45,7 @@ void Texture2D::Generate(unsigned int width, unsigned int height, unsigned char*
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
-void Texture2D::UpdateParameters()
+Texture2D& Texture2D::UpdateParameters()
 {
 	glBindTexture(GL_TEXTURE_2D, this->ID);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, Wrap_S);
@@ -53,6 +53,7 @@ void Texture2D::UpdateParameters()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, Filter_min);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, Filter_mag);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	return *this;
 }
 
 void Texture2D::Bind() const

@@ -45,7 +45,7 @@ public:
         for (int i = 0; i < 4; i++)
             Characters[other[i]] = glm::vec4(GetOffset(i), vCharSize);
     }
-    void RenderText(SpriteRenderer* pSpriteRenderer, std::string sText, glm::vec2 vPosition, glm::vec2 fScale = glm::vec2(1.0f))
+    void RenderText(SpriteRenderer* pSpriteRenderer, std::string sText, glm::vec2 vPosition, glm::vec2 vScale = glm::vec2(1.0f), glm::vec3 vColor = glm::vec3(1.0f))
     {
         for (size_t i = 0; i < sText.length(); i++)
         {
@@ -55,15 +55,15 @@ public:
             glm::vec2 part_size(vPartInfo.z, vPartInfo.w);
 
             glm::vec2 size = vCharSize;
-            pSpriteRenderer->DrawPartialSprite(Atlas, part_offset, part_size, vPosition, size * fScale);
-            vPosition.x += (size.x + Spacing) *  fScale.x;
+            pSpriteRenderer->DrawPartialSprite(Atlas, part_offset, part_size, vPosition, size * vScale, 0.0f, vColor);
+            vPosition.x += (size.x + Spacing) *  vScale.x;
         }
     }
-    inline glm::vec2 GetStringSize(std::string sText, glm::vec2 fScale = glm::vec2(1.0f))
+    inline glm::vec2 GetStringSize(std::string sText, glm::vec2 vScale = glm::vec2(1.0f))
     {
         glm::vec2 vTotalSize(0.0f);
-        vTotalSize.x = float(sText.length()) * (vCharSize.x + Spacing) * fScale.x;
-        vTotalSize.y = vCharSize.y * fScale.y;
+        vTotalSize.x = float(sText.length()) * (vCharSize.x + Spacing) * vScale.x;
+        vTotalSize.y = vCharSize.y * vScale.y;
 
         return vTotalSize;
     }
