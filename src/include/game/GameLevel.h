@@ -56,6 +56,8 @@ public:
 	InGameHUD* 					pHUD = nullptr;
 	InGameState					State = InGameState::running;
 
+	std::string 				sShowDialog = "";
+
 	GameLevel() : nCoins(0), nCoinsTotal(0) {}
 
 	void ProcessInput(InputInterface* input, float dt);
@@ -95,12 +97,13 @@ protected:
 	int nCoinsTotal = 0;
 	// Event queue;
 	std::queue<Event> eventQueue;
-	std::array<int, 5> acceptedMessages = {
+	std::array<int, 6> acceptedMessages = {
 		PLAYER_LOST_LIFE,
 		PLAYER_JUMPED,
 		PLAYER_LANDED,
 		PLAYER_COLLIDE_COIN,
-		PLAYER_WALL_JUMPED
+		PLAYER_WALL_JUMPED,
+		PLAYER_REACHED_FINISH
 	};
 	// Initial position of the player in tile-space.
 	glm::vec2 vInitPlayerPosition = glm::vec2(0.0f, 0.0f);

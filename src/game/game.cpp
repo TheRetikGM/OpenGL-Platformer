@@ -105,7 +105,6 @@ void Game::OnResize()
 	// If resized, update projection matrix to match new width and height of window.
 	glm::mat4 projection = glm::ortho(0.0f, (float)this->Width, (float)this->Height, 0.0f, -1.0f, 1.0f);
 	ResourceManager::GetShader("sprite").Use().SetMat4("projection", projection);
-	
 	projection = glm::ortho(0.0f, (float)Width, (float)Height, 0.0f, -1.0f, 1.0f);
 	tile_renderer->Projection = projection;
 
@@ -122,7 +121,7 @@ void Game::OnResize()
 		levels_manager->ActiveLevel().OnResize();
 
 	// temp
-	form->MoveTo(glm::vec2((Game::ScreenSize.x - form->vSize.x) * 0.5f, 20.0f));
+	form->MoveTo(glm::vec2((Game::ScreenSize.x - form->vSize.x) * 0.5f, 80.0f));
 }
 void Game::ProcessMouse(float xoffset, float yoffset)
 {
@@ -224,15 +223,16 @@ void Game::Init()
 
 	// ====== Initialize main menu form ======
 	form = new Forms::Form(atlas_text_renderer);
-	form->AddLabel("lblGameName", "Platformer Game!", glm::vec2(64.0f), Helper::HexToRGB(0xa83f45));
+	form->nSpacing = 50;
+	form->AddLabel("lblGameName", "Platformer Game!", glm::vec2(80.0f), Helper::HexToRGB(0x972E34));
 	form->AddLabel("lblInfo", "beta", glm::vec2(32.0f), glm::vec3(0.1f, 0.9f, 0.8f));
 
-	auto label1 = new Forms::Label("By", glm::vec2(0.0f), glm::vec2(32.0f), glm::vec3(1.0f), atlas_text_renderer);
-	auto label2 = new Forms::Label("Jakub Kloub", glm::vec2(0.0f), glm::vec2(40.0f), glm::vec3(0.0f, 0.0f, 1.0f), atlas_text_renderer);
+	auto label1 = new Forms::Label("By", glm::vec2(0.0f), glm::vec2(20.0f), glm::vec3(1.0f), atlas_text_renderer);
+	auto label2 = new Forms::Label("Jakub Kloub", glm::vec2(0.0f), glm::vec2(25.0f), glm::vec3(0.2f, 0.5f, 0.8f), atlas_text_renderer);
 	form->AddPair("pairCredit", std::shared_ptr<Forms::Control>(label1), std::shared_ptr<Forms::Control>(label2));
 
 	form->SetGravity(Forms::Gravity::center);
-	form->MoveTo(glm::vec2((Game::ScreenSize.x - form->vSize.x) * 0.5f, 20.0f));
+	form->MoveTo(glm::vec2((Game::ScreenSize.x - form->vSize.x) * 0.5f, 50.0f));
 }
 
 void Game::OnNotify(IObserverSubject* obj, int message, void* args)
@@ -426,13 +426,13 @@ void Game::Render()
 	w2.Stop();
 
 	// Render DEBUG text
-	char buf[256];
-	sprintf(buf, "FPS: %.f\nUpdate step: %f ms\nRender step: %f ms",
-		fps, 
-		w1.ElapsedMilliseconds(),
-		w2.ElapsedMilliseconds()
-	);
-	text_renderer->RenderText(std::string(buf), Width - 200.0f, 10.0f, 0.5f, glm::vec3(0.0f, 1.0f, 0.0f));
+	// char buf[256];
+	// sprintf(buf, "FPS: %.f\nUpdate step: %f ms\nRender step: %f ms",
+	// 	fps, 
+	// 	w1.ElapsedMilliseconds(),
+	// 	w2.ElapsedMilliseconds()
+	// );
+	// text_renderer->RenderText(std::string(buf), Width - 200.0f, 10.0f, 0.5f, glm::vec3(0.0f, 1.0f, 0.0f));
 }
 
 // Callbacks

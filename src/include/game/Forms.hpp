@@ -23,7 +23,7 @@ namespace Forms
         virtual void Render(SpriteRenderer* pSpriteRenderer) = 0;
     };
 
-    enum class ControlType : int { label = 0, pair = 1 };
+    enum class ControlType : int { unknown = 0, label = 1, pair = 2 };
     class Control : public IRenderable, public BasicObserverSubject
     {
     public:
@@ -71,7 +71,6 @@ namespace Forms
         glm::vec2 vTextScale = glm::vec2(1.0f);
         std::string sText = "";
     };
-
     class Pair : public Control
     {
     public:
@@ -137,7 +136,7 @@ namespace Forms
                 throw std::out_of_range("ControlsManager::GetControl(): Cannot find control with name '" + unique_name + "'.");
             return controls[control_indexes[unique_name]];
         }
-        virtual void AddControl(std::string unique_name, std::shared_ptr<Control> control, ControlType type)
+        virtual void AddControl(std::string unique_name, std::shared_ptr<Control> control, ControlType type = ControlType::unknown)
         {
             if (control_indexes.count(unique_name) != 0)
                 throw std::invalid_argument("ControlsManager::GetControl(): Control with name '" + unique_name + "' already exists.");
@@ -158,6 +157,83 @@ namespace Forms
     protected:
         std::unordered_map<std::string, size_t> control_indexes;
         std::vector<ControlHolder> controls;
+    };
+
+    class Row : public Control, public ControlsManager, public IObserver
+    {
+    public:
+        int nSpacing = 7;
+
+        Row(glm::vec2 position)
+        {
+            SetPosition(position);
+        }
+
+        void AddControl(std::string unique_name, std::shared_ptr<Control> control, ControlType type = ControlType::unknown) override
+        {
+            control->SetPosition(get_next_position());
+            control->AddObserver(this);
+            control->sName = unique_name;
+            ControlsManager::AddControl(unique_name, control, type);
+            update_total_size();
+        }
+
+        void SetOffset(glm::vec2 offset) override
+        {
+            this->vOffset = offset;
+            update_child_offsets();
+        }
+        void SetPosition(glm::vec2 pos) override
+        {
+            vPosition = pos;
+            update_child_offsets();
+        }
+
+        void Render(SpriteRenderer* pSpriteRenderer)
+        {
+            for (auto& holder : controls)
+                holder.control->Render(pSpriteRenderer);
+        }
+
+        void OnNotify(IObserverSubject* obj, int message, void* args = nullptr)
+        {
+            notify(message, args);
+        }
+    protected:
+        
+        void update_child_positions()
+        {
+            glm::vec2 pos(0.0f, 0.0f);
+            for (auto& holder : controls)
+            {
+                holder.control->vPosition = pos;
+                pos.x += holder.control->GetSize().x + nSpacing;
+            }
+        }
+        glm::vec2 get_next_position()
+        {
+            glm::vec2 pos(0.0f, 0.0f);
+            for (auto& holder : controls)
+                pos.x += holder.control->GetSize().x + nSpacing;
+            return pos;
+        }
+        void update_total_size()
+        {
+            glm::vec2 size(0.0f);
+            for (auto& holder : controls)
+            {
+                size.x += holder.control->GetSize().x + nSpacing;
+                size.y = std::max(size.y, holder.control->GetSize().y);
+            }
+            size.x -= nSpacing;
+
+            vSize = size;
+        }
+        void update_child_offsets()
+        {
+            for (auto& holder : controls)
+                holder.control->SetOffset(this->vPosition + this->vOffset);
+        }
     };
 
     enum class Gravity : int { left = 0, right = 1, center = 2 };
@@ -211,7 +287,7 @@ namespace Forms
         }
 
         // Overrides for ControlsManager.
-        void AddControl(std::string unique_name, std::shared_ptr<Control> control, ControlType type)
+        void AddControl(std::string unique_name, std::shared_ptr<Control> control, ControlType type) override
         {
             ControlsManager::AddControl(unique_name, control, type);
             control->AddObserver(this);

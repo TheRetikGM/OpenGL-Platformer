@@ -14,6 +14,7 @@
 #define PLAYER_LOST_LIFE        0x7
 #define LEVEL_RESTARTED         0x8
 #define PLAYER_DIED             0x9
+#define PLAYER_REACHED_FINISH   0xA
 
 struct Event 
 { 

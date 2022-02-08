@@ -6,7 +6,7 @@
         "locked": false,
         "name": "Tutorial",
         "lives": 8,
-        "tilemap": "tilemaps/map1/map1.tmx",
+        "tilemap": "tilemaps/map1.tmx",
         "single_animations": "animations/one_time/properties.json"
     },
     {
@@ -16,7 +16,7 @@
         "locked": false,
         "name": "Level 1",
         "lives": 5,
-        "tilemap": "tilemaps/map2/map2.tmx",
+        "tilemap": "tilemaps/map2.tmx",
         "single_animations": "animations/one_time/properties.json"
     },
     {
@@ -26,7 +26,7 @@
         "locked": true,
         "name": "Level 2",
         "lives": 6,
-        "tilemap": "tilemaps/map3/map3.tmx",
+        "tilemap": "tilemaps/map3.tmx",
         "single_animations": "animations/one_time/properties.json"
     },
     {
@@ -36,7 +36,7 @@
         "locked": true,
         "name": "Level 3",
         "lives": 7,
-        "tilemap": "tilemaps/map4/map4.tmx",
+        "tilemap": "tilemaps/map4.tmx",
         "single_animations": "animations/one_time/properties.json"
     },
     {
@@ -46,7 +46,7 @@
         "locked": true,
         "name": "Level 4",
         "lives": 8,
-        "tilemap": "tilemaps/map5/map5.tmx",
+        "tilemap": "tilemaps/map5.tmx",
         "single_animations": "animations/one_time/properties.json"
     },
     {
@@ -56,7 +56,7 @@
         "locked": true,
         "name": "Level 5",
         "lives": 8,
-        "tilemap": "tilemaps/map6/map6.tmx",
+        "tilemap": "tilemaps/map6.tmx",
         "single_animations": "animations/one_time/properties.json"
     },
     {
@@ -66,7 +66,7 @@
         "locked": true,
         "name": "Level 6",
         "lives": 8,
-        "tilemap": "tilemaps/map7/map7.tmx",
+        "tilemap": "tilemaps/map7.tmx",
         "single_animations": "animations/one_time/properties.json"
     }
 ]

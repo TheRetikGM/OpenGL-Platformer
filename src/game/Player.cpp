@@ -118,9 +118,9 @@ void Player::Update(float dt)
 				if (c.body->Name == "spikes")
 					OnHit();
 				else if (c.body->Name == "coin")
-				{
 					notify(PLAYER_COLLIDE_COIN, (void*)c.body);
-				}
+				else if (c.body->Name == "finish")
+					notify(PLAYER_REACHED_FINISH, this);
 			}
 		}
 	}

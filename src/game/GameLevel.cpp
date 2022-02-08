@@ -101,6 +101,9 @@ void GameLevel::handle_events(float dt)
         case PLAYER_WALL_JUMPED:
             pPlayer->Animator->PlayOnce("double_jump");
             break;
+        case PLAYER_REACHED_FINISH:
+            State = InGameState::paused_dialog;
+            break;
         default:
             break;
         }
@@ -352,6 +355,12 @@ void GameLevel::init_world_objects()
                 // Convert position from tilemap pixel-space to tile-space.
                 vInitPlayerPosition = glm::vec2(float(object->GetX()) / map->GetTileWidth(), float(object->GetY()) / map->GetTileHeight());
             }
+            else if (object->GetName() == "finish")
+            {
+                glm::vec2 vSizeInTiles = glm::vec2(object->GetWidth(), object->GetHeight()) / map_tile_size;
+                glm::vec2 vPosInTiles = glm::vec2(object->GetX(), object->GetY()) / map_tile_size;
+                this->PhysicsWorld->AddRectangleBody(vPosInTiles, vSizeInTiles, 2.0f, true, 1.0, true)->Name = "finish";
+            }
         }
     }
 }
@@ -400,7 +409,7 @@ void GameLevel::init_forms()
 {
     // You won form initialization.
     mForms["won"] = std::make_shared<Forms::Form>(pTextRenderer);
-    mForms["won"]->AddLabel("lblWon", "You won!", glm::vec2(64.0f), Helper::HexToRGB(0xfcff00));
+    mForms["won"]->AddLabel("lblWon", "You won!", glm::vec2(64.0f), Helper::HexToRGB(0xE0BA1E));
 
 	auto label1 = new Forms::Label("Coins", glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f, 1.0f, 0.0f), pTextRenderer);
 	auto label2 = new Forms::Label("27/40", glm::vec2(0.0f), glm::vec2(36.0f), glm::vec3(1.0f, 1.0f, 1.0f), pTextRenderer);
@@ -409,6 +418,14 @@ void GameLevel::init_forms()
     label1 = new Forms::Label("Time", glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(0.0f, 0.7f, 0.08f), pTextRenderer);
 	label2 = new Forms::Label("230s", glm::vec2(0.0f), glm::vec2(36.0f), glm::vec3(1.0f, 1.0f, 1.0f), pTextRenderer);
 	mForms["won"]->AddPair("pairTime", std::shared_ptr<Forms::Control>(label1), std::shared_ptr<Forms::Control>(label2));
+
+    label1 = new Forms::Label("Press", glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f), pTextRenderer);
+	label2 = new Forms::Label("r", glm::vec2(0.0f), glm::vec2(36.0f), glm::vec3(0.0f, 1.0f, 0.0f), pTextRenderer);
+    auto label3 = new Forms::Label("to restart", glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f), pTextRenderer);
+	mForms["won"]->AddControl("rowInputHelper", std::make_shared<Forms::Row>(glm::vec2(0.0f, 0.0f)), Forms::ControlType::unknown);
+    mForms["won"]->GetControl<Forms::Row*>("rowInputHelper")->AddControl("lblTextP1", std::shared_ptr<Forms::Control>(label1), Forms::ControlType::label);
+    mForms["won"]->GetControl<Forms::Row*>("rowInputHelper")->AddControl("lblTextP2", std::shared_ptr<Forms::Control>(label2), Forms::ControlType::label);
+    mForms["won"]->GetControl<Forms::Row*>("rowInputHelper")->AddControl("lblTextP3", std::shared_ptr<Forms::Control>(label3), Forms::ControlType::label);
 
     mForms["won"]->AddLabel("lblAnyKey", "Press any key to continue", glm::vec2(24.0f), glm::vec3(0.1f, 0.9f, 0.8f));
     mForms["won"]->SetGravity(Forms::Gravity::center);
