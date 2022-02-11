@@ -37,6 +37,7 @@ GameLevelsManager* levels_manager = nullptr;
 // Render state variables.
 bool wireframe_render = false;
 bool render_aabb = false;
+bool bRenderDebugInfo = false;
 float fps = 0.0f;
 float ref_fps = 0.0f;
 float n_fps = 0.0f;
@@ -344,6 +345,10 @@ void Game::ProcessInput(float dt)
 		else
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
+	if (Input->Pressed(GLFW_KEY_F3))
+	{
+		bRenderDebugInfo = !bRenderDebugInfo;
+	}
 
 }
 
@@ -470,13 +475,16 @@ void Game::Render()
 	w2.Stop();
 
 	// Render DEBUG text
-	// char buf[256];
-	// sprintf(buf, "FPS: %.f\nUpdate step: %f ms\nRender step: %f ms",
-	// 	fps, 
-	// 	w1.ElapsedMilliseconds(),
-	// 	w2.ElapsedMilliseconds()
-	// );
-	// text_renderer->RenderText(std::string(buf), Width - 200.0f, 10.0f, 0.5f, glm::vec3(0.0f, 1.0f, 0.0f));
+	if (bRenderDebugInfo)
+	{
+		char buf[256];
+		sprintf(buf, "FPS: %.f\nUpdate step: %f ms\nRender step: %f ms",
+			fps,
+			w1.ElapsedMilliseconds(),
+			w2.ElapsedMilliseconds()
+		);
+		text_renderer->RenderText(std::string(buf), Width - 200.0f, 10.0f, 0.5f, glm::vec3(0.0f, 1.0f, 0.0f));
+	}
 }
 
 void Game::exit_to_main_menu()
@@ -566,7 +574,7 @@ void Game::update_win_dialog_info()
 	std::string sTime = std::to_string(int(pActiveLevel.GetElapsedTime())) + "s";
 
 	mDialogs["won"]->GetControl<Forms::Pair*>("pairCoins")->GetSecond<Forms::Label*>()->SetText(sCoins);
-	mDialogs["won"]->GetControl<Forms::Pair*>("pairTime")->GetSecond<Forms::Label*>()->SetText(sTime);
+	mDialogs["won"]->GetControl<Forms::Pair*>( "pairTime")->GetSecond<Forms::Label*>()->SetText(sTime);
 }
 
 // Callbacks
