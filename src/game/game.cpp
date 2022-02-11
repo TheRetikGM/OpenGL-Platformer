@@ -53,7 +53,8 @@ MenuInputHandler* menuInputHandler;
 Helper::Stopwatch w1;
 Helper::Stopwatch w2;
 Helper::Stopwatch w3;
-Forms::Form* form = nullptr; 
+Forms::Form* form = nullptr;
+Forms::Form* form_credit =  nullptr;
 
 // Callbacks.
 void onLayerDraw(const Tmx::Map *map, const Tmx::Layer *layer, int n_layer);
@@ -90,7 +91,10 @@ Game::~Game()
 		delete atlas_text_renderer;
 	if (form)
 		delete form;
+	if (form_credit)
+		delete form_credit;
 	
+	mDialogs.clear();
 	ResourceManager::Clear();
 
 	delete Input;
@@ -122,6 +126,8 @@ void Game::OnResize()
 
 	// temp
 	form->MoveTo(glm::vec2((Game::ScreenSize.x - form->vSize.x) * 0.5f, 80.0f));
+	form_credit->MoveTo(glm::vec2(20.0f, Game::ScreenSize.y - 20.0f - form_credit->vSize.y));
+	recenter_forms();
 }
 void Game::ProcessMouse(float xoffset, float yoffset)
 {
@@ -149,6 +155,7 @@ void Game::Init()
 
 	// Load levels manager
 	levels_manager = new GameLevelsManager(ASSETS_DIR "Levels/levels.json");
+	levels_manager->AddObserver(this);
 
 	// Projection used for 2D projection.
 	glm::mat4 projection = glm::ortho(0.0f, (float)this->Width, (float)this->Height, 0.0f, -1.0f, 1.0f);
@@ -226,18 +233,25 @@ void Game::Init()
 	form->nSpacing = 50;
 	form->AddLabel("lblGameName", "Platformer Game!", glm::vec2(80.0f), Helper::HexToRGB(0x972E34));
 	form->AddLabel("lblInfo", "beta", glm::vec2(32.0f), glm::vec3(0.1f, 0.9f, 0.8f));
-
-	auto label1 = new Forms::Label("By", glm::vec2(0.0f), glm::vec2(20.0f), glm::vec3(1.0f), atlas_text_renderer);
-	auto label2 = new Forms::Label("Jakub Kloub", glm::vec2(0.0f), glm::vec2(25.0f), glm::vec3(0.2f, 0.5f, 0.8f), atlas_text_renderer);
-	form->AddPair("pairCredit", std::shared_ptr<Forms::Control>(label1), std::shared_ptr<Forms::Control>(label2));
-
 	form->SetGravity(Forms::Gravity::center);
 	form->MoveTo(glm::vec2((Game::ScreenSize.x - form->vSize.x) * 0.5f, 50.0f));
+
+	form_credit = new Forms::Form(atlas_text_renderer);
+	form_credit->AddPair("pairCredit",
+		std::make_shared<Forms::Label>("By", glm::vec2(0.0f), glm::vec2(20.0f), glm::vec3(1.0f), atlas_text_renderer), 
+		std::make_shared<Forms::Label>("Jakub Kloub", glm::vec2(0.0f), glm::vec2(25.0f), Helper::HexToRGB(0x5F4E7D), atlas_text_renderer));
+	form_credit->MoveTo(glm::vec2(20.0f, Game::ScreenSize.y - 20.0f - form_credit->vSize.y));
+
+	// Initialize game dialogs.
+	init_dialogs();
 }
 
 void Game::OnNotify(IObserverSubject* obj, int message, void* args)
 {
-	
+	Event e {obj, message, args};
+	if (!eventQueue.empty() && eventQueue.front() == e)
+		return;
+	eventQueue.emplace(e);
 }
 void Game::ProcessInput(float dt)
 {
@@ -281,11 +295,7 @@ void Game::ProcessInput(float dt)
 				levels_manager->Save();
 				break;
 			case EXIT_TO_MAIN_MENU_COMMAND:
-				levels_manager->Unload();
-				State = GameState::main_menu;
-				menu_manager->Close();
-				menu_manager->Open(&menu->at("Main Menu"));
-				menu_manager->CloseOnBack(false);
+				exit_to_main_menu();
 				break;
 			case EXIT_GAME_COMMAND:
 				this->Run = false;
@@ -322,6 +332,8 @@ void Game::ProcessInput(float dt)
 			}
 		}
 	}
+	else if (this->State == GameState::ingame_dialog)
+		pActiveDialog->ProcessInput(Input);
 
 
 	if (Input->Pressed(GLFW_KEY_F1))
@@ -334,9 +346,34 @@ void Game::ProcessInput(float dt)
 	}
 
 }
+
+void Game::handle_events()
+{
+	while (!eventQueue.empty())
+	{
+		Event e = eventQueue.front();
+		eventQueue.pop();
+
+		switch (e.message)
+		{
+		case PLAYER_DIED:
+			State = GameState::ingame_dialog;
+			pActiveDialog = &mDialogs["lost"];
+			break;
+		case PLAYER_REACHED_FINISH:
+			State = GameState::ingame_dialog;
+			pActiveDialog = &mDialogs["won"];
+			update_win_dialog_info();
+		default:
+			break;
+		}
+	}
+}
+
 void Game::Update(float dt)
 {	
 	w1.Restart();
+	handle_events();
 	if (State == GameState::active)
 	{
 		levels_manager->ActiveLevel().Update(dt);
@@ -367,7 +404,7 @@ void Game::Render()
 		return;
 
 	w2.Restart();
-	if (State == GameState::active || State == GameState::ingame_paused)
+	if (State == GameState::active || State == GameState::ingame_paused || State == GameState::ingame_dialog)
 	{
 		levels_manager->ActiveLevel().Render(renderer, tile_renderer);
 		// Render colliders.
@@ -421,7 +458,14 @@ void Game::Render()
 		menu_renderer->Draw(*menu_manager, ResourceManager::GetTexture("menu_9patch"), (glm::vec2(Width, Height) - vMenuSize) * 0.5f, 2.0f);
 
 		if (State == GameState::main_menu)
+		{
 			form->Render(renderer);	// Render game name.
+			form_credit->Render(renderer);
+		}
+	}
+	if (State == GameState::ingame_dialog)
+	{
+		pActiveDialog->Render(renderer);
 	}
 	w2.Stop();
 
@@ -433,6 +477,96 @@ void Game::Render()
 	// 	w2.ElapsedMilliseconds()
 	// );
 	// text_renderer->RenderText(std::string(buf), Width - 200.0f, 10.0f, 0.5f, glm::vec3(0.0f, 1.0f, 0.0f));
+}
+
+void Game::exit_to_main_menu()
+{
+	if (!levels_manager->Active())
+		return;
+
+	levels_manager->Save();
+	levels_manager->Unload();
+	State = GameState::main_menu;
+	menu_manager->Close();
+	menu_manager->Open(&menu->at("Main Menu"));
+	menu_manager->CloseOnBack(false);
+}
+
+
+void Game::init_dialogs()
+{
+	// ==== You Won Form definition ====
+	auto form = std::make_shared<Forms::Form>(atlas_text_renderer);
+	form->AddLabel("lblWon", "You won!", glm::vec2(64.0f), Helper::HexToRGB(0xE0BA1E));
+	form->AddPair("pairCoins", 
+        std::make_shared<Forms::Label>("Coins", glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f, 1.0f, 0.0f), atlas_text_renderer), 
+        std::make_shared<Forms::Label>("0/0", glm::vec2(0.0f), glm::vec2(36.0f), glm::vec3(1.0f, 1.0f, 1.0f), atlas_text_renderer)
+    );
+
+	form->AddPair("pairTime", 
+        std::make_shared<Forms::Label>(" Time", glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(0.0f, 0.7f, 0.08f), atlas_text_renderer), 
+        std::make_shared<Forms::Label>("0s", glm::vec2(0.0f), glm::vec2(36.0f), glm::vec3(1.0f, 1.0f, 1.0f), atlas_text_renderer)
+    );
+
+	auto row = form->AddControl("rwInputRestart", std::make_shared<Forms::Row>(glm::vec2(0.0f, 0.0f))).get<Forms::Row*>();
+	row->AddControls({
+        { "lblTextP1", std::make_shared<Forms::Label>("Press",      glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f), atlas_text_renderer), Forms::ControlType::label },
+        { "lblTextP2", std::make_shared<Forms::Label>("r",          glm::vec2(0.0f), glm::vec2(36.0f), glm::vec3(0.0f, 1.0f, 0.0f), atlas_text_renderer), Forms::ControlType::label },
+        { "lblTextP3", std::make_shared<Forms::Label>("to restart", glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f), atlas_text_renderer), Forms::ControlType::label }
+    });
+	row->SetGravity(Forms::Gravity::center);
+
+	row = form->AddControl("rwInputMainMenu", std::make_shared<Forms::Row>(glm::vec2(0.0f))).get<Forms::Row*>();
+	row->AddControls({
+		{ "lblTextP1", std::make_shared<Forms::Label>("Press", 		   glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f), atlas_text_renderer), Forms::ControlType::label },
+		{ "lblTextP2", std::make_shared<Forms::Label>("M", 			   glm::vec2(0.0f), glm::vec2(36.0f), glm::vec3(0.0f, 1.0f, 0.0f), atlas_text_renderer), Forms::ControlType::label },
+		{ "lblTextP3", std::make_shared<Forms::Label>("for main menu", glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f), atlas_text_renderer), Forms::ControlType::label }
+	});
+    row->SetGravity(Forms::Gravity::center);
+
+	mDialogs["won"] = Dialog(form, {
+		{GLFW_KEY_R, [&](){ levels_manager->ActiveLevel().Restart(); State = GameState::active; }},
+		{GLFW_KEY_M, std::bind(&Game::exit_to_main_menu, this)}
+	});
+
+	form->SetGravity(Forms::Gravity::left);
+
+	// ==== You lost form definition ====
+	form = std::make_shared<Forms::Form>(atlas_text_renderer);
+	form->AddLabel("lblLost", "You lost!", glm::vec2(64.0f), Helper::HexToRGB(0xE0BA1E));
+
+	row = form->AddControl("rwInputRestart", std::make_shared<Forms::Row>(glm::vec2(0.0f, 0.0f))).get<Forms::Row*>();
+	row->AddControls({
+        { "lblTextP1", std::make_shared<Forms::Label>("Restart", 	glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f), atlas_text_renderer), Forms::ControlType::label },
+		{ "lblTextP2", std::make_shared<Forms::Label>("r ", 		glm::vec2(0.0f), glm::vec2(36.0f), glm::vec3(0.0f, 1.0f, 0.0f), atlas_text_renderer), Forms::ControlType::label },
+        { "lblTextP3", std::make_shared<Forms::Label>("Main menu",	glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f), atlas_text_renderer), Forms::ControlType::label },
+		{ "lblTextP4", std::make_shared<Forms::Label>("m", 			glm::vec2(0.0f), glm::vec2(36.0f), glm::vec3(0.0f, 1.0f, 0.0f), atlas_text_renderer), Forms::ControlType::label }
+    });
+	row->SetGravity(Forms::Gravity::center);
+	form->SetGravity(Forms::Gravity::center);
+
+	mDialogs["lost"] = Dialog(form, {
+		{GLFW_KEY_R, [&](){ levels_manager->ActiveLevel().Restart(); State = GameState::active; }},
+		{GLFW_KEY_M, std::bind(&Game::exit_to_main_menu, this)}
+	});	
+}
+void Game::recenter_forms()
+{
+	for (auto& dialog : mDialogs)
+	{
+		std::shared_ptr<Forms::Form>& form = dialog.second.GetForm();
+		form->MoveTo((Game::ScreenSize - form->vSize) * 0.5f);
+	}
+}
+
+void Game::update_win_dialog_info()
+{
+	GameLevel& pActiveLevel = levels_manager->ActiveLevel();
+	std::string sCoins = std::to_string(pActiveLevel.GetCoins()) + "/" + std::to_string(pActiveLevel.GetCoinsTotal());
+	std::string sTime = std::to_string(int(pActiveLevel.GetElapsedTime())) + "s";
+
+	mDialogs["won"]->GetControl<Forms::Pair*>("pairCoins")->GetSecond<Forms::Label*>()->SetText(sCoins);
+	mDialogs["won"]->GetControl<Forms::Pair*>("pairTime")->GetSecond<Forms::Label*>()->SetText(sTime);
 }
 
 // Callbacks

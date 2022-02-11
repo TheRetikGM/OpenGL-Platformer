@@ -101,9 +101,6 @@ void GameLevel::handle_events(float dt)
         case PLAYER_WALL_JUMPED:
             pPlayer->Animator->PlayOnce("double_jump");
             break;
-        case PLAYER_REACHED_FINISH:
-            State = InGameState::paused_dialog;
-            break;
         default:
             break;
         }
@@ -111,8 +108,12 @@ void GameLevel::handle_events(float dt)
 }
 void GameLevel::OnPlayerDied()
 {
-    pPlayer->Animator->PlayOnce("die", "", true);
-    notify(PLAYER_DIED);
+    // Notify after player die animation has ended.
+    pPlayer->Animator->PlayOnce("die", "", true, [this](){
+        this->bPlayerDied = true;
+        this->notify(PLAYER_DIED);
+    });
+    bPlayerDying = true;
 }
 void GameLevel::pickup_coin(Physics2D::RigidBody* coin)
 {
@@ -130,42 +131,31 @@ void GameLevel::pickup_coin(Physics2D::RigidBody* coin)
 }
 void GameLevel::ProcessInput(InputInterface* input, float dt)
 {
-    if (State == InGameState::running)
+    if (!bPlayerDying)
         pPlayer->ProcessKeyboard(input, dt);
-
-    if (input->Pressed(GLFW_KEY_P))
-        State = (State == InGameState::running) ? InGameState::paused_dialog : InGameState::running;
 }
 void GameLevel::Update(float dt)
 {
-    if (State == InGameState::running)
-    {
-        handle_events(dt);
-        TileCamera2D::Update(dt);
-        this->PhysicsWorld->Update(dt, 5.0f);
-        Map->Update(dt);
-        pPlayer->Update(dt);
-        pPlayer->SetSprite(pPlayer->Animator->GetSprite());
-        pSingleAnimations->Update(dt);
-        pHUD->Update(dt);
-        fElapsedTime += dt;
-    }
+    handle_events(dt);
+    TileCamera2D::Update(dt);
+    this->PhysicsWorld->Update(dt, 5.0f);
+    Map->Update(dt);
+    pPlayer->Update(dt);
+    pPlayer->SetSprite(pPlayer->Animator->GetSprite());
+    pSingleAnimations->Update(dt);
+    pHUD->Update(dt);
+    fElapsedTime += dt;
 }
 void GameLevel::Render(SpriteRenderer* pSpriteRenderer, TilemapRenderer* pTilemapRenderer)
 {
     pSpriteRenderer->ForceColor(true).DrawSprite(*Background, glm::vec2(0.0f, 0.0f), Game::ScreenSize, 0.0f, glm::vec3(70 / 255.0f, 96 / 255.0f, 46 / 255.0f)).ForceColor(false);
     pTilemapRenderer->AfterLayer_callback = [&](const Tmx::Map* map, const Tmx::Layer* layer, int nLayer) {
-        if (layer->GetName() == "entity")
+        if (layer->GetName() == "entity" && !bPlayerDied)
             pPlayer->Draw(pSpriteRenderer);
     };
     pTilemapRenderer->Draw(Map, glm::vec2(0.0f, 0.0f));
     pSingleAnimations->Render(pSpriteRenderer);
-    pHUD->Render(pSpriteRenderer);
-    
-    if (State == InGameState::paused_dialog)
-    {
-        mForms["won"]->Render(pSpriteRenderer);
-    }
+    pHUD->Render(pSpriteRenderer);   
 }
 void GameLevel::Load(GameLevelInfo* pInfo)
 {
@@ -180,7 +170,6 @@ void GameLevel::Load(GameLevelInfo* pInfo)
     init_tilecamera();
     init_single_animations();
     init_hud();
-    init_forms();
 }
 void GameLevel::init_physics_world()
 {
@@ -202,6 +191,7 @@ void GameLevel::init_background()
 // Sort polygon vertices in clockwise order.
 void sort_polygon(const glm::vec2& poly_center, std::vector<glm::vec2>& points)
 {
+    // Store original value, to avoid floating point precision issues, when converting back to cartesian.
     struct polar_coord { glm::vec2 orig; float r; float phi; };
     std::vector<polar_coord> points_polar;
     points_polar.reserve(points.size());
@@ -405,37 +395,9 @@ void GameLevel::init_hud()
 
     pHUD = new InGameHUD(this, tex, pTextRenderer);
 }
-void GameLevel::init_forms()
-{
-    // You won form initialization.
-    mForms["won"] = std::make_shared<Forms::Form>(pTextRenderer);
-    mForms["won"]->AddLabel("lblWon", "You won!", glm::vec2(64.0f), Helper::HexToRGB(0xE0BA1E));
-
-	auto label1 = new Forms::Label("Coins", glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f, 1.0f, 0.0f), pTextRenderer);
-	auto label2 = new Forms::Label("27/40", glm::vec2(0.0f), glm::vec2(36.0f), glm::vec3(1.0f, 1.0f, 1.0f), pTextRenderer);
-	mForms["won"]->AddPair("pairCoins", std::shared_ptr<Forms::Control>(label1), std::shared_ptr<Forms::Control>(label2));
-
-    label1 = new Forms::Label("Time", glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(0.0f, 0.7f, 0.08f), pTextRenderer);
-	label2 = new Forms::Label("230s", glm::vec2(0.0f), glm::vec2(36.0f), glm::vec3(1.0f, 1.0f, 1.0f), pTextRenderer);
-	mForms["won"]->AddPair("pairTime", std::shared_ptr<Forms::Control>(label1), std::shared_ptr<Forms::Control>(label2));
-
-    label1 = new Forms::Label("Press", glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f), pTextRenderer);
-	label2 = new Forms::Label("r", glm::vec2(0.0f), glm::vec2(36.0f), glm::vec3(0.0f, 1.0f, 0.0f), pTextRenderer);
-    auto label3 = new Forms::Label("to restart", glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f), pTextRenderer);
-	mForms["won"]->AddControl("rowInputHelper", std::make_shared<Forms::Row>(glm::vec2(0.0f, 0.0f)), Forms::ControlType::unknown);
-    mForms["won"]->GetControl<Forms::Row*>("rowInputHelper")->AddControl("lblTextP1", std::shared_ptr<Forms::Control>(label1), Forms::ControlType::label);
-    mForms["won"]->GetControl<Forms::Row*>("rowInputHelper")->AddControl("lblTextP2", std::shared_ptr<Forms::Control>(label2), Forms::ControlType::label);
-    mForms["won"]->GetControl<Forms::Row*>("rowInputHelper")->AddControl("lblTextP3", std::shared_ptr<Forms::Control>(label3), Forms::ControlType::label);
-
-    mForms["won"]->AddLabel("lblAnyKey", "Press any key to continue", glm::vec2(24.0f), glm::vec3(0.1f, 0.9f, 0.8f));
-    mForms["won"]->SetGravity(Forms::Gravity::center);
-    mForms["won"]->MoveTo((Game::ScreenSize - mForms["won"]->vSize) * 0.5f);
-}
 
 void GameLevel::OnResize()
 {
-    if (mForms.count("won") != 0)
-        mForms["won"]->MoveTo((Game::ScreenSize - mForms["won"]->vSize) * 0.5f);
 }
 
 // Free all allocated resources for this level.
@@ -451,7 +413,6 @@ void GameLevel::Unload()
     delete pPlayer;
     delete pSingleAnimations;
     delete pTextRenderer;
-    mForms.clear();
     ResourceManager::DeleteGroup(Info->sName);
     Info = nullptr;
 }

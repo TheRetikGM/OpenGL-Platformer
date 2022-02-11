@@ -1,6 +1,5 @@
 #pragma once
 #include "InputInterface.hpp"
-#include "game/game.h"
 #include "AtlasTextRenderer.hpp"
 #include <string>
 #include <unordered_map>
@@ -24,6 +23,8 @@ namespace Forms
     };
 
     enum class ControlType : int { unknown = 0, label = 1, pair = 2 };
+    enum class Gravity : int { left = 0, right = 1, center = 2, top = 3, bottom = 4 };
+
     class Control : public IRenderable, public BasicObserverSubject
     {
     public:
@@ -91,6 +92,9 @@ namespace Forms
             vSize = glm::vec2(vFirstSize.x + nSpacing + vSecondSize.x, std::max(vFirstSize.y, vSecondSize.y));
         }
 
+        template<class T> T GetFirst() { return dynamic_cast<T>(pFirst.get()); }
+        template<class T> T GetSecond() { return dynamic_cast<T>(pSecond.get()); }
+
         void SetOffset(glm::vec2 offset) override
         {
             this->vOffset = offset;
@@ -136,12 +140,19 @@ namespace Forms
                 throw std::out_of_range("ControlsManager::GetControl(): Cannot find control with name '" + unique_name + "'.");
             return controls[control_indexes[unique_name]];
         }
-        virtual void AddControl(std::string unique_name, std::shared_ptr<Control> control, ControlType type = ControlType::unknown)
+        virtual ControlHolder& AddControl(std::string unique_name, std::shared_ptr<Control> control, ControlType type = ControlType::unknown)
         {
             if (control_indexes.count(unique_name) != 0)
                 throw std::invalid_argument("ControlsManager::GetControl(): Control with name '" + unique_name + "' already exists.");
             controls.push_back(ControlHolder{ control, type });
             control_indexes[unique_name] = controls.size() - 1;
+            return controls[controls.size() - 1];
+        }
+        struct _add_control_args { std::string unique_name = ""; std::shared_ptr<Control> control = nullptr; ControlType type = ControlType::unknown; };
+        virtual void AddControls(std::vector<_add_control_args> controls)
+        {
+            for (auto& c : controls)
+                AddControl(c.unique_name, c.control, c.type);
         }
         virtual void RemoveControl(std::string unique_name) 
         { 
@@ -154,6 +165,8 @@ namespace Forms
 
         template<class T> 
         T GetControl(std::string unique_name) { return GetControl(unique_name).get<T>(); }
+
+        ControlHolder& operator[] (std::string unique_name) { return GetControl(unique_name); }
     protected:
         std::unordered_map<std::string, size_t> control_indexes;
         std::vector<ControlHolder> controls;
@@ -169,13 +182,15 @@ namespace Forms
             SetPosition(position);
         }
 
-        void AddControl(std::string unique_name, std::shared_ptr<Control> control, ControlType type = ControlType::unknown) override
+        ControlHolder& AddControl(std::string unique_name, std::shared_ptr<Control> control, ControlType type = ControlType::unknown) override
         {
             control->SetPosition(get_next_position());
             control->AddObserver(this);
             control->sName = unique_name;
-            ControlsManager::AddControl(unique_name, control, type);
+            ControlHolder& holder = ControlsManager::AddControl(unique_name, control, type);
             update_total_size();
+            update_child_positions();
+            return holder;
         }
 
         void SetOffset(glm::vec2 offset) override
@@ -199,7 +214,16 @@ namespace Forms
         {
             notify(message, args);
         }
+
+        Row& SetGravity(Gravity g)
+        {
+            gravity = g;
+            update_total_size();
+            update_child_positions();
+            return *this;
+        }
     protected:
+        Gravity gravity = Gravity::top;
         
         void update_child_positions()
         {
@@ -208,6 +232,16 @@ namespace Forms
             {
                 holder.control->vPosition = pos;
                 pos.x += holder.control->GetSize().x + nSpacing;
+
+                switch(this->gravity)
+                {
+                case Gravity::center: 
+                    holder.control->SetPosition(glm::vec2(holder.control->vPosition.x, (vSize.y - holder.control->GetSize().y) * 0.5f)); 
+                    break;
+                case Gravity::bottom: holder.control->SetPosition(glm::vec2(holder.control->vPosition.x, vSize.y - holder.control->GetSize().y)); break;
+                default:
+                    break;
+                }
             }
         }
         glm::vec2 get_next_position()
@@ -235,8 +269,6 @@ namespace Forms
                 holder.control->SetOffset(this->vPosition + this->vOffset);
         }
     };
-
-    enum class Gravity : int { left = 0, right = 1, center = 2 };
 
     // For now, Form is only a vertical linear layout.
     // Note: Position of all child controls are relative to their parent container (eg. form in this case).
@@ -287,11 +319,12 @@ namespace Forms
         }
 
         // Overrides for ControlsManager.
-        void AddControl(std::string unique_name, std::shared_ptr<Control> control, ControlType type) override
+        ControlHolder& AddControl(std::string unique_name, std::shared_ptr<Control> control, ControlType type = ControlType::unknown) override
         {
-            ControlsManager::AddControl(unique_name, control, type);
+            ControlHolder& holder = ControlsManager::AddControl(unique_name, control, type);
             control->AddObserver(this);
             update_total_size();
+            return holder;
         }
         void RemoveControl(std::string unique_name) override
         {

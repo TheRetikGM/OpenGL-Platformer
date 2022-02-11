@@ -5,6 +5,7 @@
 #include <map>
 #include <any>
 #include "nlohmann/json.hpp"
+#include <functional>
 
 enum class ParameterType : uint8_t {
 		p_int, p_float, p_string, p_bool
@@ -51,7 +52,7 @@ public:
 
     // Animation control.
     /// Select last variant if (variant == "").
-    void PlayOnce(std::string kind, std::string variant = "", bool force = false);
+    void PlayOnce(std::string kind, std::string variant = "", bool force = false, std::function<void()> onEnd = [](){});
     void Play(std::string kind, std::string variant = "");
     void Stop(std::string kind, std::string variant = "");
 
@@ -60,6 +61,7 @@ public:
 protected:
     bool playing = false;        
     bool playing_loop = false;
+    std::function<void()> onPlayOnceEnd = [](){};
     AnimatedSprite* playing_sprite = nullptr;
 
     std::tuple<std::string, std::string> last_animation;

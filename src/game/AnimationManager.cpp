@@ -107,7 +107,7 @@ void AnimationManager::resetLastAnimation()
     if (std::get<0>(last_animation) != "" && std::get<1>(last_animation) != "")
         Animations.at(std::get<0>(last_animation)).at(std::get<1>(last_animation)).ResetAnimation();
 }
-void AnimationManager::PlayOnce(std::string kind, std::string variant, bool force)
+void AnimationManager::PlayOnce(std::string kind, std::string variant, bool force, std::function<void()> onEnd)
 {
     if (playing && !force)
         return;
@@ -118,7 +118,8 @@ void AnimationManager::PlayOnce(std::string kind, std::string variant, bool forc
         if (std::get<1>(this->last_animation) == "")
             throw std::runtime_error("AnimationManager::PlayOnce(): Last animation variant wanted, but no animation has been played yet.");
         variant = std::get<1>(this->last_animation);        
-    }    
+    }
+    this->onPlayOnceEnd = onEnd;
     this->playing_sprite = &Animations.at(kind).at(variant);
     this->playing = true;
     this->playing_loop = false;
@@ -132,6 +133,7 @@ void AnimationManager::onPlayingAnimationEnd(AnimatedSprite* sprite)
     this->playing = false;
     sprite->onAnimationEnd = [&](AnimatedSprite* sprite){};    
     this->playing_sprite = nullptr;
+    this->onPlayOnceEnd();
 }
 void AnimationManager::Update(float dt)
 {

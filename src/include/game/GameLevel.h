@@ -10,7 +10,7 @@
 #include "game/GameEvents.h"
 #include "game/SingleAnimations.h"
 #include "game/InGameHUD.h"
-#include "game/Forms.hpp"
+#include "game/Dialog.hpp"
 #include <unordered_map>
 #include <queue>
 #include <memory>
@@ -38,8 +38,6 @@ struct GameLevelInfo
 		: sName(""), nDifficulty(0), bCompleted(false), bLocked(true), sTileMap(""), nLevel(0), sSingleAnimationsPath("") {}
 };
 
-enum class InGameState : int { running, paused_dialog };
-
 /*
 * Represents game level.
 * Note: Implements observer pattern. Can observe player and it can be observed by game (for example.)
@@ -54,9 +52,6 @@ public:
 	Player* 					pPlayer = nullptr;
 	SingleAnimations* 			pSingleAnimations = nullptr;
 	InGameHUD* 					pHUD = nullptr;
-	InGameState					State = InGameState::running;
-
-	std::string 				sShowDialog = "";
 
 	GameLevel() : nCoins(0), nCoinsTotal(0) {}
 
@@ -70,6 +65,7 @@ public:
 		assert(Info != nullptr);
 		nCoins = nCoinsTotal = 0;
 		fElapsedTime = 0.0f;
+		bPlayerDied = bPlayerDying = false;
 		GameLevelInfo* tmp = Info;
 		Unload();
 		Load(tmp);
@@ -109,9 +105,9 @@ protected:
 	glm::vec2 vInitPlayerPosition = glm::vec2(0.0f, 0.0f);
 	// Atlas text renderer for rendering in-game text.
 	AtlasTextRenderer* pTextRenderer = nullptr;
-	// === In Game dialogs ===
-	// You died form
-	std::unordered_map<std::string, std::shared_ptr<Forms::Form>> mForms;
+	// Handle player dying stage.
+	bool bPlayerDied = false;
+	bool bPlayerDying = false;
 
 	void init_physics_world();
 	void init_tilemap();
@@ -121,7 +117,6 @@ protected:
 	void init_tilecamera();
 	void init_single_animations();
 	void init_hud();
-	void init_forms();
 
 	void handle_events(float dt);
 	void pickup_coin(Physics2D::RigidBody* coin);

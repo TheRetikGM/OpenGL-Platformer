@@ -43,6 +43,7 @@ void GameLevelsManager::Load(int nLevel)
     try
     {
         pActiveLevel->Load(&level_infos[nLevel]);
+        pActiveLevel->AddObserver(this);
     }
     catch(const std::runtime_error& err)
     {
@@ -66,6 +67,7 @@ void GameLevelsManager::Unload()
 {
     // Free GameLevel physics world and map, set active to null.
     pActiveLevel->Unload();
+    pActiveLevel->RemoveObserver(this);
     delete pActiveLevel;
     pActiveLevel = nullptr;
 }

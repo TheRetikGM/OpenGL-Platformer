@@ -2,8 +2,9 @@
 #include "game/GameLevel.h"
 #include <vector>
 #include <string>
+#include "BasicObserverSubject.hpp"
 
-class GameLevelsManager
+class GameLevelsManager : public BasicObserverSubject, public IObserver
 {
 public:
 	GameLevelsManager(const char* levels_json);
@@ -29,6 +30,9 @@ public:
 	GameLevel& ActiveLevel() { return *pActiveLevel; }
 	int ActiveLevelIndex() { return nActiveLevel; }
 	GameLevelInfo& GetLevelInfo(int nLevel);
+
+	// Implementation of IObserver
+	void OnNotify(IObserverSubject* obj, int message, void* args = nullptr) { notify(message, args); }
 
 protected:
 	std::vector<GameLevelInfo> level_infos;

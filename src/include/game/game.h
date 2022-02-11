@@ -9,11 +9,15 @@
 #include "game/GameLevel.h"
 #include "InputInterface.hpp"
 #include "interfaces/Observer.h"
+#include "game/Dialog.hpp"
+#include "game/GameEvents.h"
+#include <queue>
 
 enum class GameState : uint8_t {
 	active,
 	loading,
 	ingame_paused,
+	ingame_dialog,
 	main_menu
 };
 
@@ -57,4 +61,15 @@ public:
 
 	// Implementation of Observer functions.
 	void OnNotify(IObserverSubject* obj, int message, void* args = nullptr);
+
+protected:
+	std::unordered_map<std::string, Dialog> mDialogs;
+	std::queue<Event> eventQueue;
+	Dialog* pActiveDialog = nullptr;
+
+	void handle_events();
+	void init_dialogs();
+	void recenter_forms();
+	void exit_to_main_menu();
+	void update_win_dialog_info();
 };

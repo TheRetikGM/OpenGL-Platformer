@@ -22,3 +22,9 @@ struct Event
     int message = 0x0; 
     void* args = nullptr;
 };
+inline bool operator==(const Event& a, const Event& b)
+{
+    return a.sender == b.sender
+        && a.message == b.message
+        && a.args == b.args;
+}

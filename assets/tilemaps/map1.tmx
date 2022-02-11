@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.5" tiledversion="1.7.2" orientation="orthogonal" renderorder="right-down" width="200" height="25" tilewidth="16" tileheight="16" infinite="0" nextlayerid="9" nextobjectid="6">
+<map version="1.8" tiledversion="1.8.0" orientation="orthogonal" renderorder="right-down" width="200" height="25" tilewidth="16" tileheight="16" infinite="0" nextlayerid="9" nextobjectid="6">
  <tileset firstgid="1" source="environment.tsx"/>
  <tileset firstgid="85" source="tiki torch.tsx"/>
  <tileset firstgid="97" name="weeds_props" tilewidth="16" tileheight="8" tilecount="3" columns="3">
@@ -26,7 +26,7 @@
    </animation>
   </tile>
  </tileset>
- <tileset firstgid="106" source="checkpoint.tsx"/>
+ <tileset firstgid="106" source="save_point_anim_strip_9.tsx"/>
  <layer id="1" name="ground" width="200" height="25">
   <data encoding="csv">
 14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,14,28,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -176,7 +176,7 @@
   <properties>
    <property name="name" value="finish"/>
   </properties>
-  <object id="4" name="finish" x="1055.55" y="188.061" width="13.3052" height="20.1127"/>
+  <object id="4" name="finish" x="1056.55" y="188.061" width="11.0552" height="20.1127"/>
   <object id="5" name="start" x="961" y="199.25">
    <point/>
   </object>

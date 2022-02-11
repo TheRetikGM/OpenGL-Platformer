@@ -81,13 +81,12 @@ void InGameHUD::render_hp(SpriteRenderer* pSpriteRenderer)
 void InGameHUD::render_time(SpriteRenderer* pSpriteRenderer)
 {
     glm::vec2 text_scale = get_text_scale(mapping.vElapsedTimeText) * vScale;
-    glm::vec2 max_size = pTextRenderer->GetStringSize("0000", text_scale);
-
-    glm::vec2 pos(0.0f);
-    pos.x = Game::ScreenSize.x - max_size.x - vPadding.x;
-    pos.y = vPadding.y;
 
     std::string sTime = std::to_string(int(pLevel->fElapsedTime));
+
+    glm::vec2 pos(0.0f);
+    pos.x = Game::ScreenSize.x - pTextRenderer->GetStringSize(sTime, text_scale).x - vPadding.x;
+    pos.y = vPadding.y;
 
     pTextRenderer->RenderText(
         pSpriteRenderer,
