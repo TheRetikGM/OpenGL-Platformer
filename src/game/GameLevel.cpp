@@ -142,17 +142,25 @@ void GameLevel::Update(float dt)
     pPlayer->SetSprite(pPlayer->Animator->GetSprite());
     pSingleAnimations->Update(dt);
     pHUD->Update(dt);
+    pParticleGenerator->Update(dt, *pPlayer, 2);
     fElapsedTime += dt;
 }
 void GameLevel::Render(SpriteRenderer* pSpriteRenderer, TilemapRenderer* pTilemapRenderer)
 {
+    // Background.
     pSpriteRenderer->ForceColor(true).DrawSprite(*Background, glm::vec2(0.0f, 0.0f), Game::ScreenSize, 0.0f, glm::vec3(70 / 255.0f, 96 / 255.0f, 46 / 255.0f)).ForceColor(false);
+    // Tilemap.
     pTilemapRenderer->AfterLayer_callback = [&](const Tmx::Map* map, const Tmx::Layer* layer, int nLayer) {
         if (layer->GetName() == "entity" && !bPlayerDied)
+        {
+            this->pParticleGenerator->Render();
             pPlayer->Draw(pSpriteRenderer);
+        }
     };
     pTilemapRenderer->Draw(Map, glm::vec2(0.0f, 0.0f));
+    // On screen animations.
     pSingleAnimations->Render(pSpriteRenderer);
+    // HUD.
     pHUD->Render(pSpriteRenderer);   
 }
 void GameLevel::Load(GameLevelInfo* pInfo)
@@ -168,6 +176,7 @@ void GameLevel::Load(GameLevelInfo* pInfo)
     init_tilecamera();
     init_single_animations();
     init_hud();
+    init_particles();
 }
 void GameLevel::init_physics_world()
 {
@@ -393,9 +402,17 @@ void GameLevel::init_hud()
 
     pHUD = new InGameHUD(this, tex, pTextRenderer);
 }
+void GameLevel::init_particles()
+{
+    Shader& particle_shader = ResourceManager::LoadShader(SHADERS_DIR "particle.vert", SHADERS_DIR "particle.frag", nullptr, "particle", Info->sName);
+    particle_shader.SetMat4("projection", Game::ProjectionMatrix, true);
+    Texture2D particle_texture = ResourceManager::LoadTexture(ASSETS_DIR "sprites/particle.png", true, "particle", Info->sName);
+    pParticleGenerator = new ParticleGenerator(particle_shader, particle_texture, 150, 10.0f / 1000.0f);
+}
 
 void GameLevel::OnResize()
 {
+    ResourceManager::GetShader("particle", Info->sName).SetMat4("projection", Game::ProjectionMatrix, true);
 }
 
 // Free all allocated resources for this level.
@@ -411,6 +428,7 @@ void GameLevel::Unload()
     delete pPlayer;
     delete pSingleAnimations;
     delete pTextRenderer;
+    delete pParticleGenerator;
     ResourceManager::DeleteGroup(Info->sName);
     Info = nullptr;
 }

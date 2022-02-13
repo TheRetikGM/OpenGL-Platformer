@@ -8,10 +8,10 @@ public:
     std::function<void(Timer*)> OnEnd = [](Timer* t) {};
     bool bEnded = true;
 
-    Timer() {}
+    Timer() = default;
     virtual ~Timer() {}
 
-    inline void Start(float duration, std::function<void(Timer*)> onEnd) { Restart(duration, OnEnd); }
+    inline void Start(float duration, std::function<void(Timer*)> onEnd) { Restart(duration, onEnd); }
     void Restart(float duration, std::function<void(Timer*)> onEnd)
     {
         OnEnd = onEnd;
@@ -28,10 +28,14 @@ public:
         if (fCurrentDuration >= fDuration)
         {
             OnEnd(this);
-            bEnded = true;
+            if (!bRepeat)
+                bEnded = true;
+            fCurrentDuration = 0.0f;
         }
     }
+    inline Timer& Repeat(bool b) { bRepeat = b; return *this;}
 protected:
     float fDuration = 0.0f;
     float fCurrentDuration = 0.0f;
+    bool bRepeat = false;
 };

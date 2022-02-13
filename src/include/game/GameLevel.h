@@ -11,6 +11,7 @@
 #include "game/SingleAnimations.h"
 #include "game/InGameHUD.h"
 #include "game/Dialog.hpp"
+#include "game/ParticleGenerator.h"
 #include <unordered_map>
 #include <queue>
 #include <memory>
@@ -104,6 +105,7 @@ protected:
 	glm::vec2 vInitPlayerPosition = glm::vec2(0.0f, 0.0f);
 	// Atlas text renderer for rendering in-game text.
 	AtlasTextRenderer* pTextRenderer = nullptr;
+	ParticleGenerator* pParticleGenerator = nullptr;
 	// Handle player dying stage.
 	bool bPlayerDied = false;
 	bool bPlayerDying = false;
@@ -116,6 +118,7 @@ protected:
 	void init_tilecamera();
 	void init_single_animations();
 	void init_hud();
+	void init_particles();
 
 	void handle_events(float dt);
 	void pickup_coin(Physics2D::RigidBody* coin);

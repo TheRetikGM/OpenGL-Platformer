@@ -147,6 +147,9 @@ void Game::Init()
 	Game::SetTileSize(glm::vec2(32.0f));
 	this->BackgroundColor = Helper::HexToRGB(0x2D3D1E);
 	Game::ScreenSize = glm::vec2(float(Width), float(Height));
+	// Projection used for 2D projection.
+	glm::mat4 projection = glm::ortho(0.0f, (float)this->Width, (float)this->Height, 0.0f, -1.0f, 1.0f);
+	Game::ProjectionMatrix = projection;
 
 	// Load shaders
 	ResourceManager::LoadShader(SHADERS_DIR "SpriteRender.vert", SHADERS_DIR "SpriteRender.frag", nullptr, "sprite");
@@ -160,9 +163,6 @@ void Game::Init()
 	// Load levels manager
 	levels_manager = new GameLevelsManager(ASSETS_DIR "Levels/levels.json");
 	levels_manager->AddObserver(this);
-
-	// Projection used for 2D projection.
-	glm::mat4 projection = glm::ortho(0.0f, (float)this->Width, (float)this->Height, 0.0f, -1.0f, 1.0f);
 
 	// Initialize sprite renderer.		
 	ResourceManager::GetShader("sprite").Use().SetInt("spriteImage", 0);
@@ -569,7 +569,9 @@ void Game::init_dialogs()
 
 	// ==== You lost form definition ====
 	form = std::make_shared<Forms::Form>(atlas_text_renderer);
-	form->AddLabel("lblLost", "You lost!", glm::vec2(64.0f), Helper::HexToRGB(0xE0BA1E));
+	form->AddLabel("lblLost", "You lost!", glm::vec2(80.0f), Helper::HexToRGB(0xE0BA1E));
+	form->AddLabel("lblLostText1", "oh thats sad", glm::vec2(20.0f), glm::vec3(1.0f));
+	form->AddLabel("lblLostText2", "you should try again", glm::vec2(20.0f), glm::vec3(1.0f));
 
 	row = form->AddControl("rwInputRestart", std::make_shared<Forms::Row>(glm::vec2(0.0f, 0.0f))).get<Forms::Row*>();
 	row->AddControls({

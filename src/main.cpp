@@ -121,18 +121,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-	//if (firstmouse) {
-	//	lastX = (float)xpos;
-	//	lastY = (float)ypos;
-	//	firstmouse = false;
-	//}
 
-	//float xoffset = (float)xpos - lastX;
-	//float yoffset = lastY - (float)ypos;
-	//lastX = (float)xpos;
-	//lastY = (float)ypos;
-
-	//myCamera.ProccessMouse(xoffset, yoffset);
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
