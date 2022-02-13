@@ -60,7 +60,7 @@ public:
 	void OnResize();
 
 	// Implementation of Observer functions.
-	void OnNotify(IObserverSubject* obj, int message, void* args = nullptr);
+	void OnNotify(IObserverSubject* obj, int message, std::any args = nullptr);
 
 protected:
 	std::unordered_map<std::string, Dialog> mDialogs;

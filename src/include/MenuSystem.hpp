@@ -216,6 +216,15 @@ namespace MenuSystem
         MenuObject& SetCustomData(std::any data) { custom_data = data; return *this; }
         std::any& GetCustomData() { return custom_data; }
         template<class type> type GetCustomData() { return std::any_cast<type>(custom_data); }
+        // Return the first child, which matches the custom data.
+        template<class type>
+        MenuObject* GetChildByCustomData(std::any data)
+        {
+            std::vector<MenuObject>::iterator child = std::find_if(items.begin(), items.end(), [&](MenuObject& a){
+                return std::any_cast<type>(a.custom_data) == std::any_cast<type>(data);
+            });
+            return child == items.end() ? nullptr : &(*child);
+        }
 
         // Handles the on confirm event.
         // If item contains another menu, then the pointer to the submenu is returned.

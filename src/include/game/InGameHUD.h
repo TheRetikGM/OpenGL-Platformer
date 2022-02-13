@@ -51,7 +51,7 @@ public:
     void Render(SpriteRenderer* pSpriteRenderer);
 
     // Observer implementation.
-    void OnNotify(IObserverSubject* sender, int message, void* args = nullptr);
+    void OnNotify(IObserverSubject* sender, int message, std::any args = nullptr);
 
 protected:
     const HUD_mapping mapping;

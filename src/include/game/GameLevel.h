@@ -28,14 +28,12 @@ struct GameLevelInfo
     std::string sName;
     int nDifficulty;
 	int nLives;
-    bool bCompleted;
-	bool bLocked;
     std::string sTileMap;
 	std::string sBackground;
 	std::string sSingleAnimationsPath;
 
 	GameLevelInfo() 
-		: sName(""), nDifficulty(0), bCompleted(false), bLocked(true), sTileMap(""), nLevel(0), sSingleAnimationsPath("") {}
+		: sName(""), nDifficulty(0), sTileMap(""), nLevel(0), sSingleAnimationsPath("") {}
 };
 
 /*
@@ -52,6 +50,7 @@ public:
 	Player* 					pPlayer = nullptr;
 	SingleAnimations* 			pSingleAnimations = nullptr;
 	InGameHUD* 					pHUD = nullptr;
+	bool  bCompleted = false;
 
 	GameLevel() : nCoins(0), nCoinsTotal(0) {}
 
@@ -65,7 +64,7 @@ public:
 		assert(Info != nullptr);
 		nCoins = nCoinsTotal = 0;
 		fElapsedTime = 0.0f;
-		bPlayerDied = bPlayerDying = false;
+		bPlayerDied = bPlayerDying = bCompleted = false;
 		GameLevelInfo* tmp = Info;
 		Unload();
 		Load(tmp);
@@ -76,7 +75,7 @@ public:
 	void OnResize();
 
 	// Observer implementation.
-	void OnNotify(IObserverSubject* obj, int message, void* args = nullptr);
+	void OnNotify(IObserverSubject* obj, int message, std::any args = nullptr);
 
 	int GetCoins() const { return nCoins; }
 	int GetCoinsTotal() const { return nCoinsTotal; }

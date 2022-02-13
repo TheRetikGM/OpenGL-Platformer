@@ -18,8 +18,11 @@
 #include "MenuInputHandler.hpp"
 #include "CommandIDs.h"
 #include "game/Forms.hpp"
+#include "Filesystem.h"
 
 using namespace std::placeholders;
+
+const glm::vec3 MENU_COMPLETED_LEVEL_COLOR = Helper::HexToRGB(0x2b9f28);
 
 // Initialize static Game member variables.
 glm::vec2 Game::TileSize = glm::vec2(32.0f, 32.0f);
@@ -204,13 +207,14 @@ void Game::Init()
 	MenuObject& mainMenu = menu->at("Main Menu").SetTable(1, 4);
 	mainMenu["Play"].SetTable(1,  3);
 	mainMenu["Options"];
-	mainMenu["Reset progress"];
+	mainMenu["Reset progress"].SetID(RESET_PROGRESS_COMMAND);
 	mainMenu["Exit game"].SetID(EXIT_GAME_COMMAND);
 	auto& levelInfos = levels_manager->GetAllInfos();
 	for (const auto& i : levelInfos) {
-		mainMenu["Play"][i.sName].Enable(!i.bLocked).SetID(LOAD_LEVEL_COMMAND).SetCustomData(i.nLevel);
-		if (i.bCompleted)
-			mainMenu["Play"][i.sName].SetTextColor(Helper::HexToRGB(0x2b9f28));
+		auto progress = levels_manager->GetLevelProgress(i.nLevel);
+		mainMenu["Play"][i.sName].Enable(!progress.bLocked).SetID(LOAD_LEVEL_COMMAND).SetCustomData(i.nLevel);
+		if (progress.bCompleted)
+			mainMenu["Play"][i.sName].SetTextColor(MENU_COMPLETED_LEVEL_COLOR);
 	}
 
 	menu->Build(atlas_text_renderer);
@@ -247,7 +251,7 @@ void Game::Init()
 	init_dialogs();
 }
 
-void Game::OnNotify(IObserverSubject* obj, int message, void* args)
+void Game::OnNotify(IObserverSubject* obj, int message, std::any args)
 {
 	Event e {obj, message, args};
 	if (!eventQueue.empty() && eventQueue.front() == e)
@@ -328,6 +332,9 @@ void Game::ProcessInput(float dt)
 			case EXIT_GAME_COMMAND:
 				Run = false;
 				break;
+			case RESET_PROGRESS_COMMAND:
+				levels_manager->DeleteSavedStatistics();
+				break;
 			default:
 				break;
 			}
@@ -369,6 +376,27 @@ void Game::handle_events()
 			State = GameState::ingame_dialog;
 			pActiveDialog = &mDialogs["won"];
 			update_win_dialog_info();
+			break;
+		case LEVEL_LOCKED_CHANGED: {
+				MenuObject* level_entry = menu->at("Main Menu")["Play"].GetChildByCustomData<int>(e.args);
+ 				if (level_entry)
+					level_entry->Enable(!level_entry->Enabled());
+			}
+			break;
+		case LEVEL_COMPLETED_CHANGED: {
+				MenuObject* level_entry = menu->at("Main Menu")["Play"].GetChildByCustomData<int>(e.args);
+				if (level_entry)
+					level_entry->SetTextColor(MENU_COMPLETED_LEVEL_COLOR);
+			}
+			break;
+		case LEVEL_PROGRESS_RESETED: {
+			auto& levelInfos = levels_manager->GetAllInfos();
+			for (const auto& i : levelInfos) {
+				auto progress = levels_manager->GetLevelProgress(i.nLevel);
+				menu->at("Main Menu")["Play"][i.sName].Enable(!progress.bLocked);
+				menu->at("Main Menu")["Play"][i.sName].SetTextColor(progress.bCompleted ? MENU_COMPLETED_LEVEL_COLOR : glm::vec3(1.0f));
+			}
+		}
 		default:
 			break;
 		}

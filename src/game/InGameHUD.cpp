@@ -17,7 +17,7 @@ InGameHUD::~InGameHUD()
     pLevel->RemoveObserver(this);
 }
 
-void InGameHUD::OnNotify(IObserverSubject* sender, int message, void* args)
+void InGameHUD::OnNotify(IObserverSubject* sender, int message, std::any args)
 {
     events.emplace(Event { sender, message, args });
 }

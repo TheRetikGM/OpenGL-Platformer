@@ -7,9 +7,8 @@ in vec4 backColor;
 
 void main()
 {
-	if (backColor.x != 1.0)	
-		FragColor = texture(tilesetImage, TexCoords);	
+	if (backColor.x != 1.0)
+		FragColor = texture(tilesetImage, TexCoords);
 	else
 		FragColor = vec4(backColor.yzw, 1.0);
-	//FragColor = vec4(1.0, 0.0, 1.0, 1.0);
 }

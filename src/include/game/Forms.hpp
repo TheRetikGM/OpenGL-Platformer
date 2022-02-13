@@ -210,7 +210,7 @@ namespace Forms
                 holder.control->Render(pSpriteRenderer);
         }
 
-        void OnNotify(IObserverSubject* obj, int message, void* args = nullptr)
+        void OnNotify(IObserverSubject* obj, int message, std::any args = nullptr)
         {
             notify(message, args);
         }
@@ -334,7 +334,7 @@ namespace Forms
         }
 
         // Implementation of IObserver
-        void OnNotify(IObserverSubject* obj, int message, void* args = nullptr)
+        void OnNotify(IObserverSubject* obj, int message, std::any args = nullptr)
         {
             if (message == MSG_SIZE_CHANGED)
             {

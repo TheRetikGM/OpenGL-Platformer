@@ -30,8 +30,6 @@ void to_json(json& j, const GameLevelInfo& info)
     j = json{
         {"name", info.sName},
         {"difficulty", info.nDifficulty},
-        {"completed", info.bCompleted},
-        {"locked", info.bLocked},
         {"tilemap", info.sTileMap},
         {"background", info.sBackground},
         {"single_animations", info.sSingleAnimationsPath},
@@ -42,8 +40,6 @@ void from_json(const json& json, GameLevelInfo& info)
 {
     json.at("name").get_to(info.sName);
     json.at("difficulty").get_to(info.nDifficulty);
-    json.at("completed").get_to(info.bCompleted);
-    json.at("locked").get_to(info.bLocked);
     json.at("tilemap").get_to(info.sTileMap);
     json.at("background").get_to(info.sBackground);
     json.at("single_animations").get_to(info.sSingleAnimationsPath);
@@ -68,8 +64,10 @@ void from_json(const json& json, std::vector<GameLevelInfo>& infos)
 // ************************
 // GameLevel definitions
 // ************************
-void GameLevel::OnNotify(IObserverSubject* obj, int message, void* args)
+void GameLevel::OnNotify(IObserverSubject* obj, int message, std::any args)
 {
+    if (message == PLAYER_REACHED_FINISH)
+        bCompleted = true;
     if (std::find(acceptedMessages.begin(), acceptedMessages.end(), message) != acceptedMessages.end())
         eventQueue.emplace(Event{ obj, message, args });
     notify(message, args);
@@ -96,7 +94,7 @@ void GameLevel::handle_events(float dt)
             pSingleAnimations->Play("after_jump", "", glm::vec2(pPlayer->Position.x - 0.5f, int(pPlayer->Position.y)), glm::vec2(1.0f, 1.0f), true);
             break;
         case PLAYER_COLLIDE_COIN:
-            pickup_coin((Physics2D::RigidBody*)e.args);
+            pickup_coin(std::any_cast<Physics2D::RigidBody*>(e.args));
             break;
         case PLAYER_WALL_JUMPED:
             pPlayer->Animator->PlayOnce("double_jump");
