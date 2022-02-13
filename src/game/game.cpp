@@ -19,6 +19,7 @@
 #include "CommandIDs.h"
 #include "game/Forms.hpp"
 #include "Filesystem.h"
+#include "PostProcessor.h"
 
 using namespace std::placeholders;
 
@@ -52,6 +53,7 @@ MenuObject* menu;
 MenuRenderer* menu_renderer;
 MenuManager* menu_manager;
 MenuInputHandler* menuInputHandler;
+PostProcessor* effects;
 
 // Temp
 Helper::Stopwatch w1;
@@ -97,6 +99,8 @@ Game::~Game()
 		delete form;
 	if (form_credit)
 		delete form_credit;
+	if (effects)
+		delete effects;
 	
 	mDialogs.clear();
 	ResourceManager::Clear();
@@ -128,10 +132,12 @@ void Game::OnResize()
 	if (levels_manager->Active())
 		levels_manager->ActiveLevel().OnResize();
 
-	// temp
+	// Recenter forms.
 	form->MoveTo(glm::vec2((Game::ScreenSize.x - form->vSize.x) * 0.5f, 80.0f));
 	form_credit->MoveTo(glm::vec2(20.0f, Game::ScreenSize.y - 20.0f - form_credit->vSize.y));
 	recenter_forms();
+
+	effects->HandleResize(Width, Height);
 }
 void Game::ProcessMouse(float xoffset, float yoffset)
 {
@@ -155,6 +161,7 @@ void Game::Init()
 	ResourceManager::LoadShader(SHADERS_DIR "SpriteRender.vert", SHADERS_DIR "SpriteRender.frag", nullptr, "sprite");
 	ResourceManager::LoadShader(SHADERS_DIR "tile_render.vert", SHADERS_DIR "tile_render.frag", nullptr, "tilemap");
 	ResourceManager::LoadShader(SHADERS_DIR "BasicRender.vert", SHADERS_DIR "BasicRender.frag", nullptr, "basic_render");
+	ResourceManager::LoadShader(SHADERS_DIR "post_processing.vert", SHADERS_DIR "post_processing.frag", nullptr, "effects");
 
 	// Load textures
 	ResourceManager::LoadTexture(ASSETS_DIR "textures/menu_9patch.png", true, "menu_9patch").SetMagFilter(GL_NEAREST).SetMinFilter(GL_NEAREST).UpdateParameters();
@@ -249,6 +256,10 @@ void Game::Init()
 
 	// Initialize game dialogs.
 	init_dialogs();
+
+	// Initialize effects.
+	effects = new PostProcessor(ResourceManager::GetShader("effects"), Width, Height);
+	effects->SetClearColor(BackgroundColor);
 }
 
 void Game::OnNotify(IObserverSubject* obj, int message, std::any args)
@@ -436,6 +447,7 @@ void Game::Render()
 	if (!this->Run)
 		return;
 
+	effects->BeginRender();
 	w2.Restart();
 	if (State == GameState::active || State == GameState::ingame_paused || State == GameState::ingame_dialog)
 	{
@@ -501,6 +513,9 @@ void Game::Render()
 		pActiveDialog->Render(renderer);
 	}
 	w2.Stop();
+
+	effects->EndRender();
+	effects->Render(0.0f);
 
 	// Render DEBUG text
 	if (bRenderDebugInfo)

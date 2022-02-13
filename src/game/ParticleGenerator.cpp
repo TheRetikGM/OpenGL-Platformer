@@ -54,7 +54,12 @@ void ParticleGenerator::Render()
         if (p.fLife > 0.0f)
         {
             glm::vec2 scale = vParticleSize * TileCamera2D::GetScale() * Game::TileSize;
-            this->shader.SetVec4f("offset_scale", glm::vec4(TileCamera2D::GetScreenPosition(p.vPosition), scale));
+
+            glm::mat4 model(1.0f);
+            model = glm::translate(model, glm::vec3(TileCamera2D::GetScreenPosition(p.vPosition), 0.0f));
+            model = glm::scale(model, glm::vec3(scale, 1.0f));
+
+            this->shader.SetMat4("model", TileCamera2D::GetViewMatrix() * model);
             this->shader.SetVec4f("color", p.vColor);
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         }
@@ -101,7 +106,6 @@ void ParticleGenerator::respawnParticle(Particle& particle, GameObject& object, 
 }
 void ParticleGenerator::onTimerTick(Timer* t)
 {
-    printf("here\n");
     this->bCanSpawnNext = true;
 }
 void ParticleGenerator::init()
