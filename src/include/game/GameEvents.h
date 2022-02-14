@@ -18,6 +18,8 @@
 #define LEVEL_LOCKED_CHANGED    0xb
 #define LEVEL_COMPLETED_CHANGED 0xc
 #define LEVEL_PROGRESS_RESETED  0xd
+#define LEVEL_LOADED            0xe
+#define MAIN_MENU_LOADED        0xf
 
 struct Event 
 { 

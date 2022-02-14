@@ -260,6 +260,7 @@ void Game::Init()
 	// Initialize effects.
 	effects = new PostProcessor(ResourceManager::GetShader("effects"), Width, Height);
 	effects->SetClearColor(BackgroundColor);
+	effects->SetAnimStepMethod(AnimStepMethod::cubatic);
 }
 
 void Game::OnNotify(IObserverSubject* obj, int message, std::any args)
@@ -336,9 +337,11 @@ void Game::ProcessInput(float dt)
 			switch (command->GetID())
 			{
 			case LOAD_LEVEL_COMMAND:
-				levels_manager->Load(command->GetCustomData<int>());
-				State = GameState::active;
-				menu_manager->Close();
+				effects->Restart([this, command](){
+					levels_manager->Load(command->GetCustomData<int>());
+					this->State = GameState::active;
+					menu_manager->Close();
+				});
 				break;
 			case EXIT_GAME_COMMAND:
 				Run = false;
@@ -401,13 +404,14 @@ void Game::handle_events()
 			}
 			break;
 		case LEVEL_PROGRESS_RESETED: {
-			auto& levelInfos = levels_manager->GetAllInfos();
-			for (const auto& i : levelInfos) {
-				auto progress = levels_manager->GetLevelProgress(i.nLevel);
-				menu->at("Main Menu")["Play"][i.sName].Enable(!progress.bLocked);
-				menu->at("Main Menu")["Play"][i.sName].SetTextColor(progress.bCompleted ? MENU_COMPLETED_LEVEL_COLOR : glm::vec3(1.0f));
+				auto& levelInfos = levels_manager->GetAllInfos();
+				for (const auto& i : levelInfos) {
+					auto progress = levels_manager->GetLevelProgress(i.nLevel);
+					menu->at("Main Menu")["Play"][i.sName].Enable(!progress.bLocked);
+					menu->at("Main Menu")["Play"][i.sName].SetTextColor(progress.bCompleted ? MENU_COMPLETED_LEVEL_COLOR : glm::vec3(1.0f));
+				}
 			}
-		}
+			break;
 		default:
 			break;
 		}
@@ -427,6 +431,7 @@ void Game::Update(float dt)
 			for (auto& [name, resource] : resources)
 				resource.obj->Update(dt);
 	}
+	effects->Update(dt);
 	w1.Stop();
 
 	// Step update for FPS.
@@ -515,7 +520,7 @@ void Game::Render()
 	w2.Stop();
 
 	effects->EndRender();
-	effects->Render(0.0f);
+	effects->Render();
 
 	// Render DEBUG text
 	if (bRenderDebugInfo)
@@ -532,15 +537,18 @@ void Game::Render()
 
 void Game::exit_to_main_menu()
 {
-	if (!levels_manager->Active())
-		return;
+	effects->Restart([&](){
+		if (!levels_manager->Active())
+			return;
 
-	levels_manager->Save();
-	levels_manager->Unload();
-	State = GameState::main_menu;
-	menu_manager->Close();
-	menu_manager->Open(&menu->at("Main Menu"));
-	menu_manager->CloseOnBack(false);
+		levels_manager->Save();
+		levels_manager->Unload();
+		State = GameState::main_menu;
+		menu_manager->Close();
+		menu_manager->Open(&menu->at("Main Menu"));
+		menu_manager->CloseOnBack(false);
+		this->eventQueue.emplace(Event{ nullptr, MAIN_MENU_LOADED, nullptr});
+	});
 }
 
 

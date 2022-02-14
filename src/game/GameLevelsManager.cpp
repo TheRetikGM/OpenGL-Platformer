@@ -147,6 +147,7 @@ void GameLevelsManager::Load(int nLevel)
         throw std::runtime_error(std::string("GameLevelsManager::Load(): ") + err.what());
     }
     nActiveLevel = nLevel;
+    notify(LEVEL_LOADED);
 }
 // Save current state of level infos.
 void GameLevelsManager::Save()

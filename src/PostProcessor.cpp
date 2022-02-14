@@ -19,6 +19,9 @@ PostProcessor::PostProcessor(Shader& s, unsigned int width, unsigned int height)
     init_render_data();
 
     s.Use().SetInt("scene", 0);
+    s.SetMat4("pojection", Game::ProjectionMatrix);
+    s.SetVec2f("center_pos", glm::vec2(width, height) * 0.5f);
+    fCurrentCircleRadius = fCircleRadius = glm::length(glm::vec2(width, height) * 0.5f);
 }
 PostProcessor::~PostProcessor()
 {
@@ -36,25 +39,92 @@ void PostProcessor::EndRender()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
-void PostProcessor::Render(float time)
+void PostProcessor::Restart(std::function<void()> onEnd)
+{
+    bOngoingAnimation = true;
+    fTimeCurrent = 0.0f;
+    fCurrentCircleRadius = fCircleRadius;
+    this->onEnd = onEnd;
+    bFadeOut = false;
+}
+void PostProcessor::Update(float dt)
+{
+    if (bOngoingAnimation)
+    {
+        fTimeCurrent += dt;
+        float scale = (this->*animStepFunc)(fTimeCurrent);
+        if (bFadeOut)
+            scale = 1.0f - scale;
+        if (scale < 0.0f || scale > 1.0f || fTimeCurrent > fAnimDuration)
+        {
+            if (!bFadeOut)
+            {
+                onEnd();
+                fTimeCurrent = 0.0f;
+                bFadeOut = true;
+            }
+            else
+            {
+                bOngoingAnimation = false;
+                fCurrentCircleRadius = fCircleRadius;
+            }
+        }
+        else
+            fCurrentCircleRadius = fCircleRadius * scale;
+    }
+}
+float PostProcessor::linear_anim(float time)
+{
+    return -(1.0f / fAnimDuration) * time + 1.0f;
+}
+float PostProcessor::quadratic_anim(float time)
+{
+    return -(1.0f / (fAnimDuration * fAnimDuration)) * time * time + 1.0f;
+}
+float PostProcessor::cubatic_anim(float time)
+{
+    return -std::pow((1.0f / fAnimDuration) * time - 1.0f, 5);
+}
+void PostProcessor::Render()
 {
     shader.Use();
-    shader.SetFloat("radius", float(M_SQRT2));
+    shader.SetFloat("radius", fCurrentCircleRadius);
+
+    glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(Game::ScreenSize, 0.0f));
+    shader.SetMat4("model", model);
+
     glActiveTexture(GL_TEXTURE0);
     color_buf.Bind();
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
 }
+void PostProcessor::SetAnimStepMethod(AnimStepMethod method)
+{
+    switch (method)
+    {
+    case AnimStepMethod::linear:
+        animStepFunc = &PostProcessor::linear_anim;
+        break;
+    case AnimStepMethod::quadratic:
+        animStepFunc = &PostProcessor::quadratic_anim;
+        break;
+    case AnimStepMethod::cubatic:
+        animStepFunc = &PostProcessor::cubatic_anim;
+        break;
+    default:
+        break;
+    }
+}
 void PostProcessor::init_render_data()
 {
     unsigned int VBO;
     float vertices[] = {
-        // pos          // tex
-        -1.0f,  1.0f,   0.0f, 1.0f,
-        -1.0f, -1.0f,   0.0f, 0.0f,
-         1.0f,  1.0f,   1.0f, 1.0f,
-         1.0f, -1.0f,   1.0f, 0.0f,
+        // pos    // tex
+        0.0f, 0.0f, 0.0f, 1.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        1.0f, 0.0f, 1.0f, 1.0f,
+        1.0f, 1.0f, 1.0f, 0.0f,			
     };
 
     glGenVertexArrays(1, &VAO);
@@ -73,4 +143,7 @@ void PostProcessor::init_render_data()
 void PostProcessor::HandleResize(unsigned int width, unsigned int height)
 {
     color_buf.Generate(width, height, NULL);
+    shader.Use().SetMat4("projection", Game::ProjectionMatrix);
+    shader.SetVec2f("center_pos", glm::vec2(width, height) * 0.5f);
+    fCurrentCircleRadius = fCircleRadius = glm::length(glm::vec2(width, height) * 0.5f);
 }
