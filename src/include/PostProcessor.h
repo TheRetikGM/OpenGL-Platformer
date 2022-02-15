@@ -7,7 +7,7 @@ enum class AnimStepMethod
 {
     linear = 0,
     quadratic = 1,
-    cubatic = 2
+    cubatic = 2     // FIXME : what is this name ...
 };
 
 class PostProcessor

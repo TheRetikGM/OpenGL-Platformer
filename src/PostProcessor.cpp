@@ -19,7 +19,7 @@ PostProcessor::PostProcessor(Shader& s, unsigned int width, unsigned int height)
     init_render_data();
 
     s.Use().SetInt("scene", 0);
-    s.SetMat4("pojection", Game::ProjectionMatrix);
+    s.SetMat4("projection", Game::ProjectionMatrix);
     s.SetVec2f("center_pos", glm::vec2(width, height) * 0.5f);
     fCurrentCircleRadius = fCircleRadius = glm::length(glm::vec2(width, height) * 0.5f);
 }
@@ -142,8 +142,11 @@ void PostProcessor::init_render_data()
 }
 void PostProcessor::HandleResize(unsigned int width, unsigned int height)
 {
+    // Resize color buffer to match screen size.
     color_buf.Generate(width, height, NULL);
+    // Renew render variables.
     shader.Use().SetMat4("projection", Game::ProjectionMatrix);
     shader.SetVec2f("center_pos", glm::vec2(width, height) * 0.5f);
+    // Set radius of the circle to it's initial state.
     fCurrentCircleRadius = fCircleRadius = glm::length(glm::vec2(width, height) * 0.5f);
 }
