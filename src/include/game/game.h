@@ -45,7 +45,7 @@ public:
 	static glm::vec2 ScreenSize;
 
 	Game(unsigned int width, unsigned int height);
-	~Game();
+	virtual ~Game();
 
 	void Init();	
 
@@ -60,7 +60,7 @@ public:
 	void OnResize();
 
 	// Implementation of Observer functions.
-	void OnNotify(IObserverSubject* obj, int message, std::any args = nullptr);
+	virtual void OnNotify(IObserverSubject* obj, int message, std::any args = nullptr);
 
 protected:
 	std::unordered_map<std::string, Dialog> mDialogs;

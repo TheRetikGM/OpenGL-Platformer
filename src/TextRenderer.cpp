@@ -157,7 +157,7 @@ glm::ivec2 TextRenderer::GetStringSize(std::string str, float scale) const
 {
     glm::ivec2 size(0, 0);
     size_t len = str.length();
-    for (int i = 0; i < len; i++)
+    for (int i = 0; i < int(len); i++)
     {
         size.x += Characters.at(str[i]).Advance >> 6;
         size.y = std::max(size.y, Characters.at(str[i]).Size.y);

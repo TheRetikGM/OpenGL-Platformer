@@ -59,6 +59,7 @@ PostProcessor* effects;
 Helper::Stopwatch w1;
 Helper::Stopwatch w2;
 Helper::Stopwatch w3;
+
 Forms::Form* form = nullptr;
 Forms::Form* form_credit =  nullptr;
 
@@ -187,10 +188,10 @@ void Game::Init()
 	atlas_text_renderer = new AtlasTextRenderer();
 	atlas_text_renderer->Load(font_atlas, glm::vec2(7.0f));
 
-	// Initialize Camera	
+	// Initialize Camera. Note: Initialized further in GameLevel initialization.
 	TileCamera2D::OnScale = onCameraScale;
 
-	// Initialize tileset renderer
+	// Initialize tilemap renderer
 	tile_renderer = new TilemapRenderer(ResourceManager::GetShader("tilemap"));
 	tile_renderer->Projection = projection;
 
@@ -240,7 +241,7 @@ void Game::Init()
 	menu_manager->Open(&menu->at("Main Menu"));
 	menu_manager->CloseOnBack(false);
 
-	// ====== Initialize main menu form ======
+	// ====== Initialize main menu forms ======
 	form = new Forms::Form(atlas_text_renderer);
 	form->nSpacing = 50;
 	form->AddLabel("lblGameName", "Platformer Game!", glm::vec2(80.0f), Helper::HexToRGB(0x972E34));
@@ -272,20 +273,22 @@ void Game::OnNotify(IObserverSubject* obj, int message, std::any args)
 }
 void Game::ProcessInput(float dt)
 {
+	// Rotation functions used for testing of correct
+	// positioning of objects.
+	if (Input->Held(GLFW_KEY_Q))
+		TileCamera2D::Rotate(glm::radians(45.0f) * dt);
+	if (Input->Held(GLFW_KEY_E))
+		TileCamera2D::Rotate(glm::radians(-45.0f) * dt);
+
 	if (this->State == GameState::active)
 	{
 		levels_manager->ActiveLevel().ProcessInput(Input, dt);
 
-		if (Input->Held(GLFW_KEY_Q))
-			TileCamera2D::Rotate(glm::radians(45.0f) * dt);
-		if (Input->Held(GLFW_KEY_E))
-			TileCamera2D::Rotate(glm::radians(-45.0f) * dt);
 		if (Input->Pressed(GLFW_KEY_SPACE))
 		{
 			TileCamera2D::SetRight(glm::vec2(1.0f, 0.0f));	
 			TileCamera2D::SetScale(glm::vec2(2.0f));	
 			Game::SetTileSize(Game::TileSize);	
-			// player->Velocity = glm::vec2(0.0f);
 		}
 		if (Input->Pressed(GLFW_KEY_F2))
 			render_aabb = !render_aabb;

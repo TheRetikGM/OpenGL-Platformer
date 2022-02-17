@@ -164,7 +164,7 @@ void to_json(json& j, const AnimatedSprite& s)
     }
     else
     {
-        for (int i = 0; i < s.GetFrames().size(); i++)
+        for (int i = 0; i < int(s.GetFrames().size()); i++)
             j["frames"][i] = s.GetFrames()[i].path;
     }
 }

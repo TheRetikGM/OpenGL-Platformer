@@ -160,10 +160,10 @@ void Player::Update(float dt)
 void Player::ProcessKeyboard(InputInterface* input, float dt)
 {
 	int horizontal = 0;
-	int vertical = 0;
+	// int vertical = 0;  // not needed yet
 	glm::vec2 rightVec = glm::vec2(1.0f, 0.0f);
 	glm::vec2 leftVec = -rightVec;
-	glm::vec2 upVec = glm::vec2(0.0f, -1.0f);
+	// glm::vec2 upVec = glm::vec2(0.0f, -1.0f); // not needed yet
 	glm::vec2 downVec = glm::vec2(0.0f, 1.0f);
 	Acceleration = glm::vec2(0.0f, 0.0f);
 

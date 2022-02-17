@@ -22,7 +22,6 @@ public:
         this->Atlas = atlas;
         // Size in characters.
         int atlas_width = atlas.Width / (unsigned int)vCharSize.x;
-        int atlas_height = atlas.Height / (unsigned int)vCharSize.y;
 
         int offset = 0;
         const auto GetOffset = [&](int i) {

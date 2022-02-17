@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.13.4)
 
 project("main")
 set(CMAKE_CXX_STANDARD 17)
+
 set(CMAKE_DEBUG_POSTFIX "d")
 
 # DOWNLOAD SUBMODULES
@@ -23,10 +24,15 @@ endif()
 if (NOT EXISTS "${PROJECT_SOURCE_DIR}/external/Physics2D/CMakeLists.txt")
 	message(FATAL_ERROR "The Physics2D submodule was not downloaded!")
 endif()
-
-add_subdirectory(json-develop)
-add_subdirectory("src")
 add_subdirectory("external/Physics2D")
+add_subdirectory(json-develop)
+
+if (UNIX)
+	#add_compile_options(-O1 -g -fsanitize=address -fno-omit-frame-pointer)
+	add_compile_options(-Wall -Wno-reorder)
+endif()
+add_subdirectory("src")
+
 
 target_link_directories(${PROJECT_NAME} PRIVATE lib)
 target_include_directories(${PROJECT_NAME} 

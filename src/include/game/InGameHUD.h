@@ -45,7 +45,7 @@ public:
     
     // Level **MUST** be loaded.
     InGameHUD(GameLevel* pLevel, Texture2D texHUD, AtlasTextRenderer* pTextRenderer);
-    ~InGameHUD();
+    virtual ~InGameHUD();
 
     void Update(float dt);
     void Render(SpriteRenderer* pSpriteRenderer);

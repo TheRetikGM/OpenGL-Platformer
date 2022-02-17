@@ -60,7 +60,6 @@ void InGameHUD::render_hp(SpriteRenderer* pSpriteRenderer)
     int lives_total = pLevel->Info->nLives;
     int lives_current = pLevel->pPlayer->Lives;
 
-    glm::vec2 pos = get_offset(mapping.vHeartsScreen);
     glm::vec2 size = get_size(mapping.vHeartsScreen);
     for (int i = 0; i < lives_total; i++)
     {

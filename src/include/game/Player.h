@@ -41,7 +41,7 @@ public:
 	bool bCanLoseLife = true;
 	
 	Player(glm::vec2 position, glm::vec2 size, Sprite* sprite, glm::vec3 color);
-	~Player();
+	virtual ~Player();
 
 	void Draw(SpriteRenderer* renderer);
 	void DrawAt(SpriteRenderer* renderer, glm::vec2 pos);

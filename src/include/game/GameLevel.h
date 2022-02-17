@@ -54,6 +54,7 @@ public:
 	bool  bCompleted = false;
 
 	GameLevel() : nCoins(0), nCoinsTotal(0) {}
+	virtual ~GameLevel() {}
 
 	void ProcessInput(InputInterface* input, float dt);
 	void Update(float dt);

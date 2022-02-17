@@ -190,7 +190,7 @@ void GameLevelsManager::DeleteSavedStatistics()
 }
 GameLevelInfo& GameLevelsManager::GetLevelInfo(int nLevel)
 {
-    if (nLevel >= level_infos.size())
+    if (nLevel >= int(level_infos.size()))
         throw std::out_of_range("GameLevelsManager::GetLevelInfo(): Level index " + std::to_string(nLevel) + " out of range.");
     return level_infos[nLevel];
 }

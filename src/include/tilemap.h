@@ -65,7 +65,7 @@ public:
 	const std::vector<Tmx::AnimationFrame> &Frames;
 
 	AnimatedTile(const Tmx::Tile* tile);
-	~AnimatedTile();
+	virtual ~AnimatedTile();
 	AnimatedTile& operator=(const AnimatedTile& tile);
 	
 	void Update(float dt) override;

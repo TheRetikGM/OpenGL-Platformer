@@ -5,13 +5,14 @@
 
 PostProcessor::PostProcessor(Shader& s, unsigned int width, unsigned int height) : shader(s)
 {
+    // Generate framebuffer and texture used as color buffer.
     glGenFramebuffers(1, &FBO);
     glBindFramebuffer(GL_FRAMEBUFFER, FBO);
     color_buf.Internal_format = GL_RGBA;
     color_buf.Image_format = GL_RGBA;
     color_buf.Generate(width, height, NULL);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_buf.ID, 0);
-
+    
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         throw std::runtime_error("PostProcessor::PostProcessor(): Failed to initialize FBO.");
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

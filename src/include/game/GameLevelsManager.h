@@ -20,7 +20,7 @@ class GameLevelsManager : public BasicObserverSubject, public IObserver
 {
 public:
 	GameLevelsManager(const char* levels_json);
-	~GameLevelsManager();
+	virtual ~GameLevelsManager();
 
 	// Loads level.
 	void Load(int nLevel);

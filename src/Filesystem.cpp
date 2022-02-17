@@ -28,6 +28,7 @@ Filesystem::Filesystem()
     
     // Create game directory structure.
     fs::create_directories(paLocalfiles/"saves");
+    // fs::create_directory(paLocalfiles/"screenshots"); // TODO: Implement screenshots.
 }
 std::string Filesystem::GetLocalFilesPath()
 {
