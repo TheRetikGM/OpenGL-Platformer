@@ -57,6 +57,7 @@ int main()
 	{
 		game->Init();
 		game->ProcessScroll(0.0f);	// Trigger the TileSpace onChange event for proper sizing of textures.
+		game->OnResize();			// Trigger the onResize event for proper positioning of dialogs. This is Windows only issue.
 
 		float deltaTime = 0.0f;
 		float lastFrame = 0.0f;
