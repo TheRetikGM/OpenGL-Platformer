@@ -1,7 +1,0 @@
-#pragma once
-
-#cmakedefine SRC_DIR "@SRC_DIR@"
-#define SHADERS_DIR SRC_DIR "/src/shaders/"
-#define ASSETS_DIR SRC_DIR "/assets/"
-
-#include <glad/glad.h>
