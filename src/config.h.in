@@ -1,7 +1,16 @@
 #pragma once
 
-#cmakedefine SRC_DIR "@SRC_DIR@"
-#define SHADERS_DIR SRC_DIR "/src/shaders/"
-#define ASSETS_DIR SRC_DIR "/assets/"
+// Uncomment if building PACKAGE
+//#define _INSTALL
+
+#ifndef _INSTALL
+	#cmakedefine SRC_DIR "@SRC_DIR@"
+	#define SHADERS_DIR SRC_DIR "/src/shaders/"
+	#define ASSETS_DIR SRC_DIR "/assets/"
+#else
+	#define SRC_DIR ".."
+	#define SHADERS_DIR SRC_DIR "/shaders/"
+	#define ASSETS_DIR SRC_DIR "/assets/"
+#endif
 
 #include <glad/glad.h>

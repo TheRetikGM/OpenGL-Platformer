@@ -48,11 +48,6 @@ target_link_libraries(${PROJECT_NAME}
 )
 target_link_libraries(${PROJECT_NAME} nlohmann_json::nlohmann_json)
 
-# Install defines
-install(TARGETS "${PROJECT_NAME}" DESTINATION bin)
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/assets" DESTINATION ./)
-install(DIRECTORY "${CMAKE_SOURCE_DIR}/src/shaders" DESTINATION ./)
-
 if (MSVC)
 	target_link_libraries(${PROJECT_NAME}
 		opengl32
@@ -62,7 +57,6 @@ if (MSVC)
 		debug Debug/tmxparser optimized Release/tmxparser
 		debug Debug/freetyped optimized Release/freetype
 	)
-	include(CPack)
 elseif (UNIX)
     target_link_libraries(${PROJECT_NAME}
         glfw
