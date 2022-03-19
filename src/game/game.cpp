@@ -299,6 +299,8 @@ void Game::ProcessInput(float dt)
 			menu_manager->Open(&menu->at("Pause Menu"));
 			menu_manager->CloseOnBack(true);
 		}
+		if (Input->Pressed(GLFW_KEY_R))
+			levels_manager->ActiveLevel().Restart();
 	}
 	else if (this->State == GameState::ingame_paused)
 	{

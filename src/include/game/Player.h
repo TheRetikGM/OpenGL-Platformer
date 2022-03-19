@@ -74,7 +74,8 @@ protected:
 	std::shared_ptr<Physics2D::RigidBody> leftBody;
 	std::shared_ptr<Physics2D::RigidBody> rightBody;
 
-	float sideBodyWidth = 0.1f;
+	// Width of side colliders, used for checking if player is next to wall.
+	float sideBodyWidth = 0.15f;
 
 	struct collision {
 		float dist = INFINITY;

@@ -7,7 +7,7 @@
         "locked": false,
         "name": "Tutorial",
         "single_animations": "animations/one_time/properties.json",
-        "tilemap": "tilemaps/map1.tmx"
+        "tilemap": "tilemaps/tutorial.tmx"
     },
     {
         "background": "sprites/bg_1.png",

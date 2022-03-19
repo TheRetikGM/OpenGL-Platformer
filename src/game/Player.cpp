@@ -108,6 +108,13 @@ void Player::Update(float dt)
 				canWallJump = false;
 				Velocity.y = 0.0f;
 			}
+			else
+			{
+				// Check if player is hiting wall from left or right. If so, the player should lose all of his speed.
+				float cosine = std::abs(glm::dot(glm::normalize(info.normal), glm::vec2(1.0f, 0.0f)));
+				if (cosine >= 0.99)
+					Velocity.x = 0.0f;
+			}
 			RBody->MoveOutOfCollision(info);
 		}
 	}
@@ -167,14 +174,14 @@ void Player::ProcessKeyboard(InputInterface* input, float dt)
 	glm::vec2 downVec = glm::vec2(0.0f, 1.0f);
 	Acceleration = glm::vec2(0.0f, 0.0f);
 
-	float hAcceleration = 20.0f;
-	float hDeceleration = 30.0f;
-	float maxHVelocity = 5.0f;
+	float hAcceleration = 60.17f;
+	float hDeceleration = 40.518f;
+	float maxHVelocity = 6.695f;
 	bool hDecelerating = false;
 
 	// Jump variables
 	static float buttonTime = 0.5f;
-	static float jumpHeight = 3.1f;
+	static float jumpHeight = 2.331f;
 	static float cancelRate = 80.0f;
 	static float jumpTime = 0.0f;
 	static bool  jumpCanceled = false;

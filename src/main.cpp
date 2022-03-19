@@ -87,7 +87,7 @@ int main()
 		if (!game->Run)
 			glfwSetWindowShouldClose(window, true);
 	}
-	catch (const std::exception& e)
+	catch (const std::out_of_range& e)
 	{
 		std::cerr << DC_ERROR " " << e.what() << std::endl;
 	}
