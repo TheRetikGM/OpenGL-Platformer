@@ -13,11 +13,11 @@
         "background": "sprites/bg_1.png",
         "completed": false,
         "difficulty": 2,
-        "lives": 5,
-        "locked": false,
+        "lives": 6,
+        "locked": true,
         "name": "Level 1",
         "single_animations": "animations/one_time/properties.json",
-        "tilemap": "tilemaps/map2.tmx"
+        "tilemap": "tilemaps/map1.tmx"
     },
     {
         "background": "sprites/bg_1.png",

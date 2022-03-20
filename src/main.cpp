@@ -87,6 +87,7 @@ int main()
 		if (!game->Run)
 			glfwSetWindowShouldClose(window, true);
 	}
+	// Windows is picky with catching exceptions.
 	catch (const std::runtime_error& e)
 	{
 		std::cerr << DC_ERROR " " << e.what() << std::endl;

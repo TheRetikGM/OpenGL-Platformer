@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.5" tiledversion="1.7.2" name="environment" tilewidth="16" tileheight="16" tilecount="84" columns="12">
+<tileset version="1.8" tiledversion="1.8.2" name="environment" tilewidth="16" tileheight="16" tilecount="84" columns="12">
  <image source="tileset.png" width="192" height="112"/>
  <tile id="0">
   <objectgroup draworder="index" id="2">
@@ -177,10 +177,9 @@
  </tile>
  <tile id="66">
   <objectgroup draworder="index" id="4">
-   <object id="3" x="0" y="0" width="16" height="16"/>
    <object id="4" x="0" y="0" width="16" height="5.26087">
     <properties>
-     <property name="name" value="platform"/>
+     <property name="name" value="ground"/>
     </properties>
    </object>
   </objectgroup>
@@ -189,7 +188,7 @@
   <objectgroup draworder="index" id="2">
    <object id="1" x="0" y="0" width="16" height="5.13043">
     <properties>
-     <property name="name" value="platform"/>
+     <property name="name" value="ground"/>
     </properties>
    </object>
   </objectgroup>
