@@ -18,55 +18,5 @@
         "name": "Level 1",
         "single_animations": "animations/one_time/properties.json",
         "tilemap": "tilemaps/map1.tmx"
-    },
-    {
-        "background": "sprites/bg_1.png",
-        "completed": false,
-        "difficulty": 3,
-        "lives": 6,
-        "locked": true,
-        "name": "Level 2",
-        "single_animations": "animations/one_time/properties.json",
-        "tilemap": "tilemaps/map3.tmx"
-    },
-    {
-        "background": "sprites/bg_1.png",
-        "completed": false,
-        "difficulty": 4,
-        "lives": 7,
-        "locked": true,
-        "name": "Level 3",
-        "single_animations": "animations/one_time/properties.json",
-        "tilemap": "tilemaps/map4.tmx"
-    },
-    {
-        "background": "sprites/bg_1.png",
-        "completed": false,
-        "difficulty": 5,
-        "lives": 8,
-        "locked": true,
-        "name": "Level 4",
-        "single_animations": "animations/one_time/properties.json",
-        "tilemap": "tilemaps/map5.tmx"
-    },
-    {
-        "background": "sprites/bg_1.png",
-        "completed": false,
-        "difficulty": 6,
-        "lives": 8,
-        "locked": true,
-        "name": "Level 5",
-        "single_animations": "animations/one_time/properties.json",
-        "tilemap": "tilemaps/map6.tmx"
-    },
-    {
-        "background": "sprites/bg_1.png",
-        "completed": false,
-        "difficulty": 7,
-        "lives": 8,
-        "locked": true,
-        "name": "Level 6",
-        "single_animations": "animations/one_time/properties.json",
-        "tilemap": "tilemaps/map7.tmx"
     }
 ]

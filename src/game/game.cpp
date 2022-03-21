@@ -588,9 +588,25 @@ void Game::init_dialogs()
 	});
     row->SetGravity(Forms::Gravity::center);
 
+	row = form->AddControl("rwInputNextLevel", std::make_shared<Forms::Row>(glm::vec2(0.0f))).get<Forms::Row*>();
+	row->AddControls({
+		{ "lblTextP1", std::make_shared<Forms::Label>("Press", 		   glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f), atlas_text_renderer), Forms::ControlType::label },
+		{ "lblTextP2", std::make_shared<Forms::Label>("N", 			   glm::vec2(0.0f), glm::vec2(36.0f), glm::vec3(0.0f, 1.0f, 0.0f), atlas_text_renderer), Forms::ControlType::label },
+		{ "lblTextP3", std::make_shared<Forms::Label>("for next level", glm::vec2(0.0f), glm::vec2(28.0f), glm::vec3(1.0f), atlas_text_renderer), Forms::ControlType::label }
+	});
+    row->SetGravity(Forms::Gravity::center);
+
 	mDialogs["won"] = Dialog(form, {
 		{GLFW_KEY_R, [&](){ levels_manager->ActiveLevel().Restart(); State = GameState::active; }},
-		{GLFW_KEY_M, std::bind(&Game::exit_to_main_menu, this)}
+		{GLFW_KEY_M, std::bind(&Game::exit_to_main_menu, this)},
+		{GLFW_KEY_N, [&](){ 
+			int active = levels_manager->ActiveLevelIndex();
+			if (int(levels_manager->GetAllInfos().size()) == active + 1)
+				return;
+			levels_manager->Save();
+			levels_manager->Load(active + 1);
+			State = GameState::active; 
+		}}
 	});
 
 	form->SetGravity(Forms::Gravity::left);
