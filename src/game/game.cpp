@@ -603,9 +603,11 @@ void Game::init_dialogs()
 			int active = levels_manager->ActiveLevelIndex();
 			if (int(levels_manager->GetAllInfos().size()) == active + 1)
 				return;
-			levels_manager->Save();
-			levels_manager->Load(active + 1);
-			State = GameState::active; 
+			effects->Restart([&, active](){
+				levels_manager->Save();
+				levels_manager->Load(active + 1);
+				State = GameState::active; 
+			});
 		}}
 	});
 
